@@ -10,6 +10,7 @@ import {
   Twitter,
   Instagram,
   Github,
+  ChevronUp,
 } from "lucide-react";
 
 // Hero section background images
@@ -108,6 +109,7 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Refs for sections
   const heroRef = useRef(null);
@@ -188,6 +190,28 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Handle scroll to top button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 500) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
       {/* Navigation */}
@@ -207,30 +231,35 @@ function App() {
               <button
                 onClick={() => scrollToSection('about')}
                 className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                aria-label="Navigate to About section"
               >
                 About
               </button>
               <button
                 onClick={() => scrollToSection('how-it-works')}
                 className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                aria-label="Navigate to How It Works section"
               >
                 How It Works
               </button>
               <button
                 onClick={() => scrollToSection('why-its-special')}
                 className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                aria-label="Navigate to Why It's Special section"
               >
                 Why It's Special
               </button>
               <button
                 onClick={() => scrollToSection('testimonials')}
                 className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                aria-label="Navigate to Testimonials section"
               >
                 Testimonials
               </button>
               <button
                 onClick={() => scrollToSection('circles')}
                 className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                aria-label="Navigate to Live Circles section"
               >
                 Live Circles
               </button>
@@ -241,12 +270,14 @@ function App() {
               variant="outline"
               size="sm"
               className="border-border/60 hover:border-border"
+              aria-label="Log in to your account"
             >
               Log In
             </Button>
             <Button
               size="sm"
               className="btn-tactile bg-[hsl(var(--terracotta))] text-white"
+              aria-label="Join Kuri now"
             >
               Join Now
             </Button>
@@ -272,30 +303,35 @@ function App() {
                 <button
                   onClick={() => scrollToSection('about')}
                   className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  aria-label="Navigate to About section"
                 >
                   About
                 </button>
                 <button
                   onClick={() => scrollToSection('how-it-works')}
                   className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  aria-label="Navigate to How It Works section"
                 >
                   How It Works
                 </button>
                 <button
                   onClick={() => scrollToSection('why-its-special')}
                   className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  aria-label="Navigate to Why It's Special section"
                 >
                   Why It's Special
                 </button>
                 <button
                   onClick={() => scrollToSection('testimonials')}
                   className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  aria-label="Navigate to Testimonials section"
                 >
                   Testimonials
                 </button>
                 <button
                   onClick={() => scrollToSection('circles')}
                   className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  aria-label="Navigate to Live Circles section"
                 >
                   Live Circles
                 </button>
@@ -304,12 +340,14 @@ function App() {
                     variant="outline"
                     size="sm"
                     className="w-full border-border/60 hover:border-border"
+                    aria-label="Log in to your account"
                   >
                     Log In
                   </Button>
                   <Button
                     size="sm"
                     className="w-full btn-tactile bg-[hsl(var(--terracotta))] text-white"
+                    aria-label="Join Kuri now"
                   >
                     Join Now
                   </Button>
@@ -333,6 +371,7 @@ function App() {
               src={slide.imageUrl}
               alt={`Kuri community savings circle ${index + 1}`}
               className="slider-image"
+              loading="lazy"
             />
           </div>
         ))}
@@ -471,14 +510,19 @@ function App() {
         </div>
 
         {/* Scroll indicator */}
-        {/* <motion.div 
-          className="absolute bottom-12 right-12 hidden md:flex flex-col items-center text-white/80"
+        <motion.div 
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center text-white/80"
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          <span className="text-sm mb-2 rotate-90 origin-left">Scroll</span>
-          <ChevronDown size={20} />
-        </motion.div> */}
+          <span className="text-sm mb-2 font-light tracking-wider">Scroll</span>
+          <motion.div
+            animate={{ y: [0, 5, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, delay: 0.5 }}
+          >
+            <ChevronUp className="rotate-180" size={20} />
+          </motion.div>
+        </motion.div>
 
         {/* Decorative elements */}
         <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full border border-white/20 rotating-circle opacity-70"></div>
@@ -596,6 +640,7 @@ function App() {
                 src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?auto=format&fit=crop&w=800&q=80"
                 alt="Traditional savings group"
                 className="absolute inset-0 w-3/4 h-3/4 object-cover rounded-full m-auto shadow-xl"
+                loading="lazy"
               />
             </motion.div>
             <motion.div
@@ -1253,6 +1298,7 @@ function App() {
                     src={circle.imageUrl}
                     alt={circle.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                   <div className="absolute bottom-4 left-4">
@@ -1443,6 +1489,22 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to top button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={scrollToTop}
+            className="fixed bottom-8 right-8 p-3 rounded-full bg-[hsl(var(--terracotta))] text-white shadow-lg hover:bg-[hsl(var(--terracotta))/90] transition-all z-50"
+            aria-label="Scroll to top"
+          >
+            <ChevronUp size={24} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
