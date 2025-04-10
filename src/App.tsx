@@ -400,34 +400,30 @@ function App() {
 
       {/* Hero Section with Image Slider */}
       <section ref={heroRef} className="hero-slider" id="hero">
-        {/* Loading state */}
+        {/* Hero Skeleton Loader */}
         {!imagesLoaded && (
-          <div className="absolute inset-0 bg-[hsl(var(--forest))] flex items-center justify-center z-10">
-            <div className="text-center">
-              <div className="relative flex items-center mb-6 justify-center">
-                <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-4xl tracking-wide">
-                  K
-                </span>
-                <span className="font-sans font-extrabold text-white text-4xl tracking-wide">
-                  URI
-                </span>
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
-              </div>
-              <div className="flex space-x-2 justify-center">
-                <div className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce"></div>
-                <div
-                  className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                ></div>
-                <div
-                  className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce"
-                  style={{ animationDelay: "0.4s" }}
-                ></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] to-[#2a2a2a] z-10">
+            <div className="container mx-auto px-4 py-8 h-full flex items-center">
+              <div className="w-full md:w-1/2">
+                {/* Skeleton for title */}
+                <div className="h-12 bg-gray-700/30 rounded-md w-3/4 mb-4 animate-pulse"></div>
+                <div className="h-12 bg-gray-700/30 rounded-md w-1/2 mb-8 animate-pulse"></div>
+                
+                {/* Skeleton for description */}
+                <div className="h-4 bg-gray-700/30 rounded-md w-full mb-2 animate-pulse"></div>
+                <div className="h-4 bg-gray-700/30 rounded-md w-5/6 mb-2 animate-pulse"></div>
+                <div className="h-4 bg-gray-700/30 rounded-md w-4/6 mb-8 animate-pulse"></div>
+                
+                {/* Skeleton for buttons */}
+                <div className="flex gap-4">
+                  <div className="h-10 bg-gray-700/30 rounded-full w-40 animate-pulse"></div>
+                  <div className="h-10 bg-gray-700/30 rounded-full w-40 animate-pulse"></div>
+                </div>
               </div>
             </div>
           </div>
         )}
-
+        
         {/* Background images that change */}
         {heroBackgrounds.map((slide, index) => (
           <div
