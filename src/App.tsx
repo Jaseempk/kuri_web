@@ -110,6 +110,7 @@ function App() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // Refs for sections
   const heroRef = useRef(null);
@@ -211,6 +212,31 @@ function App() {
       behavior: 'smooth'
     });
   };
+
+  // Preload hero images
+  useEffect(() => {
+    const preloadImages = async () => {
+      try {
+        const imagePromises = heroBackgrounds.map((slide) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = slide.imageUrl;
+            img.onload = resolve;
+            img.onerror = reject;
+          });
+        });
+        
+        await Promise.all(imagePromises);
+        setImagesLoaded(true);
+      } catch (error) {
+        console.error("Failed to preload images:", error);
+        // Show images anyway after a timeout if loading fails
+        setTimeout(() => setImagesLoaded(true), 2000);
+      }
+    };
+    
+    preloadImages();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
@@ -370,6 +396,24 @@ function App() {
 
       {/* Hero Section with Image Slider */}
       <section ref={heroRef} className="hero-slider" id="hero">
+        {/* Loading state */}
+        {!imagesLoaded && (
+          <div className="absolute inset-0 bg-[hsl(var(--forest))] flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="relative flex items-center mb-6 justify-center">
+                <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-4xl tracking-wide">K</span>
+                <span className="font-sans font-extrabold text-white text-4xl tracking-wide">URI</span>
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
+              </div>
+              <div className="flex space-x-2 justify-center">
+                <div className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce"></div>
+                <div className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Background images that change */}
         {heroBackgrounds.map((slide, index) => (
           <div
