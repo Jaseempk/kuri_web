@@ -1,0 +1,473 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');
+@import url('https://use.typekit.net/xwp2kln.css'); /* For Canela font */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 36 40% 95%;
+    --foreground: 30 25% 15%;
+    
+    /* Warm Earth tones */
+    --terracotta: 18 80% 45%;
+    --ochre: 35 80% 50%;
+    --forest: 150 30% 35%;
+    
+    /* Neutrals */
+    --sand: 35 40% 90%;
+    --ivory: 40 33% 96%;
+    
+    /* Accent */
+    --gold: 35 70% 60%;
+    
+    /* UI colors */
+    --primary: 18 80% 45%; /* Terracotta */
+    --primary-foreground: 40 33% 98%;
+    --secondary: 35 80% 50%; /* Ochre */
+    --secondary-foreground: 40 33% 98%;
+    --accent: 35 70% 60%; /* Gold */
+    --accent-foreground: 30 25% 15%;
+    --muted: 35 40% 90%; /* Sand */
+    --muted-foreground: 30 25% 35%;
+    --border: 35 25% 80%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-sand/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-terracotta/40 rounded-full transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-terracotta/60;
+}
+
+/* Gradient effects */
+.gradient-blur {
+  background: radial-gradient(circle at center, hsl(var(--ochre) / 0.25) 0%, hsl(var(--ochre) / 0) 70%);
+  filter: blur(64px);
+}
+
+.gradient-overlay {
+  background: linear-gradient(to bottom, transparent, hsl(var(--background) / 0.9));
+}
+
+.text-gradient {
+  background: linear-gradient(to right, hsl(var(--terracotta)), hsl(var(--gold)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-reverse {
+  background: linear-gradient(to right, hsl(var(--gold)), hsl(var(--terracotta)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animations */
+.rotating-circle {
+  animation: rotate 20s linear infinite;
+}
+
+.rotating-circle-reverse {
+  animation: rotate 15s linear infinite reverse;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Parallax effect */
+.parallax {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.parallax-layer {
+  transition: transform 0.1s ease-out;
+}
+
+/* Image treatments */
+.image-fade-mask {
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+/* Custom button styles */
+.btn-tactile {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-tactile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-tactile:hover::before {
+  opacity: 1;
+}
+
+.btn-tactile:active {
+  transform: translateY(2px);
+}
+
+/* Hero Slider */
+.hero-slider {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.slider-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+.slider-item.active {
+  opacity: 1;
+}
+
+.slider-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slider-content {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 2rem;
+}
+
+.slider-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+}
+
+/* Decorative elements */
+.circle-decoration {
+  border-radius: 50%;
+  position: absolute;
+  background: linear-gradient(45deg, hsl(var(--terracotta)), hsl(var(--gold)));
+  opacity: 0.1;
+  filter: blur(40px);
+}
+
+.diagonal-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(to right, transparent, hsl(var(--gold)/0.3), transparent);
+  transform: rotate(-45deg);
+}
+
+/* Custom typography */
+.display-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.elegant-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.elegant-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Image gallery */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 200px);
+  gap: 1rem;
+  height: 500px;
+}
+
+.gallery-item {
+  overflow: hidden;
+  position: relative;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.5s ease;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.1);
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.gallery-item:nth-child(1) {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+}
+
+.gallery-item:nth-child(2) {
+  grid-column: 3 / 4;
+  grid-row: 1 / 2;
+}
+
+.gallery-item:nth-child(3) {
+  grid-column: 4 / 5;
+  grid-row: 1 / 2;
+}
+
+.gallery-item:nth-child(4) {
+  grid-column: 3 / 5;
+  grid-row: 2 / 3;
+}
+
+/* Marquee animation */
+.marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.marquee-content {
+  display: flex;
+  animation: marquee 20s linear infinite;
+}
+
+.marquee-item {
+  flex-shrink: 0;
+  padding: 0 2rem;
+  white-space: nowrap;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* 3D Card Effect */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.card-3d:hover {
+  transform: rotateY(10deg) rotateX(10deg);
+}
+
+.card-3d-content {
+  transform-style: preserve-3d;
+}
+
+.card-3d-front {
+  backface-visibility: hidden;
+}
+
+.card-3d-depth {
+  transform: translateZ(-50px);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: hsl(var(--terracotta)/0.1);
+  border-radius: inherit;
+}
+
+/* Image reveal animation */
+.image-reveal {
+  position: relative;
+  overflow: hidden;
+}
+
+.image-reveal::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: hsl(var(--terracotta));
+  transform: translateX(-100%);
+  animation: reveal 1.5s ease forwards;
+}
+
+.image-reveal img {
+  opacity: 0;
+  animation: fade-in 0.5s ease 1s forwards;
+}
+
+@keyframes reveal {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Staggered animation */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.stagger-item.animate {
+  animation: stagger-fade-in 0.5s ease forwards;
+}
+
+@keyframes stagger-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Floating elements */
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Glowing effect */
+.glow {
+  position: relative;
+}
+
+.glow::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background: radial-gradient(circle at center, hsl(var(--gold)/0.3) 0%, transparent 70%);
+  filter: blur(20px);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.glow:hover::after {
+  opacity: 1;
+}
+
+/* Split text effect */
+.split-text {
+  overflow: hidden;
+}
+
+.split-text span {
+  display: inline-block;
+  transform: translateY(100%);
+  opacity: 0;
+  animation: split-reveal 0.8s ease forwards;
+}
+
+@keyframes split-reveal {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
