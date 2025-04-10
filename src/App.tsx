@@ -116,6 +116,21 @@ function App() {
   const testimonialsRef = useRef(null);
   const liveCirclesRef = useRef(null);
 
+  // Smooth scroll function
+  const scrollToSection = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      // Close mobile menu if open
+      if (isMenuOpen) setIsMenuOpen(false);
+      
+      // Smooth scroll to the element
+      window.scrollTo({
+        top: element.offsetTop - 80, // Offset for the fixed header
+        behavior: 'smooth'
+      });
+    }
+  };
+
   // Scroll animations - using useScroll without destructuring unused variables
   useScroll();
 
@@ -189,36 +204,36 @@ function App() {
               </div>
             </a>
             <div className="hidden md:flex items-center space-x-6">
-              <a
-                href="#about"
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm"
+              <button
+                onClick={() => scrollToSection('about')}
+                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
               >
                 About
-              </a>
-              <a
-                href="#how-it-works"
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm"
+              </button>
+              <button
+                onClick={() => scrollToSection('how-it-works')}
+                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
               >
                 How It Works
-              </a>
-              <a
-                href="#why-its-special"
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm"
+              </button>
+              <button
+                onClick={() => scrollToSection('why-its-special')}
+                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
               >
                 Why It's Special
-              </a>
-              <a
-                href="#testimonials"
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm"
+              </button>
+              <button
+                onClick={() => scrollToSection('testimonials')}
+                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
               >
                 Testimonials
-              </a>
-              <a
-                href="#circles"
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm"
+              </button>
+              <button
+                onClick={() => scrollToSection('circles')}
+                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
               >
                 Live Circles
-              </a>
+              </button>
             </div>
           </div>
           <div className="hidden md:flex items-center space-x-4">
@@ -254,36 +269,36 @@ function App() {
               className="md:hidden bg-black/90 backdrop-blur-md border-b border-white/10"
             >
               <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-                <a
-                  href="#about"
-                  className="py-2 text-white hover:text-white transition-colors font-medium"
+                <button
+                  onClick={() => scrollToSection('about')}
+                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
                 >
                   About
-                </a>
-                <a
-                  href="#how-it-works"
-                  className="py-2 text-white hover:text-white transition-colors font-medium"
+                </button>
+                <button
+                  onClick={() => scrollToSection('how-it-works')}
+                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
                 >
                   How It Works
-                </a>
-                <a
-                  href="#why-its-special"
-                  className="py-2 text-white hover:text-white transition-colors font-medium"
+                </button>
+                <button
+                  onClick={() => scrollToSection('why-its-special')}
+                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
                 >
                   Why It's Special
-                </a>
-                <a
-                  href="#testimonials"
-                  className="py-2 text-white hover:text-white transition-colors font-medium"
+                </button>
+                <button
+                  onClick={() => scrollToSection('testimonials')}
+                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
                 >
                   Testimonials
-                </a>
-                <a
-                  href="#circles"
-                  className="py-2 text-white hover:text-white transition-colors font-medium"
+                </button>
+                <button
+                  onClick={() => scrollToSection('circles')}
+                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
                 >
                   Live Circles
-                </a>
+                </button>
                 <div className="flex flex-col space-y-2 pt-2">
                   <Button
                     variant="outline"
@@ -637,7 +652,7 @@ function App() {
                   className="absolute -bottom-3 left-0 h-3 bg-[hsl(var(--terracotta))]/30 w-full"
                   initial={{ width: 0 }}
                   whileInView={{ width: "100%" }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
                   viewport={{ once: true }}
                 />
               </h2>
