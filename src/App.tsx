@@ -125,11 +125,11 @@ function App() {
     if (element) {
       // Close mobile menu if open
       if (isMenuOpen) setIsMenuOpen(false);
-      
+
       // Smooth scroll to the element
       window.scrollTo({
         top: element.offsetTop - 80, // Offset for the fixed header
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -201,15 +201,15 @@ function App() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 
@@ -225,7 +225,7 @@ function App() {
             img.onerror = reject;
           });
         });
-        
+
         await Promise.all(imagePromises);
         setImagesLoaded(true);
       } catch (error) {
@@ -234,7 +234,7 @@ function App() {
         setTimeout(() => setImagesLoaded(true), 2000);
       }
     };
-    
+
     preloadImages();
   }, []);
 
@@ -247,15 +247,19 @@ function App() {
             <a href="#" className="text-2xl font-bold flex items-center">
               <div className="relative">
                 <div className="flex items-center">
-                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">K</span>
-                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">URI</span>
+                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">
+                    K
+                  </span>
+                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">
+                    URI
+                  </span>
                   <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
                 </div>
               </div>
             </a>
             <div className="hidden md:flex items-center space-x-6">
               <button
-                onClick={() => scrollToSection('about')}
+                onClick={() => scrollToSection("about")}
                 className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to About section"
               >
@@ -263,7 +267,7 @@ function App() {
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
-                onClick={() => scrollToSection('how-it-works')}
+                onClick={() => scrollToSection("how-it-works")}
                 className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to How It Works section"
               >
@@ -271,7 +275,7 @@ function App() {
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
-                onClick={() => scrollToSection('why-its-special')}
+                onClick={() => scrollToSection("why-its-special")}
                 className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Why It's Special section"
               >
@@ -279,7 +283,7 @@ function App() {
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
-                onClick={() => scrollToSection('testimonials')}
+                onClick={() => scrollToSection("testimonials")}
                 className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Testimonials section"
               >
@@ -287,7 +291,7 @@ function App() {
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
-                onClick={() => scrollToSection('circles')}
+                onClick={() => scrollToSection("circles")}
                 className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Live Circles section"
               >
@@ -332,7 +336,7 @@ function App() {
             >
               <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
                 <button
-                  onClick={() => scrollToSection('about')}
+                  onClick={() => scrollToSection("about")}
                   className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to About section"
                 >
@@ -340,7 +344,7 @@ function App() {
                   <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
-                  onClick={() => scrollToSection('how-it-works')}
+                  onClick={() => scrollToSection("how-it-works")}
                   className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to How It Works section"
                 >
@@ -348,7 +352,7 @@ function App() {
                   <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
-                  onClick={() => scrollToSection('why-its-special')}
+                  onClick={() => scrollToSection("why-its-special")}
                   className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to Why It's Special section"
                 >
@@ -356,7 +360,7 @@ function App() {
                   <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
-                  onClick={() => scrollToSection('testimonials')}
+                  onClick={() => scrollToSection("testimonials")}
                   className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to Testimonials section"
                 >
@@ -364,7 +368,7 @@ function App() {
                   <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
-                  onClick={() => scrollToSection('circles')}
+                  onClick={() => scrollToSection("circles")}
                   className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to Live Circles section"
                 >
@@ -401,19 +405,29 @@ function App() {
           <div className="absolute inset-0 bg-[hsl(var(--forest))] flex items-center justify-center z-10">
             <div className="text-center">
               <div className="relative flex items-center mb-6 justify-center">
-                <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-4xl tracking-wide">K</span>
-                <span className="font-sans font-extrabold text-white text-4xl tracking-wide">URI</span>
+                <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-4xl tracking-wide">
+                  K
+                </span>
+                <span className="font-sans font-extrabold text-white text-4xl tracking-wide">
+                  URI
+                </span>
                 <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
               </div>
               <div className="flex space-x-2 justify-center">
                 <div className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce"></div>
-                <div className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                <div
+                  className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
+                <div
+                  className="w-3 h-3 rounded-full bg-[hsl(var(--gold))] animate-bounce"
+                  style={{ animationDelay: "0.4s" }}
+                ></div>
               </div>
             </div>
           </div>
         )}
-        
+
         {/* Background images that change */}
         {heroBackgrounds.map((slide, index) => (
           <div
@@ -564,7 +578,7 @@ function App() {
         </div>
 
         {/* Scroll indicator */}
-        <motion.div 
+        <motion.div
           className="absolute bottom-12 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center text-white/80"
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
@@ -590,7 +604,7 @@ function App() {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1440 320"
             preserveAspectRatio="none"
-            style={{ transform: 'translateY(10%)' }}
+            style={{ transform: "translateY(10%)" }}
           >
             <path
               fill="hsl(var(--sand))"
@@ -598,13 +612,13 @@ function App() {
               d="M0,128L48,144C96,160,192,192,288,186.7C384,181,480,139,576,138.7C672,139,768,181,864,202.7C960,224,1056,224,1152,202.7C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
             ></path>
           </svg>
-          
+
           <svg
             className="absolute bottom-0 w-full h-full"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1440 320"
             preserveAspectRatio="none"
-            style={{ transform: 'translateY(20%)' }}
+            style={{ transform: "translateY(20%)" }}
           >
             <path
               fill="hsl(var(--sand))"
@@ -612,13 +626,13 @@ function App() {
               d="M0,160L48,149.3C96,139,192,117,288,117.3C384,117,480,139,576,165.3C672,192,768,224,864,218.7C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
             ></path>
           </svg>
-          
+
           <svg
             className="absolute bottom-0 w-full h-full"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1440 320"
             preserveAspectRatio="none"
-            style={{ transform: 'translateY(30%)' }}
+            style={{ transform: "translateY(30%)" }}
           >
             <path
               fill="hsl(var(--sand))"
@@ -626,7 +640,7 @@ function App() {
               d="M0,192L48,181.3C96,171,192,149,288,154.7C384,160,480,192,576,192C672,192,768,160,864,154.7C960,149,1056,171,1152,181.3C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
             ></path>
           </svg>
-          
+
           {/* Final solid wave for complete transition */}
           <svg
             className="absolute bottom-0 w-full h-full"
@@ -640,7 +654,7 @@ function App() {
               d="M0,224L48,229.3C96,235,192,245,288,240C384,235,480,213,576,213.3C672,213,768,235,864,234.7C960,235,1056,213,1152,202.7C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
             ></path>
           </svg>
-          
+
           {/* Gradient overlay for smoother transition */}
           <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-b from-transparent via-[hsl(var(--sand))/20] to-[hsl(var(--sand))]"></div>
         </div>
@@ -673,7 +687,7 @@ function App() {
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-6">
                 A modern revival of time-honored community saving traditions
-                from around the world.
+                from around the world.Built with care for circles that matter.
               </p>
             </motion.div>
           </div>
@@ -1430,8 +1444,12 @@ function App() {
             <div className="md:col-span-2">
               <div className="flex items-center mb-6">
                 <div className="relative flex items-center">
-                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">K</span>
-                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">URI</span>
+                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">
+                    K
+                  </span>
+                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">
+                    URI
+                  </span>
                   <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
                 </div>
               </div>
