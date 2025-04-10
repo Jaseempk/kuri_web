@@ -466,7 +466,7 @@ function App() {
                   viewport={{ once: true }}
                 />
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-6">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 We've turned tradition into joyful, interest-free finance.
               </p>
             </motion.div>
@@ -474,7 +474,7 @@ function App() {
           
           {/* Interactive Process Steps with Image Reveals */}
           <div className="grid md:grid-cols-2 gap-16 items-center mb-24 bg-[hsl(var(--sand))/50] py-16 px-4 md:px-8 rounded-3xl">
-            {/* Step 1 */}
+            {/* Step 1: Image on LEFT */}
             <div className="order-1 md:order-1">
               <motion.div 
                 className="relative rounded-2xl overflow-hidden image-reveal hover-lift shadow-lg"
@@ -486,33 +486,31 @@ function App() {
                   y: -10,
                   boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
                 }}
+                style={{ background: `url('/images/joinyourcircle.jpg') center/cover no-repeat` }}
               >
-                <img 
-                  src="/images/joinyourcircle.jpg" 
-                  alt="People joining a circle" 
-                  className="w-full h-[400px] object-cover"
-                />
+                <div className="w-full h-[400px]"></div>
                 <motion.div 
-                  className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--foreground))/70] to-transparent"
+                  className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
                   viewport={{ once: true }}
                 />
                 <motion.div 
-                  className="absolute bottom-0 left-0 right-0 p-6"
+                  className="absolute bottom-0 left-0 right-0 p-6 z-10"
                   initial={{ y: 50, opacity: 0 }}
                   whileInView={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.8 }}
                   viewport={{ once: true }}
                 >
-                  <span className="inline-block bg-[hsl(var(--gold))/10] text-[hsl(var(--gold))] text-sm font-bold px-3 py-1 rounded-full mb-3">Step 1</span>
-                  <h3 className="text-white text-2xl font-serif font-semibold mb-2">Join Your Circle</h3>
-                  <p className="text-white/80">Create or join a circle with people you trust</p>
+                  <span className="inline-block bg-[hsl(var(--gold))] text-black font-bold px-3 py-1 rounded-full mb-3 text-sm shadow-md">Step 1</span>
+                  <h3 className="text-white text-2xl font-serif font-semibold mb-2 drop-shadow-md">Join Your Circle</h3>
+                  <p className="text-white/90 drop-shadow-md font-medium">Create or join a circle with people you trust</p>
                 </motion.div>
               </motion.div>
             </div>
             
+            {/* Step 1: Text on RIGHT */}
             <motion.div 
               className="order-2 md:order-2"
               initial={{ opacity: 0, x: 50 }}
@@ -572,9 +570,9 @@ function App() {
               </div>
             </motion.div>
             
-            {/* Step 2 */}
+            {/* Step 2: Text on LEFT */}
             <motion.div 
-              className="order-4 md:order-3"
+              className="order-3 md:order-3"
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
@@ -620,7 +618,8 @@ function App() {
               </ul>
             </motion.div>
             
-            <div className="order-3 md:order-4">
+            {/* Step 2: Image on RIGHT */}
+            <div className="order-4 md:order-4">
               <motion.div 
                 className="relative rounded-2xl overflow-hidden image-reveal hover-lift shadow-lg"
                 initial={{ opacity: 0 }}
@@ -631,34 +630,31 @@ function App() {
                   y: -10,
                   boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
                 }}
+                style={{ background: `url('/images/makecontributions.jpg') center/cover no-repeat` }}
               >
-                <img 
-                  src="/images/makecontributions.jpg" 
-                  alt="Making contributions" 
-                  className="w-full h-[400px] object-cover"
-                />
+                <div className="w-full h-[400px]"></div>
                 <motion.div 
-                  className="absolute inset-0 bg-gradient-to-t from-background to-transparent"
+                  className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
                   viewport={{ once: true }}
                 />
                 <motion.div 
-                  className="absolute bottom-0 left-0 right-0 p-6"
+                  className="absolute bottom-0 left-0 right-0 p-6 z-10"
                   initial={{ y: 50, opacity: 0 }}
                   whileInView={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.8 }}
                   viewport={{ once: true }}
                 >
-                  <span className="inline-block bg-[hsl(var(--gold))/10] text-[hsl(var(--gold))] text-sm font-bold px-3 py-1 rounded-full mb-3">Step 2</span>
-                  <h3 className="text-white text-2xl font-serif font-semibold mb-2">Make Contributions</h3>
-                  <p className="text-white/80">Regular payments build your community fund</p>
+                  <span className="inline-block bg-[hsl(var(--gold))] text-black font-bold px-3 py-1 rounded-full mb-3 text-sm shadow-md">Step 2</span>
+                  <h3 className="text-white text-2xl font-serif font-semibold mb-2 drop-shadow-md">Make Contributions</h3>
+                  <p className="text-white/90 drop-shadow-md font-medium">Regular payments build your community fund</p>
                 </motion.div>
               </motion.div>
             </div>
             
-            {/* Step 3 */}
+            {/* Step 3: Image on LEFT */}
             <div className="order-5 md:order-5">
               <motion.div 
                 className="relative rounded-2xl overflow-hidden image-reveal hover-lift shadow-lg"
@@ -670,33 +666,31 @@ function App() {
                   y: -10,
                   boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
                 }}
+                style={{ background: `url('/images/fairdistribution.jpg') center/cover no-repeat` }}
               >
-                <img 
-                  src="/images/fairdistribution.jpg" 
-                  alt="Receiving funds" 
-                  className="w-full h-[400px] object-cover"
-                />
+                <div className="w-full h-[400px]"></div>
                 <motion.div 
-                  className="absolute inset-0 bg-gradient-to-t from-background to-transparent"
+                  className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
                   viewport={{ once: true }}
                 />
                 <motion.div 
-                  className="absolute bottom-0 left-0 right-0 p-6"
+                  className="absolute bottom-0 left-0 right-0 p-6 z-10"
                   initial={{ y: 50, opacity: 0 }}
                   whileInView={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.8 }}
                   viewport={{ once: true }}
                 >
-                  <span className="inline-block bg-[hsl(var(--forest))/10] text-[hsl(var(--forest))] text-sm font-bold px-3 py-1 rounded-full mb-3">Step 3</span>
-                  <h3 className="text-white text-2xl font-serif font-semibold mb-2">Receive Your Payout</h3>
-                  <p className="text-white/80">Get the full pool when it's your turn</p>
+                  <span className="inline-block bg-[hsl(var(--forest))] text-white font-bold px-3 py-1 rounded-full mb-3 text-sm shadow-md">Step 3</span>
+                  <h3 className="text-white text-2xl font-serif font-semibold mb-2 drop-shadow-md">Receive Your Payout</h3>
+                  <p className="text-white/90 drop-shadow-md font-medium">Get the full pool when it's your turn</p>
                 </motion.div>
               </motion.div>
             </div>
             
+            {/* Step 3: Text on RIGHT */}
             <motion.div 
               className="order-6 md:order-6"
               initial={{ opacity: 0, x: 50 }}
@@ -707,8 +701,8 @@ function App() {
               <span className="text-[hsl(var(--forest))] font-mono text-sm tracking-wider">03 — RECEIVE</span>
               <h3 className="text-3xl font-serif font-semibold mb-6 mt-2">Fair Distribution</h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Each cycle, one member receives the entire pool through a transparent selection process,
-                until everyone has had their turn.
+                Each cycle, one member receives the entire pool through a 
+                transparent selection process, until everyone has had their turn.
               </p>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
@@ -758,9 +752,10 @@ function App() {
           </div>
         </div>
       </section>
+
       {/* Testimonials Section */}
       <section ref={testimonialsRef} className="py-24 relative overflow-hidden" id="testimonials">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5 -z-10" />
         <div className="container mx-auto px-4 py-12 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -852,7 +847,7 @@ function App() {
                     alt={circle.name}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                   <div className="absolute bottom-4 left-4">
                     <h3 className="text-xl font-display font-semibold text-white">{circle.name}</h3>
                   </div>
