@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { Button } from "./components/ui/button";
 import { 
-  ArrowRight, ChevronDown, Menu, X, Globe, Check,
+  ArrowRight, Menu, X, Globe, Check,
   CircleDollarSign, ChevronRight, Twitter, Instagram, Github
 } from "lucide-react";
 
@@ -20,7 +20,7 @@ const heroBackgrounds = [
     imageUrl: '/images/financialempowerment.jpg',
     title: "Empower Your",
     subtitle: "Financial Future",
-    description: "Zero interest, zero fees. Just the power of community saving to help you reach your goals."
+    description: "Zero interest, zero hidden fees. Just the power of community saving to help you reach your goals."
   },
   {
     id: 3,
@@ -65,7 +65,7 @@ const activeCircles = [
     contribution: "$250 monthly",
     totalPool: "$3,000",
     nextDraw: "April 15, 2025",
-    imageUrl: "https://images.unsplash.com/photo-1484154218962-491adf1aa5ba?auto=format&fit=crop&w=500&q=80"
+    imageUrl: "/images/homerenovators.jpg"
   },
   {
     id: 2,
@@ -153,18 +153,22 @@ function App() {
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed w-full backdrop-blur-sm border-b border-border/40 z-50 transition-all duration-300">
+      <nav className="fixed w-full backdrop-blur-md bg-black/20 border-b border-white/10 z-50 transition-all duration-300">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <a href="#" className="text-2xl font-bold flex items-center">
-              <CircleDollarSign className="h-8 w-8 text-[hsl(var(--terracotta))]" />
-              <span className="ml-2 display-title text-gradient">KURI</span>
+              <div className="relative">
+                <CircleDollarSign className="h-9 w-9 text-[hsl(var(--gold))]" />
+                <div className="absolute inset-0 bg-white/20 blur-sm rounded-full -z-10"></div>
+              </div>
+              <span className="ml-2 font-serif font-bold tracking-wider text-white drop-shadow-md">KURI</span>
             </a>
             <div className="hidden md:flex items-center space-x-6">
-              <a href="#about" className="text-foreground/80 hover:text-foreground transition-colors">About</a>
-              <a href="#how-it-works" className="text-foreground/80 hover:text-foreground transition-colors">How It Works</a>
-              <a href="#testimonials" className="text-foreground/80 hover:text-foreground transition-colors">Testimonials</a>
-              <a href="#circles" className="text-foreground/80 hover:text-foreground transition-colors">Live Circles</a>
+              <a href="#about" className="text-white hover:text-white transition-colors font-medium drop-shadow-sm">About</a>
+              <a href="#how-it-works" className="text-white hover:text-white transition-colors font-medium drop-shadow-sm">How It Works</a>
+              <a href="#why-its-special" className="text-white hover:text-white transition-colors font-medium drop-shadow-sm">Why It's Special</a>
+              <a href="#testimonials" className="text-white hover:text-white transition-colors font-medium drop-shadow-sm">Testimonials</a>
+              <a href="#circles" className="text-white hover:text-white transition-colors font-medium drop-shadow-sm">Live Circles</a>
             </div>
           </div>
           <div className="hidden md:flex items-center space-x-4">
@@ -176,7 +180,7 @@ function App() {
             </Button>
           </div>
           <button 
-            className="md:hidden text-foreground p-1"
+            className="md:hidden text-white p-1"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X /> : <Menu />}
@@ -190,13 +194,14 @@ function App() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-background/95 backdrop-blur-md border-b border-border/40"
+              className="md:hidden bg-black/90 backdrop-blur-md border-b border-white/10"
             >
               <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-                <a href="#about" className="py-2 text-foreground/80 hover:text-foreground transition-colors">About</a>
-                <a href="#how-it-works" className="py-2 text-foreground/80 hover:text-foreground transition-colors">How It Works</a>
-                <a href="#testimonials" className="py-2 text-foreground/80 hover:text-foreground transition-colors">Testimonials</a>
-                <a href="#circles" className="py-2 text-foreground/80 hover:text-foreground transition-colors">Live Circles</a>
+                <a href="#about" className="py-2 text-white hover:text-white transition-colors font-medium">About</a>
+                <a href="#how-it-works" className="py-2 text-white hover:text-white transition-colors font-medium">How It Works</a>
+                <a href="#why-its-special" className="py-2 text-white hover:text-white transition-colors font-medium">Why It's Special</a>
+                <a href="#testimonials" className="py-2 text-white hover:text-white transition-colors font-medium">Testimonials</a>
+                <a href="#circles" className="py-2 text-white hover:text-white transition-colors font-medium">Live Circles</a>
                 <div className="flex flex-col space-y-2 pt-2">
                   <Button variant="outline" size="sm" className="w-full border-border/60 hover:border-border">
                     Log In
@@ -229,7 +234,7 @@ function App() {
         ))}
         
         {/* Fixed content card that stays in place */}
-        <div className="container mx-auto slider-content">
+        <div className="container mx-auto px-4 py-8 slider-content">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ 
@@ -264,7 +269,7 @@ function App() {
                       className="h-full"
                     >
                       {/* Culturally-inspired typography with modern layout */}
-                      <div className="mb-2 text-[hsl(var(--gold))] font-sans uppercase tracking-widest text-sm">
+                      <div className="mb-2 text-[hsl(var(--gold))] font-sans uppercase tracking-widest text-sm font-semibold drop-shadow-sm brightness-125">
                         Community-Powered Finance
                       </div>
                       
@@ -295,7 +300,7 @@ function App() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.6, delay: 0.4 }}
-                        className="text-base md:text-lg font-sans text-white/80 mb-10 max-w-xl"
+                        className="text-base md:text-lg font-sans text-white/95 mb-10 max-w-xl font-medium drop-shadow-sm"
                       >
                         {heroBackgrounds[activeSlide].description}
                       </motion.p>
@@ -361,14 +366,14 @@ function App() {
         </div>
         
         {/* Scroll indicator */}
-        <motion.div 
+        {/* <motion.div 
           className="absolute bottom-12 right-12 hidden md:flex flex-col items-center text-white/80"
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
           <span className="text-sm mb-2 rotate-90 origin-left">Scroll</span>
           <ChevronDown size={20} />
-        </motion.div>
+        </motion.div> */}
         
         {/* Decorative elements */}
         <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full border border-white/20 rotating-circle opacity-70"></div>
@@ -376,10 +381,10 @@ function App() {
       </section>
 
       {/* About Section */}
-      <section ref={aboutRef} className="py-24 relative overflow-hidden" id="about">
+      <section ref={aboutRef} className="py-16 relative overflow-hidden" id="about">
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
-        <div className="container mx-auto px-4 py-12 relative">
-          <div className="text-center mb-16">
+        <div className="container mx-auto px-4 py-8 relative">
+          <div className="text-center mb-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -445,11 +450,136 @@ function App() {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section ref={howItWorksRef} className="py-24 bg-sand/30 relative overflow-hidden" id="how-it-works">
+      {/* Why It's Special Section */}
+      <section id="why-its-special" className="py-16 bg-sand/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
-        <div className="container mx-auto px-4 py-12 relative">
-          <div className="text-center mb-16">
+        <div className="container mx-auto px-4 py-8 relative">
+          <div className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <span className="text-[hsl(var(--terracotta))] font-mono text-sm tracking-wider uppercase">What makes Kuri different</span>
+              <h2 className="text-4xl font-serif font-semibold mb-4 relative inline-block">
+                <span className="relative z-10">Why It's Special</span>
+                <motion.div 
+                  className="absolute -bottom-3 left-0 h-3 bg-[hsl(var(--terracotta))]/30 w-full"
+                  initial={{ width: 0 }}
+                  whileInView={{ width: '100%' }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  viewport={{ once: true }}
+                />
+              </h2>
+              <p className="max-w-2xl mx-auto text-lg text-muted-foreground mt-6">
+                Kuri combines ancient community finance traditions with modern technology to create something truly unique.
+              </p>
+            </motion.div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 max-w-6xl mx-auto">
+            {/* Feature 1 */}
+            <motion.div 
+              className="flex flex-col items-center text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-28 h-28 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
+                <img 
+                  src="/images/zeroInterest.jpg" 
+                  alt="Zero interest" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-serif font-medium mb-3">Zero-interest,<br />Zero-shame</h3>
+              <p className="text-muted-foreground">No predatory fees or interest rates. Just people helping people achieve financial goals together.</p>
+            </motion.div>
+            
+            {/* Feature 2 */}
+            <motion.div 
+              className="flex flex-col items-center text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-28 h-28 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
+                <img 
+                  src="/images/trustvibe.jpg" 
+                  alt="Trust based" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-serif font-medium mb-3">Trust-based<br />with optional privacy</h3>
+              <p className="text-muted-foreground">Built on community trust with flexible privacy options to suit your comfort level.</p>
+            </motion.div>
+            
+            {/* Feature 3 */}
+            <motion.div 
+              className="flex flex-col items-center text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-28 h-28 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
+                <img 
+                  src="/images/communityvibe.jpg" 
+                  alt="Community owned" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-serif font-medium mb-3">Community-<br />owned vibe</h3>
+              <p className="text-muted-foreground">Created by and for communities, with decisions made collectively by members.</p>
+            </motion.div>
+            
+            {/* Feature 4 */}
+            <motion.div 
+              className="flex flex-col items-center text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-28 h-28 rounded-full bg-[hsl(var(--terracotta))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
+                <img 
+                  src="/images/fairplay.jpg" 
+                  alt="Fair raffles" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-serif font-medium mb-3">Fair, verifiable<br />raffles</h3>
+              <p className="text-muted-foreground">Transparent selection process ensures everyone gets their turn, verified on blockchains trustless.</p>
+            </motion.div>
+          </div>
+          
+          <motion.div 
+            className="mt-16 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Button 
+              size="lg" 
+              rounded="full"
+              className="bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))] group"
+            >
+              Learn More About Our Approach
+              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section ref={howItWorksRef} className="py-16 bg-sand/30 relative overflow-hidden" id="how-it-works">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
+        <div className="container mx-auto px-4 py-8 relative">
+          <div className="text-center mb-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -457,7 +587,7 @@ function App() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl font-serif font-semibold mb-4 relative inline-block">
-                <span className="relative z-10">Why It's Special</span>
+                <span className="relative z-10">How It Works</span>
                 <motion.div 
                   className="absolute -bottom-3 left-0 h-3 bg-[hsl(var(--terracotta))/30] w-full"
                   initial={{ width: 0 }}
@@ -562,7 +692,7 @@ function App() {
                   variant="terracotta" 
                   size="lg" 
                   rounded="full"
-                  className="group bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))/90] text-white"
+                  className="group bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))]"
                 >
                   Start Your Circle
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -754,78 +884,80 @@ function App() {
       </section>
 
       {/* Testimonials Section */}
-      <section ref={testimonialsRef} className="py-24 relative overflow-hidden" id="testimonials">
+      <section ref={testimonialsRef} className="py-16 relative overflow-hidden" id="testimonials">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5 -z-10" />
-        <div className="container mx-auto px-4 py-12 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <blockquote className="text-center max-w-4xl mx-auto">
-              <AnimatePresence mode="wait">
-                <motion.div 
-                  key={activeTestimonial}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className="relative"
-                >
-                  <div className="mb-8 relative">
-                    <motion.img
-                      src={testimonials[activeTestimonial].imageUrl}
-                      alt={testimonials[activeTestimonial].name}
-                      className="w-20 h-20 rounded-full mx-auto mb-6 border-4 border-terracotta/20 object-cover shadow-lg"
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.5 }}
+        <div className="container mx-auto px-4 py-8 relative">
+          <div className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <blockquote className="text-center max-w-4xl mx-auto">
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={activeTestimonial}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative"
+                  >
+                    <div className="mb-8 relative">
+                      <motion.img
+                        src={testimonials[activeTestimonial].imageUrl}
+                        alt={testimonials[activeTestimonial].name}
+                        className="w-20 h-20 rounded-full mx-auto mb-6 border-4 border-terracotta/20 object-cover shadow-lg"
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
+                    <motion.p 
+                      className="text-2xl font-sans text-muted-foreground mb-8 italic"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      "{testimonials[activeTestimonial].quote}"
+                    </motion.p>
+                    <motion.footer 
+                      className="font-mono text-sm"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      <cite>{testimonials[activeTestimonial].name} · {testimonials[activeTestimonial].role}</cite>
+                    </motion.footer>
+                  </motion.div>
+                </AnimatePresence>
+                
+                {/* Testimonial navigation dots */}
+                <div className="flex justify-center mt-8 space-x-2">
+                  {testimonials.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setActiveTestimonial(index)}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        activeTestimonial === index 
+                          ? "bg-[hsl(var(--terracotta))] w-4" 
+                          : "bg-[hsl(var(--terracotta))/30]"
+                      }`}
+                      aria-label={`View testimonial ${index + 1}`}
                     />
-                  </div>
-                  <motion.p 
-                    className="text-2xl font-sans text-muted-foreground mb-8 italic"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                  >
-                    "{testimonials[activeTestimonial].quote}"
-                  </motion.p>
-                  <motion.footer 
-                    className="font-mono text-sm"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                  >
-                    <cite>{testimonials[activeTestimonial].name} · {testimonials[activeTestimonial].role}</cite>
-                  </motion.footer>
-                </motion.div>
-              </AnimatePresence>
-              
-              {/* Testimonial navigation dots */}
-              <div className="flex justify-center mt-8 space-x-2">
-                {testimonials.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveTestimonial(index)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      activeTestimonial === index 
-                        ? "bg-[hsl(var(--terracotta))] w-4" 
-                        : "bg-[hsl(var(--terracotta))/30]"
-                    }`}
-                    aria-label={`View testimonial ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </blockquote>
-          </motion.div>
+                  ))}
+                </div>
+              </blockquote>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Live Circles Section */}
-      <section ref={liveCirclesRef} className="py-24 bg-sand/30" id="circles">
-        <div className="container mx-auto px-4 py-12">
-          <div className="text-center mb-16">
+      <section ref={liveCirclesRef} className="py-16 bg-sand/30" id="circles">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-display font-semibold mb-4">Live Circles</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Join one of our active circles or create your own to start your saving journey.
@@ -882,12 +1014,12 @@ function App() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden">
+      <section className="py-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-terracotta/10" />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] gradient-blur" />
         </div>
-        <div className="container mx-auto px-4 py-12 relative">
+        <div className="container mx-auto px-4 py-8 relative">
           <div className="bg-background/80 backdrop-blur-md p-12 rounded-2xl max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-display font-semibold mb-6">Ready to Start Your Circle?</h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -907,9 +1039,9 @@ function App() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[hsl(var(--ochre))/20] py-16 bg-[hsl(var(--terracotta))] relative text-white">
+      <footer className="border-t border-[hsl(var(--ochre))/20] py-8 bg-[hsl(var(--terracotta))] relative text-white">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-center bg-no-repeat bg-cover opacity-10" />
-        <div className="container mx-auto px-4 py-12 relative">
+        <div className="container mx-auto px-4 py-4 relative">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center mb-6">
@@ -952,9 +1084,9 @@ function App() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-[hsl(var(--ochre))/20] mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <div className="border-t border-[hsl(var(--ochre))/20] mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-white/80">&copy; 2025 Kuri. All rights reserved.</p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            <div className="flex space-x-6 mt-2 md:mt-0">
               <a href="#" className="text-sm text-white/80 hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="text-sm text-white/80 hover:text-white transition-colors">Terms of Service</a>
               <a href="#" className="text-sm text-white/80 hover:text-white transition-colors">Cookie Policy</a>
