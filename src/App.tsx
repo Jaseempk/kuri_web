@@ -10,24 +10,49 @@ import {
 const heroBackgrounds = [
   {
     id: 1,
-    imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=2000&q=80',
+    imageUrl: '/images/trust.jpg',
     title: "The heart of",
     subtitle: "Kuri",
     description: "Kuri is inspired by global saving circles - from chit funds in India, to tandas in Mexico, to susus in West Africa."
   },
   {
     id: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=2000&q=80',
+    imageUrl: '/images/financialempowerment.jpg',
     title: "Empower Your",
     subtitle: "Financial Future",
     description: "Zero interest, zero fees. Just the power of community saving to help you reach your goals."
   },
   {
     id: 3,
-    imageUrl: 'https://images.unsplash.com/photo-1556484687-30636164638b?auto=format&fit=crop&w=2000&q=80',
+    imageUrl: '/images/kate-bezzubets-z7btlKrdmrI-unsplash.jpg',
     title: "Transparent",
     subtitle: "& Trustworthy",
     description: "We've turned tradition into joyful, interest-free finance."
+  }
+];
+
+// Testimonial data
+const testimonials = [
+  {
+    id: 1,
+    name: "Sarah Johnson",
+    role: "Small Business Owner",
+    quote: "Kuri helped me save for my business expansion without taking on debt. The community aspect made the journey enjoyable rather than stressful.",
+    imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    id: 2,
+    name: "Michael Chen",
+    role: "Freelance Designer",
+    quote: "As someone with irregular income, Kuri circles gave me the structure I needed to save consistently. It's changed my financial habits completely.",
+    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    id: 3,
+    name: "Aisha Okafor",
+    role: "Healthcare Worker",
+    quote: "My grandmother used to participate in susus back home. Kuri brings that tradition into the digital age while keeping the community spirit alive.",
+    imageUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=400&q=80"
   }
 ];
 
@@ -66,6 +91,7 @@ function App() {
   // State for navigation
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
   
   // Refs for sections
   const heroRef = useRef(null);
@@ -84,6 +110,15 @@ function App() {
     }, 5000);
     
     return () => clearInterval(interval);
+  }, []);
+  
+  // Testimonial rotation
+  useEffect(() => {
+    const testimonialInterval = setInterval(() => {
+      setActiveTestimonial((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
+    }, 6000);
+    
+    return () => clearInterval(testimonialInterval);
   }, []);
   
   // Scroll-based animations
@@ -342,7 +377,7 @@ function App() {
 
       {/* About Section */}
       <section ref={aboutRef} className="py-24 relative overflow-hidden" id="about">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
         <div className="container mx-auto px-4 py-12 relative">
           <div className="text-center mb-16">
             <motion.div
@@ -453,7 +488,7 @@ function App() {
                 }}
               >
                 <img 
-                  src="https://images.unsplash.com/photo-1517245386807-bb43f82c976d?auto=format&fit=crop&w=800&q=80" 
+                  src="/images/joinyourcircle.jpg" 
                   alt="People joining a circle" 
                   className="w-full h-[400px] object-cover"
                 />
@@ -598,7 +633,7 @@ function App() {
                 }}
               >
                 <img 
-                  src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=800&q=80" 
+                  src="/images/makecontributions.jpg" 
                   alt="Making contributions" 
                   className="w-full h-[400px] object-cover"
                 />
@@ -637,7 +672,7 @@ function App() {
                 }}
               >
                 <img 
-                  src="https://images.unsplash.com/photo-1579621970795-bb43f82c976d?auto=format&fit=crop&w=800&q=80" 
+                  src="/images/fairdistribution.jpg" 
                   alt="Receiving funds" 
                   className="w-full h-[400px] object-cover"
                 />
@@ -721,6 +756,74 @@ function App() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+      {/* Testimonials Section */}
+      <section ref={testimonialsRef} className="py-24 relative overflow-hidden" id="testimonials">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
+        <div className="container mx-auto px-4 py-12 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <blockquote className="text-center max-w-4xl mx-auto">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={activeTestimonial}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="relative"
+                >
+                  <div className="mb-8 relative">
+                    <motion.img
+                      src={testimonials[activeTestimonial].imageUrl}
+                      alt={testimonials[activeTestimonial].name}
+                      className="w-20 h-20 rounded-full mx-auto mb-6 border-4 border-terracotta/20 object-cover shadow-lg"
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+                  <motion.p 
+                    className="text-2xl font-sans text-muted-foreground mb-8 italic"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    "{testimonials[activeTestimonial].quote}"
+                  </motion.p>
+                  <motion.footer 
+                    className="font-mono text-sm"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                  >
+                    <cite>{testimonials[activeTestimonial].name} · {testimonials[activeTestimonial].role}</cite>
+                  </motion.footer>
+                </motion.div>
+              </AnimatePresence>
+              
+              {/* Testimonial navigation dots */}
+              <div className="flex justify-center mt-8 space-x-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveTestimonial(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      activeTestimonial === index 
+                        ? "bg-[hsl(var(--terracotta))] w-4" 
+                        : "bg-[hsl(var(--terracotta))/30]"
+                    }`}
+                    aria-label={`View testimonial ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </blockquote>
+          </motion.div>
         </div>
       </section>
 
