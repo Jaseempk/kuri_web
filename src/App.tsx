@@ -6,7 +6,6 @@ import {
   Menu,
   X,
   Check,
-  CircleDollarSign,
   ChevronRight,
   Twitter,
   Instagram,
@@ -182,12 +181,12 @@ function App() {
           <div className="flex items-center gap-8">
             <a href="#" className="text-2xl font-bold flex items-center">
               <div className="relative">
-                <CircleDollarSign className="h-9 w-9 text-[hsl(var(--gold))]" />
-                <div className="absolute inset-0 bg-white/20 blur-sm rounded-full -z-10"></div>
+                <div className="flex items-center">
+                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">K</span>
+                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">URI</span>
+                  <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
+                </div>
               </div>
-              <span className="ml-2 font-serif font-bold tracking-wider text-white drop-shadow-md">
-                KURI
-              </span>
             </a>
             <div className="hidden md:flex items-center space-x-6">
               <a
@@ -469,12 +468,75 @@ function App() {
         {/* Decorative elements */}
         <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full border border-white/20 rotating-circle opacity-70"></div>
         <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full border border-white/10 rotating-circle-reverse opacity-50"></div>
+
+        {/* Section transition blend effect */}
+        <div className="absolute bottom-0 left-0 right-0 h-48 overflow-hidden">
+          {/* Multiple wave layers with increasing opacity */}
+          <svg
+            className="absolute bottom-0 w-full h-full"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1440 320"
+            preserveAspectRatio="none"
+            style={{ transform: 'translateY(10%)' }}
+          >
+            <path
+              fill="hsl(var(--sand))"
+              fillOpacity="0.3"
+              d="M0,128L48,144C96,160,192,192,288,186.7C384,181,480,139,576,138.7C672,139,768,181,864,202.7C960,224,1056,224,1152,202.7C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            ></path>
+          </svg>
+          
+          <svg
+            className="absolute bottom-0 w-full h-full"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1440 320"
+            preserveAspectRatio="none"
+            style={{ transform: 'translateY(20%)' }}
+          >
+            <path
+              fill="hsl(var(--sand))"
+              fillOpacity="0.5"
+              d="M0,160L48,149.3C96,139,192,117,288,117.3C384,117,480,139,576,165.3C672,192,768,224,864,218.7C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            ></path>
+          </svg>
+          
+          <svg
+            className="absolute bottom-0 w-full h-full"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1440 320"
+            preserveAspectRatio="none"
+            style={{ transform: 'translateY(30%)' }}
+          >
+            <path
+              fill="hsl(var(--sand))"
+              fillOpacity="0.7"
+              d="M0,192L48,181.3C96,171,192,149,288,154.7C384,160,480,192,576,192C672,192,768,160,864,154.7C960,149,1056,171,1152,181.3C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            ></path>
+          </svg>
+          
+          {/* Final solid wave for complete transition */}
+          <svg
+            className="absolute bottom-0 w-full h-full"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1440 320"
+            preserveAspectRatio="none"
+          >
+            <path
+              fill="hsl(var(--sand))"
+              fillOpacity="0.9"
+              d="M0,224L48,229.3C96,235,192,245,288,240C384,235,480,213,576,213.3C672,213,768,235,864,234.7C960,235,1056,213,1152,202.7C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            ></path>
+          </svg>
+          
+          {/* Gradient overlay for smoother transition */}
+          <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-b from-transparent via-[hsl(var(--sand))/20] to-[hsl(var(--sand))]"></div>
+        </div>
       </section>
 
       {/* About Section */}
       <section
         ref={aboutRef}
-        className="py-16 relative overflow-hidden"
+        className="py-16 relative overflow-hidden bg-[hsl(var(--sand))]"
         id="about"
       >
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
@@ -1252,10 +1314,11 @@ function App() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center mb-6">
-                <CircleDollarSign className="h-8 w-8 text-white" />
-                <span className="ml-2 text-2xl font-bold text-white">
-                  <span className="font-serif">KURI</span>
-                </span>
+                <div className="relative flex items-center">
+                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">K</span>
+                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">URI</span>
+                  <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
+                </div>
               </div>
               <p className="text-white/80 max-w-md mb-6">
                 Built with care for circles that matter. Bringing ancestral
