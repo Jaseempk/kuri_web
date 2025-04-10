@@ -230,38 +230,43 @@ function App() {
             <div className="hidden md:flex items-center space-x-6">
               <button
                 onClick={() => scrollToSection('about')}
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to About section"
               >
                 About
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('how-it-works')}
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to How It Works section"
               >
                 How It Works
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('why-its-special')}
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Why It's Special section"
               >
                 Why It's Special
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('testimonials')}
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Testimonials section"
               >
                 Testimonials
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button
                 onClick={() => scrollToSection('circles')}
-                className="text-white hover:text-white transition-colors font-medium drop-shadow-sm cursor-pointer"
+                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Live Circles section"
               >
                 Live Circles
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
             </div>
           </div>
@@ -302,38 +307,43 @@ function App() {
               <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
                 <button
                   onClick={() => scrollToSection('about')}
-                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to About section"
                 >
                   About
+                  <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
                   onClick={() => scrollToSection('how-it-works')}
-                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to How It Works section"
                 >
                   How It Works
+                  <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
                   onClick={() => scrollToSection('why-its-special')}
-                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to Why It's Special section"
                 >
                   Why It's Special
+                  <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
                   onClick={() => scrollToSection('testimonials')}
-                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to Testimonials section"
                 >
                   Testimonials
+                  <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <button
                   onClick={() => scrollToSection('circles')}
-                  className="py-2 text-white hover:text-white transition-colors font-medium cursor-pointer"
+                  className="py-2 text-white hover:text-[hsl(var(--gold))] transition-all font-medium cursor-pointer relative group w-full text-left"
                   aria-label="Navigate to Live Circles section"
                 >
                   Live Circles
+                  <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <div className="flex flex-col space-y-2 pt-2">
                   <Button
