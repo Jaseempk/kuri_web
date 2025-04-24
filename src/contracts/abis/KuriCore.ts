@@ -331,4 +331,73 @@ export const KuriCoreABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
+  {
+    inputs: [],
+    name: "kuriData",
+    outputs: [
+      {
+        components: [
+          { name: "creator", type: "address", internalType: "address" },
+          { name: "kuriAmount", type: "uint64", internalType: "uint64" },
+          {
+            name: "totalParticipantsCount",
+            type: "uint16",
+            internalType: "uint16",
+          },
+          {
+            name: "totalActiveParticipantsCount",
+            type: "uint16",
+            internalType: "uint16",
+          },
+          { name: "intervalDuration", type: "uint24", internalType: "uint24" },
+          { name: "nexRaffleTime", type: "uint48", internalType: "uint48" },
+          {
+            name: "nextIntervalDepositTime",
+            type: "uint48",
+            internalType: "uint48",
+          },
+          { name: "launchPeriod", type: "uint48", internalType: "uint48" },
+          { name: "startTime", type: "uint48", internalType: "uint48" },
+          { name: "endTime", type: "uint48", internalType: "uint48" },
+          {
+            name: "intervalType",
+            type: "uint8",
+            internalType: "enum KuriCore.IntervalType",
+          },
+          {
+            name: "state",
+            type: "uint8",
+            internalType: "enum KuriCore.KuriState",
+          },
+        ],
+        internalType: "struct KuriCore.Kuri",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "initialiseKuri",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "userInstallmentDeposit",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { name: "_intervalIndex", type: "uint16", internalType: "uint16" },
+    ],
+    name: "claimKuriAmount",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ] as const;

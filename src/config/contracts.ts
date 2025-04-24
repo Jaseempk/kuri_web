@@ -48,3 +48,6 @@ export const getSupportedChainIds = (): number[] => {
 export const isChainSupported = (chainId: number): boolean => {
   return chainId in NETWORK_CONFIG;
 };
+
+export const KURI_CONTRACT_ADDRESS =
+  "0x0000000000000000000000000000000000000000" as const;

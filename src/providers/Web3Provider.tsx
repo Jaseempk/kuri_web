@@ -6,8 +6,7 @@ import { ReactNode, useEffect } from "react";
 
 // Create a more resilient transport with retries and longer timeout
 const transport = http(
-  process.env.NEXT_PUBLIC_RPC_URL ||
-    "https://api.developer.coinbase.com/rpc/v1/base-sepolia/DBytHtVTEsZ9VhQE0Zx7WvomGHot4hTI",
+  "https://api.developer.coinbase.com/rpc/v1/base-sepolia/DBytHtVTEsZ9VhQE0Zx7WvomGHot4hTI",
   {
     timeout: 30000, // 30 seconds
     retryCount: 3,
@@ -18,9 +17,7 @@ const transport = http(
 const config = createConfig(
   getDefaultConfig({
     appName: "Kuri Finance",
-    walletConnectProjectId:
-      process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
-      "b1647c589ac18a28722c490d2f840895",
+    walletConnectProjectId: "b1647c589ac18a28722c490d2f840895",
     chains: [baseSepolia],
     transports: {
       [baseSepolia.id]: transport,
