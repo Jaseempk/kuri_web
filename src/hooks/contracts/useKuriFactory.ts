@@ -23,7 +23,7 @@ export const useKuriFactory = () => {
   // Initialize new Kuri market
   const initialiseKuriMarket = useCallback(
     async (
-      kuriAmount: number,
+      kuriAmount: bigint,
       participantCount: number,
       intervalType: 0 | 1
     ) => {
@@ -36,7 +36,7 @@ export const useKuriFactory = () => {
           address: factoryAddress,
           abi: KuriFactoryABI,
           functionName: "initialiseKuriMarket",
-          args: [BigInt(kuriAmount), participantCount, intervalType],
+          args: [kuriAmount, participantCount, intervalType],
         });
 
         // If simulation succeeds, send the transaction
