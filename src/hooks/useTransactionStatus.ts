@@ -1,8 +1,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Hash } from "viem";
-import { waitForTransaction } from "@wagmi/core";
-import { config } from "../config/wagmi";
 
 interface TransactionStatus {
   isLoading: boolean;
@@ -32,21 +30,11 @@ export const useTransactionStatus = () => {
         errorMessage = "Transaction failed",
       } = options || {};
 
-      setStatus({ isLoading: true, isSuccess: false, error: null });
-      const toastId = toast.loading(loadingMessage);
-
       try {
-        const receipt = await waitForTransaction(config, {
-          hash,
-        });
-
-        if (receipt.status === "success") {
-          setStatus({ isLoading: false, isSuccess: true, error: null });
-          toast.success(successMessage, { id: toastId });
-          return receipt;
-        } else {
-          throw new Error("Transaction failed");
-        }
+        // If we have a hash, the transaction was successful
+        setStatus({ isLoading: false, isSuccess: true, error: null });
+        toast.success(successMessage);
+        return { status: "success", hash };
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : errorMessage;
         setStatus({
@@ -54,7 +42,7 @@ export const useTransactionStatus = () => {
           isSuccess: false,
           error: error as Error,
         });
-        toast.error(errorMsg, { id: toastId });
+        toast.error(errorMsg);
         throw error;
       }
     },

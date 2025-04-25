@@ -179,19 +179,6 @@ export default function MarketList() {
                 </div>
               </div>
             </div>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="px-6 py-2 text-sm bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full">
-                  Create a Circle
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Circle</DialogTitle>
-                </DialogHeader>
-                <CreateMarketForm />
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
       </section>
@@ -200,20 +187,6 @@ export default function MarketList() {
       <section className="mb-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Active Circles</h2>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                New Circle
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Create New Circle</DialogTitle>
-              </DialogHeader>
-              <CreateMarketForm />
-            </DialogContent>
-          </Dialog>
         </div>
         {activeMarkets.length === 0 ? (
           <div className="text-center py-12 bg-muted rounded-lg">

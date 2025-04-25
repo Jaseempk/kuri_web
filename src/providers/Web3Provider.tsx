@@ -6,7 +6,7 @@ import { ReactNode, useEffect, useState } from "react";
 
 // Create a more resilient transport with retries and longer timeout
 const transport = http(
-  "https://api.developer.coinbase.com/rpc/v1/base-sepolia/DBytHtVTEsZ9VhQE0Zx7WvomGHot4hTI",
+  "https://base-sepolia.g.alchemy.com/v2/txntl9XYKWyIkkmj1p0JcecUKxqt9327",
   {
     timeout: 30000, // 30 seconds
     retryCount: 3,
@@ -14,7 +14,7 @@ const transport = http(
   }
 );
 
-const config = createConfig(
+export const config = createConfig(
   getDefaultConfig({
     appName: "Kuri Finance",
     walletConnectProjectId: "b1647c589ac18a28722c490d2f840895",

@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
 import { LoadingSkeleton } from "../ui/loading-states";
-import { parseEther } from "viem";
+import { parseUnits } from "viem";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 
 interface FormData {
-  kuriAmount: string;
+  totalAmount: string;
   participantCount: string;
   intervalType: "0" | "1"; // 0 for WEEKLY, 1 for MONTHLY
 }
@@ -23,7 +23,7 @@ export const CreateMarketForm = ({
   onClose,
 }: CreateMarketFormProps) => {
   const [formData, setFormData] = useState<FormData>({
-    kuriAmount: "",
+    totalAmount: "",
     participantCount: "",
     intervalType: "1", // Default to Monthly
   });
@@ -31,6 +31,15 @@ export const CreateMarketForm = ({
 
   const { initialiseKuriMarket, isCreating, isCreationSuccess } =
     useKuriFactory();
+
+  // Calculate monthly contribution per participant
+  const monthlyContribution = useMemo(() => {
+    if (!formData.totalAmount || !formData.participantCount) return "0";
+    const total = parseFloat(formData.totalAmount);
+    const participants = parseInt(formData.participantCount);
+    if (isNaN(total) || isNaN(participants) || participants === 0) return "0";
+    return (total / participants).toFixed(2);
+  }, [formData.totalAmount, formData.participantCount]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -41,16 +50,16 @@ export const CreateMarketForm = ({
   };
 
   const validateForm = (): boolean => {
-    if (!formData.kuriAmount || Number(formData.kuriAmount) <= 0) {
-      setError("Please enter a valid contribution amount");
+    if (!formData.totalAmount || Number(formData.totalAmount) <= 0) {
+      setError("Please enter a valid total amount");
       return false;
     }
     if (!formData.participantCount || Number(formData.participantCount) <= 0) {
       setError("Please enter the number of participants");
       return false;
     }
-    if (Number(formData.participantCount) > 25) {
-      setError("Maximum 25 participants allowed per circle");
+    if (Number(formData.participantCount) > 500) {
+      setError("Maximum 500 participants allowed per circle");
       return false;
     }
     return true;
@@ -62,7 +71,7 @@ export const CreateMarketForm = ({
 
     try {
       const tx = await initialiseKuriMarket(
-        parseEther(formData.kuriAmount),
+        parseUnits(monthlyContribution, 6), // USDC has 6 decimal places
         Number(formData.participantCount),
         Number(formData.intervalType) as 0 | 1
       );
@@ -89,20 +98,20 @@ export const CreateMarketForm = ({
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2">
-            Monthly Contribution (ETH)
+            Total Kuri Amount (USDC)
           </label>
           <input
             type="number"
-            name="kuriAmount"
-            value={formData.kuriAmount}
+            name="totalAmount"
+            value={formData.totalAmount}
             onChange={handleChange}
             className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent"
-            placeholder="0.1"
-            min="0.01"
-            step="0.01"
+            placeholder="1000"
+            min="100"
+            step="100"
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            This is the amount each participant will contribute per interval
+            This is the total amount anyone can win monthly
           </p>
         </div>
 
@@ -118,26 +127,55 @@ export const CreateMarketForm = ({
             className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent"
             placeholder="10"
             min="2"
-            max="25"
+            max="500"
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            Min: 2, Max: 25 participants
+            Min: 2, Max: 500 participants
           </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Monthly Deposit per Participant (USDC)
+          </label>
+          <input
+            type="text"
+            value={monthlyContribution}
+            readOnly
+            className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-[#F9F5F1] focus:outline-none cursor-not-allowed"
+          />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">
             Contribution Interval
           </label>
-          <select
-            name="intervalType"
-            value={formData.intervalType}
-            onChange={handleChange}
-            className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent"
-          >
-            <option value="1">Monthly</option>
-            <option value="0">Weekly</option>
-          </select>
+          <div className="relative">
+            <select
+              name="intervalType"
+              value={formData.intervalType}
+              onChange={handleChange}
+              className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent appearance-none cursor-pointer"
+            >
+              <option value="1">Monthly</option>
+              <option value="0">Weekly</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+              <svg
+                className="w-4 h-4 text-[#8B6F47]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
           <p className="mt-1 text-xs text-muted-foreground">
             How often participants will contribute
           </p>
@@ -166,7 +204,7 @@ export const CreateMarketForm = ({
           >
             {isCreating ? (
               <div className="flex items-center justify-center gap-2">
-                <LoadingSkeleton className="w-4 h-4 rounded-full" />
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
                 Creating...
               </div>
             ) : (
