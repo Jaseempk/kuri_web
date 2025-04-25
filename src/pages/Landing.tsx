@@ -449,7 +449,7 @@ function App() {
                   <Button
                     size="lg"
                     className="relative group overflow-hidden rounded-xl bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-14 px-8"
-                    onClick={() => navigate("/dapp")}
+                    onClick={() => navigate("/markets")}
                   >
                     <span className="relative z-20 flex items-center font-sans font-medium">
                       Create Your Circle
@@ -1348,11 +1348,19 @@ function App() {
               building stronger communities.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="xl" className="group">
+              <Button
+                size="xl"
+                className="group"
+                onClick={() => navigate("/markets")}
+              >
                 Create Your Circle
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button size="xl" variant="outline">
+              <Button
+                size="xl"
+                variant="outline"
+                onClick={() => navigate("/dapp")}
+              >
                 Join Existing Circle
               </Button>
             </div>

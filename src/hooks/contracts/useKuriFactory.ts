@@ -8,7 +8,6 @@ import {
 import { KuriFactoryABI } from "../../contracts/abis/KuriFactory";
 import { getContractAddress } from "../../config/contracts";
 import { handleContractError } from "../../utils/errors";
-import { parseEther } from "viem";
 import { config } from "../../config/wagmi";
 import { baseSepolia } from "viem/chains";
 import { useTransactionStatus } from "../useTransactionStatus";
@@ -21,9 +20,13 @@ export const useKuriFactory = () => {
   const { handleTransaction, isSuccess: isCreationSuccess } =
     useTransactionStatus();
 
-  // Create new Kuri with error handling
-  const createKuri = useCallback(
-    async (name: string, symbol: string, initialSupply: number) => {
+  // Initialize new Kuri market
+  const initialiseKuriMarket = useCallback(
+    async (
+      kuriAmount: number,
+      participantCount: number,
+      intervalType: 0 | 1
+    ) => {
       if (!account.address) throw new Error("Wallet not connected");
       setIsCreating(true);
 
@@ -32,8 +35,8 @@ export const useKuriFactory = () => {
         const { request } = await simulateContract(config, {
           address: factoryAddress,
           abi: KuriFactoryABI,
-          functionName: "createKuri",
-          args: [name, symbol, parseEther(initialSupply.toString())],
+          functionName: "initialiseKuriMarket",
+          args: [BigInt(kuriAmount), participantCount, intervalType],
         });
 
         // If simulation succeeds, send the transaction
@@ -56,44 +59,26 @@ export const useKuriFactory = () => {
     [account.address, factoryAddress, handleTransaction]
   );
 
-  // Get user's Kuri
-  const getUserKuri = useCallback(async () => {
-    if (!account.address) return null;
+  // Get all deployed Kuri markets
+  const getAllMarkets = useCallback(async () => {
     try {
-      return await readContract(config, {
-        address: factoryAddress,
-        abi: KuriFactoryABI,
-        functionName: "creatorToKuri",
-        args: [account.address],
-      });
-    } catch (error) {
-      console.error("Error fetching user Kuri:", error);
-      return null;
-    }
-  }, [account.address, factoryAddress]);
-
-  // Get all Kuris
-  const getAllKuris = useCallback(async () => {
-    try {
+      // Note: This will be replaced with subgraph query to get KuriMarketDeployed events
+      // For now, we'll use a direct contract call if available
       return await readContract(config, {
         address: factoryAddress,
         abi: KuriFactoryABI,
         functionName: "getAllKuris",
       });
     } catch (error) {
-      console.error("Error fetching all Kuris:", error);
+      console.error("Error fetching markets:", error);
       return [];
     }
   }, [factoryAddress]);
 
   return {
-    // Creation
-    createKuri,
+    initialiseKuriMarket,
+    getAllMarkets,
     isCreating,
     isCreationSuccess,
-
-    // Queries
-    getUserKuri,
-    getAllKuris,
   };
 };

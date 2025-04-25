@@ -67,3 +67,113 @@ export const USER_MARKETS_QUERY = gql`
     }
   }
 `;
+
+export const KURI_MARKETS_QUERY = gql`
+  query KuriMarkets {
+    kuriMarketDeployeds(orderBy: timestamp, orderDirection: desc) {
+      id
+      caller
+      marketAddress
+      intervalType
+      timestamp
+      blockTimestamp
+    }
+    kuriInitialiseds {
+      id
+      _kuriData_creator
+      _kuriData_kuriAmount
+      _kuriData_totalParticipantsCount
+      _kuriData_totalActiveParticipantsCount
+      _kuriData_intervalDuration
+      _kuriData_nexRaffleTime
+      _kuriData_nextIntervalDepositTime
+      _kuriData_launchPeriod
+      _kuriData_startTime
+      _kuriData_endTime
+      _kuriData_intervalType
+      _kuriData_state
+    }
+  }
+`;
+
+export const KURI_MARKET_DETAIL_QUERY = gql`
+  query KuriMarketDetail($marketAddress: String!) {
+    kuriInitialised(id: $marketAddress) {
+      id
+      _kuriData_creator
+      _kuriData_kuriAmount
+      _kuriData_totalParticipantsCount
+      _kuriData_totalActiveParticipantsCount
+      _kuriData_intervalDuration
+      _kuriData_nexRaffleTime
+      _kuriData_nextIntervalDepositTime
+      _kuriData_state
+    }
+    userDepositeds(
+      where: { id_contains: $marketAddress }
+      orderBy: depositTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user
+      userIndex
+      intervalIndex
+      amountDeposited
+      depositTimestamp
+    }
+    raffleWinnerSelecteds(
+      where: { id_contains: $marketAddress }
+      orderBy: winnerTimestamp
+      orderDirection: desc
+    ) {
+      id
+      intervalIndex
+      winnerIndex
+      winnerAddress
+      winnerTimestamp
+    }
+    membershipRequesteds(where: { id_contains: $marketAddress }) {
+      id
+      user
+      timestamp
+    }
+    userAccepteds(where: { id_contains: $marketAddress }) {
+      id
+      user
+      _totalActiveParticipantsCount
+    }
+  }
+`;
+
+export const USER_ACTIVITY_QUERY = gql`
+  query UserActivity($userAddress: String!) {
+    membershipRequesteds(
+      where: { user: $userAddress }
+      orderBy: timestamp
+      orderDirection: desc
+    ) {
+      id
+      timestamp
+    }
+    userDepositeds(
+      where: { user: $userAddress }
+      orderBy: depositTimestamp
+      orderDirection: desc
+    ) {
+      id
+      intervalIndex
+      amountDeposited
+      depositTimestamp
+    }
+    kuriSlotClaimeds(
+      where: { user: $userAddress }
+      orderBy: timestamp
+      orderDirection: desc
+    ) {
+      id
+      timestamp
+      kuriAmount
+      intervalIndex
+    }
+  }
+`;

@@ -1,4 +1,4 @@
-import { sepolia } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 
 // Contract addresses for different networks
 interface ContractAddresses {
@@ -13,11 +13,11 @@ interface NetworkConfig {
 
 // Contract addresses per network
 const NETWORK_CONFIG: { [key: number]: NetworkConfig } = {
-  [sepolia.id]: {
+  [baseSepolia.id]: {
     addresses: {
       KuriFactory: "0x0000000000000000000000000000000000000000", // Replace with actual factory address
     },
-    chainId: sepolia.id,
+    chainId: baseSepolia.id,
   },
 };
 

@@ -9,11 +9,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Badge } from "../ui/badge";
-
-import {
-  useKuriCore,
-  MembershipStatus,
-} from "../../hooks/contracts/useKuriCore";
+import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
 import { config } from "../../config/wagmi";
 import { isUserRejection } from "../../utils/errors";
@@ -25,9 +21,7 @@ interface MarketCardProps {
 }
 
 export const MarketCard = ({ market }: MarketCardProps) => {
-  const [membershipStatus, setMembershipStatus] = useState<MembershipStatus>(
-    MembershipStatus.NONE
-  );
+  const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -47,9 +41,10 @@ export const MarketCard = ({ market }: MarketCardProps) => {
       if (!account.address) return;
       try {
         const status = await getMemberStatus(account.address);
-        setMembershipStatus(status);
+        setMembershipStatus(status ?? 0); // Ensure we always set a number, defaulting to 0 (NONE) if null
       } catch (err) {
         console.error("Error fetching member status:", err);
+        setMembershipStatus(0); // Set to NONE state on error
       }
     };
 
@@ -67,7 +62,8 @@ export const MarketCard = ({ market }: MarketCardProps) => {
 
     try {
       await requestMembership();
-      setMembershipStatus(MembershipStatus.PENDING);
+      // After requesting membership, user's state will still be NONE until accepted
+      setMembershipStatus(0); // NONE state
     } catch (err) {
       if (!isUserRejection(err)) {
         setError(
@@ -93,13 +89,16 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   };
 
   const getMembershipStatusDisplay = () => {
+    // Using the contract's UserState enum values
     switch (membershipStatus) {
-      case MembershipStatus.PENDING:
-        return <Badge variant="warning">Pending Approval</Badge>;
-      case MembershipStatus.ACCEPTED:
+      case 0: // NONE
+        return null;
+      case 1: // ACCEPTED
         return <Badge variant="success">Member</Badge>;
-      case MembershipStatus.REJECTED:
+      case 2: // REJECTED
         return <Badge variant="destructive">Rejected</Badge>;
+      case 3: // FLAGGED
+        return <Badge variant="destructive">Flagged</Badge>;
       default:
         return null;
     }
@@ -141,16 +140,17 @@ export const MarketCard = ({ market }: MarketCardProps) => {
         {error && <p className="text-sm text-red-500">{error}</p>}
       </CardContent>
       <CardFooter>
-        {!isCreator && membershipStatus === MembershipStatus.NONE && (
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={handleJoinRequest}
-            disabled={isRequesting || isLoading}
-          >
-            {isRequesting ? "Requesting..." : "Join Market"}
-          </Button>
-        )}
+        {!isCreator &&
+          membershipStatus === 0 && ( // NONE state
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={handleJoinRequest}
+              disabled={isRequesting || isLoading}
+            >
+              {isRequesting ? "Requesting..." : "Join Market"}
+            </Button>
+          )}
         {isCreator && (
           <ManageMembersDialog
             marketAddress={market.address}

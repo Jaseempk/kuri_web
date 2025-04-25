@@ -1,8 +1,8 @@
 export enum KuriState {
-  INLAUNCH = "INLAUNCH",
-  LAUNCHFAILED = "LAUNCHFAILED",
-  ACTIVE = "ACTIVE",
-  COMPLETED = "COMPLETED",
+  INLAUNCH = 0,
+  LAUNCHFAILED = 1,
+  ACTIVE = 2,
+  COMPLETED = 3,
 }
 
 export enum IntervalType {

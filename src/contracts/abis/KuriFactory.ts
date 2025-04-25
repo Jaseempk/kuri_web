@@ -1,99 +1,45 @@
 export const KuriFactoryABI = [
-  {
-    inputs: [],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
+  { inputs: [], name: "KCF__InvalidInputs", type: "error" },
   {
     anonymous: false,
     inputs: [
       {
         indexed: true,
         internalType: "address",
-        name: "creator",
+        name: "caller",
         type: "address",
       },
       {
         indexed: true,
         internalType: "address",
-        name: "kuriCore",
+        name: "marketAddress",
         type: "address",
       },
       {
         indexed: false,
-        internalType: "string",
-        name: "name",
-        type: "string",
+        internalType: "uint8",
+        name: "intervalType",
+        type: "uint8",
       },
       {
         indexed: false,
-        internalType: "string",
-        name: "symbol",
-        type: "string",
+        internalType: "uint256",
+        name: "timestamp",
+        type: "uint256",
       },
     ],
-    name: "KuriCreated",
+    name: "KuriMarketDeployed",
     type: "event",
   },
   {
     inputs: [
-      {
-        internalType: "string",
-        name: "_name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_symbol",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "_initialSupply",
-        type: "uint256",
-      },
+      { internalType: "uint64", name: "kuriAmount", type: "uint64" },
+      { internalType: "uint16", name: "kuriParticipantCount", type: "uint16" },
+      { internalType: "uint8", name: "intervalType", type: "uint8" },
     ],
-    name: "createKuri",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
+    name: "initialiseKuriMarket",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "creatorToKuri",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getAllKuris",
-    outputs: [
-      {
-        internalType: "address[]",
-        name: "",
-        type: "address[]",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
 ] as const;

@@ -5,6 +5,16 @@ export class ContractError extends Error {
   }
 }
 
+export const isUserRejection = (error: unknown): boolean => {
+  if (error instanceof Error) {
+    return (
+      error.message.toLowerCase().includes("user rejected") ||
+      error.message.toLowerCase().includes("user denied")
+    );
+  }
+  return false;
+};
+
 export const handleContractError = (error: unknown): ContractError => {
   if (error instanceof ContractError) {
     return error;
@@ -12,13 +22,15 @@ export const handleContractError = (error: unknown): ContractError => {
 
   // Handle specific error types
   if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+
     // User rejected transaction
-    if (error.message.includes("User rejected")) {
+    if (message.includes("user rejected") || message.includes("user denied")) {
       return new ContractError("Transaction was rejected by user", error);
     }
 
     // Insufficient funds
-    if (error.message.includes("insufficient funds")) {
+    if (message.includes("insufficient funds")) {
       return new ContractError(
         "Insufficient funds to complete transaction",
         error
@@ -26,7 +38,7 @@ export const handleContractError = (error: unknown): ContractError => {
     }
 
     // Gas estimation failed
-    if (error.message.includes("gas required exceeds allowance")) {
+    if (message.includes("gas required exceeds allowance")) {
       return new ContractError(
         "Transaction would fail - gas estimation error",
         error
@@ -34,7 +46,7 @@ export const handleContractError = (error: unknown): ContractError => {
     }
 
     // Network error
-    if (error.message.includes("network")) {
+    if (message.includes("network")) {
       return new ContractError(
         "Network error occurred. Please check your connection",
         error
@@ -42,8 +54,36 @@ export const handleContractError = (error: unknown): ContractError => {
     }
 
     // Contract execution reverted
-    if (error.message.includes("execution reverted")) {
-      return new ContractError("Transaction failed - contract reverted", error);
+    if (message.includes("execution reverted")) {
+      // Extract revert reason if available
+      const revertReason = message.includes("reason:")
+        ? message.split("reason:")[1].trim()
+        : "Transaction failed - contract reverted";
+      return new ContractError(revertReason, error);
+    }
+
+    // Kuri specific errors
+    if (message.includes("not active")) {
+      return new ContractError("Market is not active", error);
+    }
+
+    if (message.includes("already deposited")) {
+      return new ContractError("Already deposited for this interval", error);
+    }
+
+    if (message.includes("not winner")) {
+      return new ContractError(
+        "You are not the winner for this interval",
+        error
+      );
+    }
+
+    if (message.includes("invalid interval")) {
+      return new ContractError("Invalid interval for claiming", error);
+    }
+
+    if (message.includes("not member")) {
+      return new ContractError("You are not a member of this Kuri", error);
     }
   }
 
@@ -52,11 +92,4 @@ export const handleContractError = (error: unknown): ContractError => {
     "An unexpected error occurred during contract interaction",
     error
   );
-};
-
-export const isUserRejection = (error: unknown): boolean => {
-  if (error instanceof Error) {
-    return error.message.includes("User rejected");
-  }
-  return false;
 };

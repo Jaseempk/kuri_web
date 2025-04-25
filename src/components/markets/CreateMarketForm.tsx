@@ -1,52 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
 
 interface FormData {
-  name: string;
-  symbol: string;
-  initialSupply: string;
+  kuriAmount: string;
+  participantCount: string;
+  intervalType: "0" | "1"; // 0 for WEEKLY, 1 for MONTHLY
 }
 
 export const CreateMarketForm = () => {
   const [formData, setFormData] = useState<FormData>({
-    name: "",
-    symbol: "",
-    initialSupply: "",
+    kuriAmount: "",
+    participantCount: "",
+    intervalType: "0",
   });
   const [error, setError] = useState<string>("");
-  const [userKuri, setUserKuri] = useState<`0x${string}` | null>(null);
 
-  const { createKuri, isCreating, isCreationSuccess, getUserKuri } =
+  const { initialiseKuriMarket, isCreating, isCreationSuccess } =
     useKuriFactory();
 
-  // Fetch user's Kuri on mount
-  useEffect(() => {
-    const fetchUserKuri = async () => {
-      const kuri = await getUserKuri();
-      setUserKuri(kuri as `0x${string}` | null);
-    };
-    fetchUserKuri();
-  }, [getUserKuri]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError("");
   };
 
   const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
-      setError("Market name is required");
+    if (!formData.kuriAmount || Number(formData.kuriAmount) <= 0) {
+      setError("Kuri amount must be greater than 0");
       return false;
     }
-    if (!formData.symbol.trim()) {
-      setError("Market symbol is required");
-      return false;
-    }
-    if (!formData.initialSupply || Number(formData.initialSupply) <= 0) {
-      setError("Initial supply must be greater than 0");
+    if (!formData.participantCount || Number(formData.participantCount) <= 0) {
+      setError("Participant count must be greater than 0");
       return false;
     }
     return true;
@@ -57,10 +45,10 @@ export const CreateMarketForm = () => {
     if (!validateForm()) return;
 
     try {
-      const tx = await createKuri(
-        formData.name,
-        formData.symbol,
-        Number(formData.initialSupply)
+      const tx = await initialiseKuriMarket(
+        Number(formData.kuriAmount),
+        Number(formData.participantCount),
+        Number(formData.intervalType) as 0 | 1
       );
       console.log("Transaction submitted:", tx);
     } catch (err) {
@@ -73,89 +61,69 @@ export const CreateMarketForm = () => {
   };
 
   // Reset form on successful creation
-  useEffect(() => {
-    if (isCreationSuccess) {
-      setFormData({
-        name: "",
-        symbol: "",
-        initialSupply: "",
-      });
-      setError("");
-      // Refresh user's Kuri data
-      getUserKuri().then((kuri) => setUserKuri(kuri as `0x${string}` | null));
-    }
-  }, [isCreationSuccess, getUserKuri]);
-
-  // If user already has a Kuri, show message instead of form
-  if (userKuri) {
-    return (
-      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-6">Your Market</h2>
-        <p className="text-gray-600">
-          You already have a Kuri market at address: {userKuri}
-        </p>
-      </div>
-    );
+  if (isCreationSuccess) {
+    setFormData({
+      kuriAmount: "",
+      participantCount: "",
+      intervalType: "0",
+    });
+    setError("");
   }
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6">Create New Market</h2>
-
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Market Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              className="w-full px-3 py-2 border border-[hsl(var(--gold))/20] rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[hsl(var(--terracotta))]"
-              placeholder="Enter market name"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              required
-              rows={3}
-              className="w-full px-3 py-2 border border-[hsl(var(--gold))/20] rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[hsl(var(--terracotta))]"
-              placeholder="Enter market description"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Entry Fee (ETH)
-            </label>
-            <input
-              type="number"
-              name="entryFee"
-              required
-              step="0.01"
-              min="0"
-              className="w-full px-3 py-2 border border-[hsl(var(--gold))/20] rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[hsl(var(--terracotta))]"
-              placeholder="0.00"
-            />
-          </div>
-
-          {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-
-          <Button
-            type="submit"
-            variant="default"
-            disabled={isCreating}
-            className="w-full"
-          >
-            {isCreating ? "Creating..." : "Create Market"}
-          </Button>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Total Kuri Amount
+          </label>
+          <input
+            type="number"
+            name="kuriAmount"
+            value={formData.kuriAmount}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="Enter total amount"
+            min="1"
+          />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Number of Participants
+          </label>
+          <input
+            type="number"
+            name="participantCount"
+            value={formData.participantCount}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="Enter participant count"
+            min="1"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Interval Type
+          </label>
+          <select
+            name="intervalType"
+            value={formData.intervalType}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option value="0">Weekly</option>
+            <option value="1">Monthly</option>
+          </select>
+        </div>
+
+        {error && <div className="text-red-600 text-sm">{error}</div>}
+
+        <Button type="submit" disabled={isCreating} className="w-full">
+          {isCreating ? "Creating..." : "Create Market"}
+        </Button>
       </form>
     </div>
   );

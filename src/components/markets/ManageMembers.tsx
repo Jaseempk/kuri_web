@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  useKuriCore,
-  MembershipStatus,
-} from "../../hooks/contracts/useKuriCore";
+import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
