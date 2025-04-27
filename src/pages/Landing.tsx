@@ -347,235 +347,69 @@ function App() {
         </AnimatePresence>
       </nav>
 
-      {/* Hero Section with Image Slider */}
-      <section ref={heroRef} className="hero-slider" id="hero">
-        {/* Background images that change */}
-        {heroBackgrounds.map((slide, index) => (
-          <div
-            key={index}
-            className={`slider-item ${index === activeSlide ? "active" : ""}`}
-          >
-            <div className="slider-overlay"></div>
-            <img
-              src={slide.imageUrl}
-              alt={`Kuri community savings circle ${index + 1}`}
-              className="slider-image"
-              loading="lazy"
-            />
-          </div>
-        ))}
+      {/* Hero Section matching screenshot design */}
+      <section
+        ref={heroRef}
+        className="min-h-screen relative overflow-hidden bg-[#f8f5f0] flex items-center"
+        id="hero"
+      >
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 md:py-24">
+            {/* Left content column */}
+            <div className="space-y-7">
+              <h1 className="text-[52px] lg:text-6xl font-semibold tracking-tight text-[#402e32] leading-[1.1]">
+                <span className="block">Community-</span>
+                <span className="block">Powered</span>
+                <span className="text-[#C84E31] block">Financial Circles</span>
+              </h1>
 
-        {/* Fixed content card that stays in place */}
-        <div className="container mx-auto px-4 py-8 slider-content">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            whileHover={{
-              y: -10,
-              scale: 1.02,
-              transition: { duration: 0.3, ease: "easeOut" },
-            }}
-            transition={{
-              delay: 0.2,
-              duration: 0.8,
-            }}
-            className="relative z-10 cursor-pointer overflow-hidden"
-          >
-            {/* Modern asymmetric layout with cultural elements */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-              {/* Content side - takes up 3/5 of the space on desktop */}
-              <div className="md:col-span-3 p-10 md:p-14 rounded-3xl border border-white/20 border-l-4 border-l-[hsl(var(--terracotta))] relative overflow-hidden bg-black/10 backdrop-blur-[1px] shadow-lg">
-                {/* Fixed height container for content to maintain consistent card size */}
-                <div className="min-h-[320px]">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeSlide}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.5 }}
-                      className="h-full"
-                    >
-                      {/* Culturally-inspired typography with modern layout */}
-                      <div className="mb-2 text-[hsl(var(--gold))] font-sans uppercase tracking-widest text-sm font-semibold drop-shadow-sm brightness-125">
-                        Community-Powered Finance
-                      </div>
+              <p className="text-lg text-[#5f5b56] max-w-lg leading-relaxed">
+                Join the future of collaborative finance. Zero interest, zero
+                hidden fees. Just the power of community saving to help you
+                reach your goals.
+              </p>
 
-                      <h2 className="text-4xl font-sans font-bold text-white mb-6 tracking-tight leading-[1.2]">
-                        <div className="overflow-hidden pb-2">
-                          <motion.span
-                            initial={{ y: "100%" }}
-                            animate={{ y: "0%" }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="block py-1"
-                          >
-                            {heroBackgrounds[activeSlide].title}
-                          </motion.span>
-                        </div>
-                        <div className="overflow-hidden pb-2">
-                          <motion.span
-                            initial={{ y: "100%" }}
-                            animate={{ y: "0%" }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="block text-white py-1"
-                          >
-                            {heroBackgrounds[activeSlide].subtitle}
-                          </motion.span>
-                        </div>
-                      </h2>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Button
+                  className="bg-[#C84E31] hover:bg-[#B64529] text-white rounded-xl px-4 py-2 font-small text-base flex items-center gap-2 shadow-sm border-none "
+                  onClick={() => navigate("/markets")}
+                >
+                  <span>Get Started</span>
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
 
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="text-base md:text-lg font-sans text-white/95 mb-10 max-w-xl font-medium drop-shadow-sm"
-                      >
-                        {heroBackgrounds[activeSlide].description}
-                      </motion.p>
-                    </motion.div>
-                  </AnimatePresence>
+                <Button
+                  variant="outline"
+                  className="bg-transparent border-spacing-0.5 border-[#C84E31] text-[#C84E31] hover:bg-[#C84E31]/5 rounded-xl px-4 py-2 font-medium text-base "
+                  onClick={() => scrollToSection("how-it-works")}
+                >
+                  Learn More
+                </Button>
+              </div>
+            </div>
+
+            {/* Right image column with correct circular layers */}
+            <div className="relative flex justify-center lg:justify-start items-center lg:pl-12">
+              <div className="relative w-[520px] h-[520px] flex items-center justify-center">
+                {/* Outer circle - matching background with thinner peach border */}
+                <div className="absolute w-[520px] h-[520px] rounded-full bg-[#f8f5f0] border border-[#f9d4c0]"></div>
+
+                {/* Inner circle - enhanced peach gradient background */}
+                <div className="absolute w-[480px] h-[480px] rounded-full overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#f9d4c0] via-[#f9d4c0]/40 to-transparent"></div>
                 </div>
 
-                {/* Buttons moved outside AnimatePresence to prevent unmounting during transitions */}
-                <motion.div
-                  className="flex flex-col sm:flex-row gap-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                >
-                  <Button
-                    size="lg"
-                    className="relative group overflow-hidden rounded-xl bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-14 px-8"
-                    onClick={() => navigate("/markets")}
-                  >
-                    <span className="relative z-20 flex items-center font-sans font-medium">
-                      Create Your Circle
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </span>
-                  </Button>
-
-                  <Button
-                    size="lg"
-                    className="relative group overflow-hidden rounded-xl bg-black/5 hover:bg-white/10 text-white border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-14 px-8 backdrop-blur-[1px]"
-                    onClick={() => navigate("/dapp")}
-                  >
-                    <span className="relative z-20 flex items-center font-sans font-medium">
-                      Explore Circles
-                      <ArrowRight className="ml-2 h-5 w-5 opacity-70 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
-                    </span>
-                  </Button>
-                </motion.div>
+                {/* Image container */}
+                <div className="relative w-[440px] h-[440px] rounded-full overflow-hidden">
+                  <img
+                    src="/images/trust.jpg"
+                    alt="People joining hands in a circle showing community trust"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
-
-              {/* Empty div to maintain the grid layout */}
-              <div className="md:col-span-2"></div>
             </div>
-
-            {/* Slide indicators - redesigned as cultural symbols */}
-            <div className="flex justify-center mt-8 space-x-3">
-              {heroBackgrounds.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveSlide(index)}
-                  className={`w-8 h-8 flex items-center justify-center focus:outline-none transition-all duration-300 ${
-                    activeSlide === index
-                      ? "opacity-100 scale-110"
-                      : "opacity-50 hover:opacity-75"
-                  }`}
-                >
-                  <div className="w-2 h-2 rounded-full bg-white"></div>
-                  {activeSlide === index && (
-                    <motion.div
-                      layoutId="activeIndicator"
-                      className="absolute w-6 h-6 rounded-full border border-white/50"
-                      transition={{ duration: 0.3 }}
-                    ></motion.div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center text-white/80"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        >
-          <span className="text-sm mb-2 font-light tracking-wider">Scroll</span>
-          <motion.div
-            animate={{ y: [0, 5, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5, delay: 0.5 }}
-          >
-            <ChevronUp className="rotate-180" size={20} />
-          </motion.div>
-        </motion.div>
-
-        {/* Section transition blend effect */}
-        <div className="absolute bottom-0 left-0 right-0 h-48 overflow-hidden">
-          {/* Multiple wave layers with increasing opacity */}
-          <svg
-            className="absolute bottom-0 w-full h-full"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 1440 320"
-            preserveAspectRatio="none"
-            style={{ transform: "translateY(10%)" }}
-          >
-            <path
-              fill="hsl(var(--sand))"
-              fillOpacity="0.3"
-              d="M0,128L48,144C96,160,192,192,288,186.7C384,181,480,139,576,138.7C672,139,768,181,864,202.7C960,224,1056,224,1152,202.7C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            ></path>
-          </svg>
-
-          <svg
-            className="absolute bottom-0 w-full h-full"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 1440 320"
-            preserveAspectRatio="none"
-            style={{ transform: "translateY(20%)" }}
-          >
-            <path
-              fill="hsl(var(--sand))"
-              fillOpacity="0.5"
-              d="M0,160L48,149.3C96,139,192,117,288,117.3C384,117,480,139,576,165.3C672,192,768,224,864,218.7C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            ></path>
-          </svg>
-
-          <svg
-            className="absolute bottom-0 w-full h-full"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 1440 320"
-            preserveAspectRatio="none"
-            style={{ transform: "translateY(30%)" }}
-          >
-            <path
-              fill="hsl(var(--sand))"
-              fillOpacity="0.7"
-              d="M0,192L48,181.3C96,171,192,149,288,154.7C384,160,480,192,576,192C672,192,768,160,864,154.7C960,149,1056,171,1152,181.3C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            ></path>
-          </svg>
-
-          {/* Final solid wave for complete transition */}
-          <svg
-            className="absolute bottom-0 w-full h-full"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 1440 320"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="hsl(var(--sand))"
-              fillOpacity="0.9"
-              d="M0,224L48,229.3C96,235,192,245,288,240C384,235,480,213,576,213.3C672,213,768,235,864,234.7C960,235,1056,213,1152,202.7C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            ></path>
-          </svg>
-
-          {/* Gradient overlay for smoother transition */}
-          <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-b from-transparent via-[hsl(var(--sand))/20] to-[hsl(var(--sand))]"></div>
+          </div>
         </div>
       </section>
 
