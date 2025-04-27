@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
-import { ConnectKitButton } from "connectkit";
+import { ConnectButton } from "../components/ui/ConnectButton";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -278,7 +278,7 @@ function App() {
             </div>
           </div>
           <div className="hidden md:flex items-center space-x-4">
-            <ConnectKitButton />
+            <ConnectButton />
           </div>
           <button
             className="md:hidden text-white p-1"
@@ -339,7 +339,7 @@ function App() {
                   <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
                 <div className="flex flex-col space-y-2 pt-2">
-                  <ConnectKitButton />
+                  <ConnectButton />
                 </div>
               </div>
             </motion.div>
@@ -347,68 +347,140 @@ function App() {
         </AnimatePresence>
       </nav>
 
-      {/* Hero Section matching screenshot design */}
+      {/* Hero Section */}
       <section
         ref={heroRef}
         className="min-h-screen relative overflow-hidden bg-[#f8f5f0] flex items-center"
         id="hero"
       >
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 md:py-24">
             {/* Left content column */}
-            <div className="space-y-7">
-              <h1 className="text-[52px] lg:text-6xl font-semibold tracking-tight text-[#402e32] leading-[1.1]">
-                <span className="block">Community-</span>
-                <span className="block">Powered</span>
-                <span className="text-[#C84E31] block">Financial Circles</span>
-              </h1>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-8 relative z-10"
+            >
+              <div className="space-y-2">
+                <motion.h1
+                  className="text-[52px] lg:text-6xl font-semibold tracking-tight text-[#402e32] leading-[1.1]"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <motion.span
+                    className="block"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                  >
+                    Community-
+                  </motion.span>
+                  <motion.span
+                    className="block"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                  >
+                    Powered
+                  </motion.span>
+                  <motion.span
+                    className="text-[#C84E31] block relative"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    Financial Circles
+                    <div className="absolute -bottom-2 left-0 w-full h-1 bg-[#C84E31]/10 rounded-full" />
+                  </motion.span>
+                </motion.h1>
+              </div>
 
-              <p className="text-lg text-[#5f5b56] max-w-lg leading-relaxed">
+              <motion.p
+                className="text-lg text-[#5f5b56] max-w-lg leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
                 Join the future of collaborative finance. Zero interest, zero
                 hidden fees. Just the power of community saving to help you
                 reach your goals.
-              </p>
+              </motion.p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <motion.div
+                className="flex flex-col sm:flex-row gap-4 pt-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.9 }}
+              >
                 <Button
-                  className="bg-[#C84E31] hover:bg-[#B64529] text-white rounded-xl px-4 py-2 font-small text-base flex items-center gap-2 shadow-sm border-none "
+                  className="bg-[#C84E31] hover:bg-[#B64529] text-white rounded-xl px-7 py-3 font-medium text-[17px] flex items-center gap-2.5 shadow-sm border-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/20 group relative overflow-hidden"
                   onClick={() => navigate("/markets")}
                 >
-                  <span>Get Started</span>
-                  <ArrowRight className="h-5 w-5" />
+                  <span className="relative z-10">Get Started</span>
+                  <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#C84E31] to-[#B64529] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </Button>
 
                 <Button
                   variant="outline"
-                  className="bg-transparent border-spacing-0.5 border-[#C84E31] text-[#C84E31] hover:bg-[#C84E31]/5 rounded-xl px-4 py-2 font-medium text-base "
+                  className="bg-transparent border-2 border-[#C84E31] text-[#C84E31] hover:bg-[#C84E31]/5 rounded-xl px-7 py-3 font-medium text-[17px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/10 relative overflow-hidden group"
                   onClick={() => scrollToSection("how-it-works")}
                 >
-                  Learn More
+                  <span className="relative z-10">Learn More</span>
+                  <div className="absolute inset-0 bg-[#C84E31]/5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                 </Button>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
-            {/* Right image column with correct circular layers */}
-            <div className="relative flex justify-center lg:justify-start items-center lg:pl-12">
-              <div className="relative w-[520px] h-[520px] flex items-center justify-center">
-                {/* Outer circle - matching background with thinner peach border */}
-                <div className="absolute w-[520px] h-[520px] rounded-full bg-[#f8f5f0] border border-[#f9d4c0]"></div>
+            {/* Right image column with circular layers */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="relative flex justify-center lg:justify-start items-center lg:pl-12"
+            >
+              <div className="relative w-[520px] h-[520px] flex items-center justify-center transform hover:scale-[1.02] transition-transform duration-700">
+                {/* Outer circle with gradient border */}
+                <motion.div
+                  className="absolute w-[520px] h-[520px] rounded-full bg-[#f8f5f0]"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                >
+                  <div className="absolute inset-0 rounded-full border border-[#f9d4c0] shadow-[0_0_60px_rgba(249,212,192,0.3)]" />
+                </motion.div>
 
-                {/* Inner circle - enhanced peach gradient background */}
-                <div className="absolute w-[480px] h-[480px] rounded-full overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#f9d4c0] via-[#f9d4c0]/40 to-transparent"></div>
-                </div>
+                {/* Inner circle with gradient */}
+                <motion.div
+                  className="absolute w-[480px] h-[480px] rounded-full overflow-hidden"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#f9d4c0] via-[#f9d4c0]/40 to-transparent" />
+                </motion.div>
 
-                {/* Image container */}
-                <div className="relative w-[440px] h-[440px] rounded-full overflow-hidden">
+                {/* Image container with enhanced effects */}
+                <motion.div
+                  className="relative w-[440px] h-[440px] rounded-full overflow-hidden"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 1 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#C84E31]/10 to-transparent mix-blend-overlay" />
                   <img
                     src="/images/trust.jpg"
                     alt="People joining hands in a circle showing community trust"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                    loading="lazy"
+                    width={440}
+                    height={440}
                   />
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -794,6 +866,7 @@ function App() {
                   variant="default"
                   size="lg"
                   className="group bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))]"
+                  onClick={() => navigate("/markets")}
                 >
                   Start Your Circle
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -1001,6 +1074,7 @@ function App() {
                   variant="forest"
                   size="lg"
                   className="bg-[hsl(var(--forest))] hover:bg-white hover:text-[hsl(var(--forest))] text-white border border-[hsl(var(--forest))] group"
+                  onClick={() => navigate("/markets")}
                 >
                   Start Your Circle
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
