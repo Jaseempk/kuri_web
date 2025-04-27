@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Market } from "../../graphql/types";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -11,19 +10,22 @@ import {
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
-import { config } from "../../config/wagmi";
+import { config } from "../../providers/Web3Provider";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
+import { KuriMarket } from "../../hooks/useKuriMarkets";
+import { Clock } from "lucide-react";
 
 interface MarketCardProps {
-  market: Market;
-  onJoinClick?: (market: Market) => void;
+  market: KuriMarket;
+  onJoinClick?: (market: KuriMarket) => void;
 }
 
 export const MarketCard = ({ market }: MarketCardProps) => {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [timeLeft, setTimeLeft] = useState<string>("");
 
   const account = getAccount(config);
   const { requestMembership, getMemberStatus, isRequesting } = useKuriCore(
@@ -33,7 +35,42 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   // Default values until implemented in Market type
   const defaultDescription =
     "A community savings circle powered by Kuri protocol.";
-  const defaultEntryFee = "0.1"; // 0.1 ETH default entry fee
+
+  // Calculate launch end time (3 days from creation)
+  const launchEndTime = useMemo(() => {
+    const creationTime = Number(market.createdAt) * 1000; // Convert to milliseconds
+    return creationTime + 3 * 24 * 60 * 60 * 1000; // Add 3 days
+  }, [market.createdAt]);
+
+  // Update countdown timer
+  useEffect(() => {
+    if (market.state !== 0) return; // Only run for INLAUNCH state
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const end = launchEndTime;
+      const diff = end - now;
+
+      if (diff <= 0) {
+        setTimeLeft("Launch period ended");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    const timer = setInterval(updateTimer, 1000);
+    updateTimer(); // Initial update
+
+    return () => clearInterval(timer);
+  }, [market.state, launchEndTime]);
 
   // Fetch membership status on mount and when account changes
   useEffect(() => {
@@ -75,16 +112,33 @@ export const MarketCard = ({ market }: MarketCardProps) => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "CREATED":
+  const getStatusColor = (state: number) => {
+    switch (state) {
+      case 0: // INLAUNCH
         return "bg-[hsl(var(--gold))]";
-      case "ACTIVE":
+      case 2: // ACTIVE
         return "bg-[hsl(var(--forest))]";
-      case "PAUSED":
+      case 1: // LAUNCHFAILED
         return "bg-[hsl(var(--ochre))]";
+      case 3: // COMPLETED
+        return "bg-[hsl(var(--sand))]";
       default:
         return "bg-[hsl(var(--sand))]";
+    }
+  };
+
+  const getStatusText = (state: number) => {
+    switch (state) {
+      case 0:
+        return "IN LAUNCH";
+      case 1:
+        return "LAUNCH FAILED";
+      case 2:
+        return "ACTIVE";
+      case 3:
+        return "COMPLETED";
+      default:
+        return "UNKNOWN";
     }
   };
 
@@ -107,18 +161,17 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   const isCreator =
     account.address?.toLowerCase() === market.creator.toLowerCase();
 
+  console.log("isCreator:", isCreator);
+
   return (
     <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold truncate">
-            {market.name}
+            {`Kuri`}
           </CardTitle>
           <div className="flex items-center gap-2">
             {getMembershipStatusDisplay()}
-            <Badge className={getStatusColor(market.status)}>
-              {market.status}
-            </Badge>
           </div>
         </div>
       </CardHeader>
@@ -127,14 +180,27 @@ export const MarketCard = ({ market }: MarketCardProps) => {
           <p className="text-sm text-muted-foreground">Description</p>
           <p className="text-sm line-clamp-2">{defaultDescription}</p>
         </div>
+        {market.state === 0 && timeLeft && (
+          <div className="bg-amber-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-amber-700">
+              <Clock className="h-4 w-4" />
+              <p className="text-sm font-medium">Launch Period</p>
+            </div>
+            <p className="text-sm font-mono mt-1">{timeLeft}</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Entry Fee</p>
-            <p className="font-medium">{defaultEntryFee} ETH</p>
+            <p className="font-medium">
+              {(Number(market.kuriAmount) / 1_000_000).toFixed(2)} USD
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Participants</p>
-            <p className="font-medium">{market.memberCount}</p>
+            <p className="font-medium">
+              {market.activeParticipants}/{market.totalParticipants}
+            </p>
           </div>
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -144,17 +210,18 @@ export const MarketCard = ({ market }: MarketCardProps) => {
           membershipStatus === 0 && ( // NONE state
             <Button
               variant="default"
-              className="w-full"
+              className="w-full hover:bg-white hover:text-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))]"
               onClick={handleJoinRequest}
               disabled={isRequesting || isLoading}
             >
-              {isRequesting ? "Requesting..." : "Join Market"}
+              {isRequesting ? "Requesting..." : "Join Circle"}
             </Button>
           )}
         {isCreator && (
           <ManageMembersDialog
             marketAddress={market.address}
-            marketName={market.name}
+            marketName={`Kuri`}
+            isCreator={isCreator}
           />
         )}
       </CardFooter>

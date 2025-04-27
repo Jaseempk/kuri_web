@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { useKuriCore } from "../../hooks/contracts/useKuriCore";
+import { useQuery } from "@apollo/client";
 import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
 import {
   Table,
   TableBody,
@@ -10,160 +9,251 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { useQuery } from "@apollo/client";
-import { MARKET_MEMBERS_QUERY } from "../../graphql/queries";
-import { MarketMember } from "../../graphql/types";
-import { getAccount } from "@wagmi/core";
-import { config } from "../../config/wagmi";
-import { isUserRejection } from "../../utils/errors";
+import { useKuriCore } from "../../hooks/contracts/useKuriCore";
+import { Badge } from "../ui/badge";
+import { Loader2 } from "lucide-react";
+import { MEMBERSHIP_REQUESTS_QUERY } from "../../graphql/queries";
+import { useAccount } from "wagmi";
+
+interface MembershipRequest {
+  id: string;
+  user: string;
+  timestamp: string;
+  state: number;
+}
 
 interface ManageMembersProps {
   marketAddress: string;
 }
 
 export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
-  const [error, setError] = useState<string>("");
-  const account = getAccount(config);
-  const { acceptMember, rejectMember, isAccepting, isRejecting } = useKuriCore(
-    marketAddress as `0x${string}`
-  );
+  const [memberRequests, setMemberRequests] = useState<MembershipRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [processingUser, setProcessingUser] = useState<string | null>(null);
 
+  const { address } = useAccount();
+  const {
+    marketData,
+    acceptMember,
+    rejectMember,
+    getMemberStatus,
+    isAccepting,
+    isRejecting,
+  } = useKuriCore(marketAddress as `0x${string}`);
+  console.log("aaddreaa:", address);
+  console.log("marketData:", marketData);
+  console.log("marketAddress:", marketAddress);
+
+  // Verify creator access
+  useEffect(() => {
+    if (marketData && address && marketData.creator !== address) {
+      setError("Only the creator can manage members");
+      setIsLoading(false);
+    }
+  }, [marketData, address]);
+
+  // Query membership requests from subgraph
   const {
     data,
-    loading,
+    loading: queryLoading,
     error: queryError,
     refetch,
-  } = useQuery(MARKET_MEMBERS_QUERY, {
+  } = useQuery(MEMBERSHIP_REQUESTS_QUERY, {
     variables: {
-      market: marketAddress,
-      first: 100,
-      skip: 0,
+      marketAddress: marketAddress.toLowerCase(),
     },
     fetchPolicy: "network-only",
   });
 
-  const handleAcceptMember = async (memberAddress: string) => {
-    try {
-      await acceptMember(memberAddress as `0x${string}`);
-      refetch();
-    } catch (err) {
-      if (!isUserRejection(err)) {
-        setError(
-          err instanceof Error ? err.message : "Failed to accept member"
+  // Fetch member states from contract
+  useEffect(() => {
+    const fetchMemberStates = async () => {
+      if (!data?.membershipRequesteds) return;
+
+      try {
+        const requestsWithState = await Promise.all(
+          data.membershipRequesteds.map(
+            async (request: Omit<MembershipRequest, "state">) => {
+              try {
+                const state = await getMemberStatus(
+                  request.user as `0x${string}`
+                );
+                return { ...request, state: state ?? 0 };
+              } catch (err) {
+                console.error(`Error fetching state for ${request.user}:`, err);
+                return { ...request, state: 0 }; // Default to NONE state on error
+              }
+            }
+          )
         );
+        setMemberRequests(requestsWithState);
+      } catch (err) {
+        console.error("Error fetching member states:", err);
+        setError("Failed to fetch member states");
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    if (data) {
+      fetchMemberStates();
+    }
+  }, [data, getMemberStatus]);
+
+  const handleAccept = async (address: `0x${string}`) => {
+    try {
+      setProcessingUser(address);
+      setError(null);
+      await acceptMember(address);
+      await refetch();
+      // Refresh the specific user's state
+      const state = await getMemberStatus(address);
+      setMemberRequests((prev) =>
+        prev.map((req) =>
+          req.user === address ? { ...req, state: state ?? 0 } : req
+        )
+      );
+    } catch (err) {
+      console.error("Error accepting member:", err);
+      setError("Failed to accept member");
+    } finally {
+      setProcessingUser(null);
     }
   };
 
-  const handleRejectMember = async (memberAddress: string) => {
+  const handleReject = async (address: `0x${string}`) => {
     try {
-      await rejectMember(memberAddress as `0x${string}`);
-      refetch();
+      setProcessingUser(address);
+      setError(null);
+      await rejectMember(address);
+      await refetch();
+      // Refresh the specific user's state
+      const state = await getMemberStatus(address);
+      setMemberRequests((prev) =>
+        prev.map((req) =>
+          req.user === address ? { ...req, state: state ?? 0 } : req
+        )
+      );
     } catch (err) {
-      if (!isUserRejection(err)) {
-        setError(
-          err instanceof Error ? err.message : "Failed to reject member"
-        );
-      }
+      console.error("Error rejecting member:", err);
+      setError("Failed to reject member");
+    } finally {
+      setProcessingUser(null);
     }
   };
 
-  if (loading) {
-    return <div>Loading members...</div>;
+  const getMembershipStatusBadge = (state: number) => {
+    switch (state) {
+      case 0: // NONE
+        return <Badge variant="secondary">Pending</Badge>;
+      case 1: // ACCEPTED
+        return <Badge variant="success">Accepted</Badge>;
+      case 2: // REJECTED
+        return <Badge variant="destructive">Rejected</Badge>;
+      case 3: // FLAGGED
+        return <Badge variant="destructive">Flagged</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+
+  if (queryLoading || isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
-  if (queryError) {
-    return <div>Error loading members: {queryError.message}</div>;
+  if (queryError || error) {
+    return (
+      <div className="text-red-500 p-4 rounded-lg bg-red-50">
+        Error: {queryError?.message || error || "Unknown error"}
+      </div>
+    );
   }
-
-  const pendingMembers = data?.marketMembers.filter(
-    (member: MarketMember) => member.status === "PENDING"
-  );
-
-  const acceptedMembers = data?.marketMembers.filter(
-    (member: MarketMember) => member.status === "ACCEPTED"
-  );
 
   return (
-    <div className="space-y-6">
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
-        {pendingMembers?.length === 0 ? (
-          <p className="text-muted-foreground">No pending requests</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Address</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingMembers?.map((member: MarketMember) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-mono">{member.address}</TableCell>
-                  <TableCell>
-                    <Badge variant="warning">Pending</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAcceptMember(member.address)}
-                        disabled={isAccepting}
-                      >
-                        {isAccepting ? "Accepting..." : "Accept"}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRejectMember(member.address)}
-                        disabled={isRejecting}
-                      >
-                        {isRejecting ? "Rejecting..." : "Reject"}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Members</h3>
-        {acceptedMembers?.length === 0 ? (
-          <p className="text-muted-foreground">No members yet</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Address</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined At</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {acceptedMembers?.map((member: MarketMember) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-mono">{member.address}</TableCell>
-                  <TableCell>
-                    <Badge variant="success">Member</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(member.joinedAt).toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+    <div className="space-y-4">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Address</TableHead>
+            <TableHead>Requested</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {memberRequests.map((request) => (
+            <TableRow key={request.id}>
+              <TableCell className="font-mono">
+                {request.user.slice(0, 6)}...{request.user.slice(-4)}
+              </TableCell>
+              <TableCell>
+                {new Date(
+                  Number(request.timestamp) * 1000
+                ).toLocaleDateString()}
+              </TableCell>
+              <TableCell>{getMembershipStatusBadge(request.state)}</TableCell>
+              <TableCell className="text-right">
+                {request.state === 0 && (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleAccept(request.user as `0x${string}`)
+                      }
+                      disabled={
+                        isAccepting ||
+                        isRejecting ||
+                        processingUser === request.user
+                      }
+                    >
+                      {processingUser === request.user && isAccepting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Accepting...
+                        </>
+                      ) : (
+                        "Accept"
+                      )}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() =>
+                        handleReject(request.user as `0x${string}`)
+                      }
+                      disabled={
+                        isAccepting ||
+                        isRejecting ||
+                        processingUser === request.user
+                      }
+                    >
+                      {processingUser === request.user && isRejecting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Rejecting...
+                        </>
+                      ) : (
+                        "Reject"
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {memberRequests.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          No membership requests found
+        </div>
+      )}
     </div>
   );
 };

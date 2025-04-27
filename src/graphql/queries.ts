@@ -96,6 +96,20 @@ export const KURI_MARKETS_QUERY = gql`
   }
 `;
 
+export const MEMBERSHIP_REQUESTS_QUERY = gql`
+  query MembershipRequests($marketAddress: String!) {
+    membershipRequesteds(
+      where: { contractAddress: $marketAddress }
+      orderBy: timestamp
+      orderDirection: desc
+    ) {
+      id
+      user
+      timestamp
+    }
+  }
+`;
+
 export const KURI_MARKET_DETAIL_QUERY = gql`
   query KuriMarketDetail($marketAddress: String!) {
     kuriInitialised(id: $marketAddress) {

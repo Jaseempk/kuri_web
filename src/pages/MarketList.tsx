@@ -17,32 +17,12 @@ import { Plus } from "lucide-react";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
 import { MarketCard } from "../components/markets/MarketCard";
+import { KuriMarket } from "../hooks/useKuriMarkets";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
   MONTHLY: 1 as IntervalType,
 } as const;
-
-interface Market {
-  id: string;
-  name: string;
-  symbol: string;
-  creator: string;
-  address: string;
-  isComplete: boolean;
-  kuriAmount: string;
-  participantCount: number;
-  intervalType: IntervalType;
-  totalContributions: string;
-  nextContributionDue: number;
-  currentRound: number;
-  maxParticipants: number;
-  totalSupply: string;
-  memberCount: number;
-  status: MarketStatus;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const intervalTypeToString = (intervalType: IntervalType): string => {
   switch (intervalType) {
@@ -73,38 +53,34 @@ const marketSections = [
   {
     title: "Active Markets",
     description: "Currently active markets accepting deposits",
-    filter: (market: Market) => market.status === MarketStatus.ACTIVE,
+    filter: (market: KuriMarket) => market.state === 2, // KuriState.ACTIVE
   },
   {
     title: "Created Markets",
     description: "Recently created markets pending activation",
-    filter: (market: Market) => market.status === MarketStatus.CREATED,
+    filter: (market: KuriMarket) => market.state === 0, // KuriState.INLAUNCH
   },
   {
     title: "Paused Markets",
     description: "Markets that are temporarily paused",
-    filter: (market: Market) => market.status === MarketStatus.PAUSED,
+    filter: (market: KuriMarket) => market.state === 1, // KuriState.LAUNCHFAILED
   },
 ];
 
 export default function MarketList() {
-  const { getAllMarkets, isCreating } = useKuriFactory();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [markets, setMarkets] = useState<Market[]>([]);
-  const [activeMarkets, setActiveMarkets] = useState<Market[]>([]);
-  const [completedMarkets, setCompletedMarkets] = useState<Market[]>([]);
+  const { getAllMarkets, isCreating, isLoading, error } = useKuriFactory();
+  const [markets, setMarkets] = useState<KuriMarket[]>([]);
+  const [inLaunchMarkets, setInLaunchMarkets] = useState<KuriMarket[]>([]);
+  const [activeMarkets, setActiveMarkets] = useState<KuriMarket[]>([]);
+  const [completedMarkets, setCompletedMarkets] = useState<KuriMarket[]>([]);
 
   useEffect(() => {
     const fetchMarkets = async () => {
       try {
-        setIsLoading(true);
         const fetchedMarkets = await getAllMarkets();
-        setMarkets(fetchedMarkets as Market[]);
+        setMarkets(fetchedMarkets);
       } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
+        console.error("Error fetching markets:", err);
       }
     };
 
@@ -113,8 +89,10 @@ export default function MarketList() {
 
   useEffect(() => {
     if (markets) {
-      const active = markets.filter((market: Market) => !market.isComplete);
-      const completed = markets.filter((market: Market) => market.isComplete);
+      const inLaunch = markets.filter((market) => market.state === 0); // INLAUNCH
+      const active = markets.filter((market) => market.state === 2); // ACTIVE
+      const completed = markets.filter((market) => market.state === 3); // COMPLETED
+      setInLaunchMarkets(inLaunch);
       setActiveMarkets(active);
       setCompletedMarkets(completed);
     }
@@ -125,7 +103,7 @@ export default function MarketList() {
   }
 
   if (error) {
-    return <div>Error loading markets</div>;
+    return <div>Error loading markets: {error.message}</div>;
   }
 
   return (
@@ -181,6 +159,24 @@ export default function MarketList() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* In Launch Markets */}
+      <section className="mb-12">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold">Launching Circles</h2>
+        </div>
+        {inLaunchMarkets.length === 0 ? (
+          <div className="text-center py-12 bg-muted rounded-lg">
+            <p className="text-muted-foreground">No circles in launch phase</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {inLaunchMarkets.map((market) => (
+              <MarketCard key={market.address} market={market} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Active Markets */}

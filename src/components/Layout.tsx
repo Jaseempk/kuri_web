@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { ConnectKitButton } from "connectkit";
+import { ConnectButton } from "./ui/ConnectButton";
 
 const Layout = () => {
   const location = useLocation();
@@ -39,7 +39,7 @@ const Layout = () => {
               </Link>
             </nav>
           </div>
-          <ConnectKitButton />
+          <ConnectButton />
         </div>
       </header>
 

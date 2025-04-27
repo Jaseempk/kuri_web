@@ -2,6 +2,7 @@ import { useQuery } from "@apollo/client";
 import { KURI_MARKETS_QUERY } from "../graphql/queries";
 import { KuriMarketsQueryResult, KuriState } from "../graphql/types";
 import { useMemo } from "react";
+import { useMultipleKuriData } from "./useKuriData";
 
 export interface KuriMarket {
   address: string;
@@ -11,47 +12,64 @@ export interface KuriMarket {
   activeParticipants: number;
   intervalType: number;
   state: KuriState;
+  nextDepositTime: string;
+  nextRaffleTime: string;
   createdAt: string;
 }
 
 export const useKuriMarkets = () => {
-  const { data, loading, error, refetch } = useQuery<KuriMarketsQueryResult>(
-    KURI_MARKETS_QUERY,
-    {
-      notifyOnNetworkStatusChange: true,
-    }
-  );
+  const {
+    data: subgraphData,
+    loading: subgraphLoading,
+    error: subgraphError,
+    refetch,
+  } = useQuery<KuriMarketsQueryResult>(KURI_MARKETS_QUERY, {
+    notifyOnNetworkStatusChange: true,
+  });
+
+  // Get market addresses
+  const marketAddresses = useMemo(() => {
+    return (
+      subgraphData?.kuriMarketDeployeds.map(
+        (m) => m.marketAddress as `0x${string}`
+      ) ?? []
+    );
+  }, [subgraphData]);
+
+  // Fetch kuriData for all markets
+  const {
+    data: kuriDataResults,
+    isLoading: kuriDataLoading,
+    error: kuriDataError,
+  } = useMultipleKuriData(marketAddresses);
 
   const markets = useMemo(() => {
-    if (!data) return [];
+    if (!subgraphData || !kuriDataResults) return [];
 
-    // Create a map of initialized markets for quick lookup
-    const initializedMarketsMap = new Map(
-      data.kuriInitialiseds.map((market) => [market.id, market])
+    return subgraphData.kuriMarketDeployeds.map(
+      (deployed, index): KuriMarket => {
+        const kuriData = kuriDataResults[index];
+
+        return {
+          address: deployed.marketAddress,
+          creator: deployed.caller,
+          kuriAmount: kuriData?.kuriAmount.toString() ?? "0",
+          totalParticipants: kuriData?.totalParticipantsCount ?? 0,
+          activeParticipants: kuriData?.totalActiveParticipantsCount ?? 0,
+          intervalType: deployed.intervalType,
+          state: (kuriData?.state ?? 0) as KuriState,
+          nextDepositTime: kuriData?.nextIntervalDepositTime.toString() ?? "0",
+          nextRaffleTime: kuriData?.nexRaffleTime.toString() ?? "0",
+          createdAt: deployed.timestamp,
+        };
+      }
     );
-
-    // Combine deployed and initialized data
-    return data.kuriMarketDeployeds.map((deployed): KuriMarket => {
-      const initialized = initializedMarketsMap.get(deployed.marketAddress);
-
-      return {
-        address: deployed.marketAddress,
-        creator: deployed.caller,
-        kuriAmount: initialized?._kuriData_kuriAmount ?? "0",
-        totalParticipants: initialized?._kuriData_totalParticipantsCount ?? 0,
-        activeParticipants:
-          initialized?._kuriData_totalActiveParticipantsCount ?? 0,
-        intervalType: deployed.intervalType,
-        state: (initialized?._kuriData_state ?? 0) as KuriState,
-        createdAt: deployed.timestamp,
-      };
-    });
-  }, [data]);
+  }, [subgraphData, kuriDataResults]);
 
   return {
     markets,
-    loading,
-    error,
+    loading: subgraphLoading || kuriDataLoading,
+    error: subgraphError || kuriDataError,
     refetch,
   };
 };

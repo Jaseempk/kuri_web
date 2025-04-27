@@ -7,7 +7,7 @@ import {
 } from "@wagmi/core";
 import { KuriCoreABI } from "../../contracts/abis/KuriCore";
 import { handleContractError } from "../../utils/errors";
-import { config } from "../../config/wagmi";
+import { config } from "../../providers/Web3Provider";
 import { useTransactionStatus } from "../useTransactionStatus";
 
 export enum KuriState {
@@ -205,6 +205,8 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     async (address: `0x${string}`) => {
       if (!kuriAddress || !account.address)
         throw new Error("Invalid parameters");
+
+      console.log("acceptMember address:", address);
 
       try {
         const { request } = await simulateContract(config, {
