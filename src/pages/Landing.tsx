@@ -415,7 +415,7 @@ function App() {
                 transition={{ duration: 0.6, delay: 0.9 }}
               >
                 <Button
-                  className="bg-[#C84E31] hover:bg-[#B64529] text-white rounded-xl px-7 py-3 font-medium text-[17px] flex items-center gap-2.5 shadow-sm border-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/20 group relative overflow-hidden"
+                  className="bg-[#C84E31] hover:bg-[#B64529] text-white rounded-xl px-6 py-3 font-medium text-[17px] flex items-center gap-2.5 shadow-sm border-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/20 group relative overflow-hidden"
                   onClick={() => navigate("/markets")}
                 >
                   <span className="relative z-10">Get Started</span>
@@ -425,7 +425,7 @@ function App() {
 
                 <Button
                   variant="outline"
-                  className="bg-transparent border-2 border-[#C84E31] text-[#C84E31] hover:bg-[#C84E31]/5 rounded-xl px-7 py-3 font-medium text-[17px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/10 relative overflow-hidden group"
+                  className="bg-transparent border border-[#C84E31] text-[#C84E31] hover:bg-[#C84E31]/5 rounded-xl px-6 py-3 font-medium text-[17px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/10 relative overflow-hidden group"
                   onClick={() => scrollToSection("how-it-works")}
                 >
                   <span className="relative z-10">Learn More</span>
