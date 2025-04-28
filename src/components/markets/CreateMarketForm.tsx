@@ -82,7 +82,7 @@ export const CreateMarketForm = ({
 
       // Redirect to the new circle after a short delay
       setTimeout(() => {
-        window.location.href = `/markets/${tx}`;
+        window.location.href = `/markets`; ///${tx}
       }, 2000);
     } catch (err) {
       if (!isUserRejection(err)) {

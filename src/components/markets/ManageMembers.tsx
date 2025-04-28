@@ -41,9 +41,6 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
     isAccepting,
     isRejecting,
   } = useKuriCore(marketAddress as `0x${string}`);
-  console.log("aaddreaa:", address);
-  console.log("marketData:", marketData);
-  console.log("marketAddress:", marketAddress);
 
   // Verify creator access
   useEffect(() => {

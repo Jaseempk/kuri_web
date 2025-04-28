@@ -15,11 +15,28 @@ import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
 import { Clock } from "lucide-react";
+import { IntervalType } from "../../graphql/types";
 
 interface MarketCardProps {
   market: KuriMarket;
   onJoinClick?: (market: KuriMarket) => void;
 }
+
+const INTERVAL_TYPE = {
+  WEEKLY: 0 as IntervalType,
+  MONTHLY: 1 as IntervalType,
+} as const;
+
+const getIntervalTypeText = (intervalType: number): string => {
+  switch (intervalType) {
+    case INTERVAL_TYPE.WEEKLY:
+      return "Weekly";
+    case INTERVAL_TYPE.MONTHLY:
+      return "Monthly";
+    default:
+      return "Interval";
+  }
+};
 
 export const MarketCard = ({ market }: MarketCardProps) => {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
@@ -161,8 +178,6 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   const isCreator =
     account.address?.toLowerCase() === market.creator.toLowerCase();
 
-  console.log("isCreator:", isCreator);
-
   return (
     <Card className="overflow-hidden">
       <CardHeader>
@@ -191,7 +206,9 @@ export const MarketCard = ({ market }: MarketCardProps) => {
         )}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">Entry Fee</p>
+            <p className="text-sm text-muted-foreground">
+              {getIntervalTypeText(market.intervalType)} Deposit
+            </p>
             <p className="font-medium">
               {(Number(market.kuriAmount) / 1_000_000).toFixed(2)} USD
             </p>
@@ -214,7 +231,7 @@ export const MarketCard = ({ market }: MarketCardProps) => {
               onClick={handleJoinRequest}
               disabled={isRequesting || isLoading}
             >
-              {isRequesting ? "Requesting..." : "Join Circle"}
+              {isRequesting ? "Requesting..." : "Request to Join"}
             </Button>
           )}
         {isCreator && (
