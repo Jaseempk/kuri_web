@@ -38,11 +38,11 @@ const CIRCLE_IMAGES = [
 const getIntervalTypeText = (intervalType: number): string => {
   switch (intervalType) {
     case INTERVAL_TYPE.WEEKLY:
-      return "Weekly";
+      return "weekly";
     case INTERVAL_TYPE.MONTHLY:
-      return "Monthly";
+      return "monthly";
     default:
-      return "Interval";
+      return "interval";
   }
 };
 
@@ -332,11 +332,13 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">
-              {getIntervalTypeText(market.intervalType)} Contribution
-            </p>
+            <p className="text-xs text-muted-foreground">Contribution</p>
             <p className="font-medium">
-              {(Number(market.kuriAmount) / 1_000_000).toFixed(2)} USD
+              $
+              {(Number(market.kuriAmount) / 1_000_000) % 1 === 0
+                ? (Number(market.kuriAmount) / 1_000_000).toFixed(0)
+                : (Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
+              {getIntervalTypeText(market.intervalType)}
             </p>
           </div>
           <div className="col-span-2">
