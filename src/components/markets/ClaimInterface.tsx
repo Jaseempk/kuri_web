@@ -36,7 +36,7 @@ export const ClaimInterface = () => {
   if (isLoading || !marketData) {
     return (
       <Card className="p-6">
-        <LoadingSkeleton lines={3} />
+        <LoadingSkeleton />
       </Card>
     );
   }

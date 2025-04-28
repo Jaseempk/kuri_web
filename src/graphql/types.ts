@@ -60,6 +60,7 @@ export interface KuriMarketDeployed {
   blockNumber: string;
   blockTimestamp: string;
   transactionHash: string;
+  name: string;
 }
 
 export interface KuriInitialised {

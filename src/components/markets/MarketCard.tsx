@@ -1,12 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
@@ -20,6 +13,7 @@ import { toast } from "sonner";
 
 interface MarketCardProps {
   market: KuriMarket;
+  index: number;
   onJoinClick?: (market: KuriMarket) => void;
 }
 
@@ -27,6 +21,19 @@ const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
   MONTHLY: 1 as IntervalType,
 } as const;
+
+// Available circle images
+const CIRCLE_IMAGES = [
+  "/images/communityvibe.jpg",
+  "/images/fairdistribution.jpg",
+  "/images/financialempowerment.jpg",
+  "/images/homerenovators.jpg",
+  "/images/joinyourcircle.jpg",
+  "/images/makecontributions.jpg",
+  "/images/recievepayout.jpg",
+  "/images/trust.jpg",
+  "/images/zeroInterest.jpg",
+];
 
 const getIntervalTypeText = (intervalType: number): string => {
   switch (intervalType) {
@@ -39,7 +46,7 @@ const getIntervalTypeText = (intervalType: number): string => {
   }
 };
 
-export const MarketCard = ({ market }: MarketCardProps) => {
+export const MarketCard = ({ market, index }: MarketCardProps) => {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -100,10 +107,10 @@ export const MarketCard = ({ market }: MarketCardProps) => {
       if (!account.address) return;
       try {
         const status = await getMemberStatus(account.address);
-        setMembershipStatus(status ?? 0); // Ensure we always set a number, defaulting to 0 (NONE) if null
+        setMembershipStatus(status ?? 0);
       } catch (err) {
         console.error("Error fetching member status:", err);
-        setMembershipStatus(0); // Set to NONE state on error
+        setMembershipStatus(0);
       }
     };
 
@@ -135,7 +142,6 @@ export const MarketCard = ({ market }: MarketCardProps) => {
       await initializeKuri();
       toast.success("Kuri cycle initialized successfully!");
     } catch (err) {
-      console.error("Error initializing Kuri:", err);
       if (!isUserRejection(err)) {
         const errorMsg =
           err instanceof Error ? err.message : "Failed to initialize Kuri";
@@ -208,7 +214,6 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   };
 
   const getMembershipStatusDisplay = () => {
-    // Using the contract's UserState enum values
     switch (membershipStatus) {
       case 0: // NONE
         return null;
@@ -226,7 +231,10 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   const isCreator =
     account.address?.toLowerCase() === market.creator.toLowerCase();
 
-  // In the render section, update the action buttons
+  // Get circle image based on index
+  const imageUrl = CIRCLE_IMAGES[index % CIRCLE_IMAGES.length];
+
+  // Render action button based on user role and market state
   const renderActionButton = () => {
     if (isCreator) {
       if (canInitialize) {
@@ -256,7 +264,6 @@ export const MarketCard = ({ market }: MarketCardProps) => {
 
     // For non-creators
     if (membershipStatus === 0) {
-      // NONE state
       return (
         <Button
           onClick={handleJoinRequest}
@@ -279,50 +286,79 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   };
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold truncate">
-            {`Kuri`}
-          </CardTitle>
+    <div className="bg-background rounded-2xl overflow-hidden hover-lift shadow-lg">
+      {/* Image Section with Status and Title */}
+      <div className="relative h-48">
+        <img
+          src={imageUrl}
+          alt={market.name || "Kuri Circle"}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = CIRCLE_IMAGES[0]; // Fallback to first image
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+        {/* Title and Membership Status */}
+        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+          <h3 className="text-xl font-sans font-semibold text-white">
+            {market.name || "Kuri"}
+          </h3>
           <div className="flex items-center gap-2">
             {getMembershipStatusDisplay()}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </div>
+
+      {/* Content Section */}
+      <div className="p-6 space-y-4">
+        {/* Description */}
         <div>
-          <p className="text-sm text-muted-foreground">Description</p>
-          <p className="text-sm line-clamp-2">{defaultDescription}</p>
+          <p
+            className="text-sm text-muted-foreground line-clamp-2"
+            title={defaultDescription}
+          >
+            {defaultDescription}
+          </p>
         </div>
-        {market.state === 0 && timeLeft && (
-          <div className="bg-amber-50 p-3 rounded-lg">
-            <div className="flex items-center gap-2 text-amber-700">
-              <Clock className="h-4 w-4" />
-              <p className="text-sm font-medium">Launch Period</p>
-            </div>
-            <p className="text-sm font-mono mt-1">{timeLeft}</p>
-          </div>
-        )}
+
+        {/* Info Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">
-              {getIntervalTypeText(market.intervalType)} Deposit
+            <p className="text-xs text-muted-foreground">Members</p>
+            <p className="font-medium">
+              {market.activeParticipants}/{market.totalParticipants}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">
+              {getIntervalTypeText(market.intervalType)} Contribution
             </p>
             <p className="font-medium">
               {(Number(market.kuriAmount) / 1_000_000).toFixed(2)} USD
             </p>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Participants</p>
-            <p className="font-medium">
-              {market.activeParticipants}/{market.totalParticipants}
+          <div className="col-span-2">
+            <p className="text-xs text-muted-foreground">
+              {market.state === 0 ? "Launch Ends In" : "Next Draw"}
+            </p>
+            <p className="font-medium font-mono">
+              {market.state === 0 ? timeLeft : market.nextDraw || "--"}
             </p>
           </div>
         </div>
-        {error && <p className="text-sm text-red-500">{error}</p>}
-      </CardContent>
-      <CardFooter className="pt-4">{renderActionButton()}</CardFooter>
-    </Card>
+
+        {/* Error Message */}
+        {error && (
+          <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+            {error}
+          </div>
+        )}
+
+        {/* Action Button */}
+        <div className="mt-4">{renderActionButton()}</div>
+      </div>
+    </div>
   );
 };

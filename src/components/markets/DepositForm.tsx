@@ -37,7 +37,7 @@ export const DepositForm = () => {
   if (isLoading || !marketData) {
     return (
       <Card className="p-6">
-        <LoadingSkeleton lines={4} />
+        <LoadingSkeleton />
       </Card>
     );
   }

@@ -15,6 +15,11 @@ export interface KuriMarket {
   nextDepositTime: string;
   nextRaffleTime: string;
   createdAt: string;
+  name: string;
+  nextDraw: string;
+  launchPeriod: string;
+  startTime: string;
+  endTime: string;
 }
 
 export const useKuriMarkets = () => {
@@ -61,6 +66,11 @@ export const useKuriMarkets = () => {
           nextDepositTime: kuriData?.nextIntervalDepositTime.toString() ?? "0",
           nextRaffleTime: kuriData?.nexRaffleTime.toString() ?? "0",
           createdAt: deployed.timestamp,
+          name: deployed.name,
+          nextDraw: kuriData?.nexRaffleTime.toString() ?? "0",
+          launchPeriod: kuriData?.launchPeriod.toString() ?? "0",
+          startTime: kuriData?.startTime.toString() ?? "0",
+          endTime: kuriData?.endTime.toString() ?? "0",
         };
       }
     );

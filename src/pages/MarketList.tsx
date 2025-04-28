@@ -194,8 +194,8 @@ export default function MarketList() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {inLaunchMarkets.map((market) => (
-              <MarketCard key={market.address} market={market} />
+            {inLaunchMarkets.map((market, index) => (
+              <MarketCard key={market.address} market={market} index={index} />
             ))}
           </div>
         )}
@@ -217,8 +217,8 @@ export default function MarketList() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {activeMarkets.map((market) => (
-              <MarketCard key={market.address} market={market} />
+            {activeMarkets.map((market, index) => (
+              <MarketCard key={market.address} market={market} index={index} />
             ))}
           </div>
         )}
@@ -240,8 +240,8 @@ export default function MarketList() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {completedMarkets.map((market) => (
-              <MarketCard key={market.address} market={market} />
+            {completedMarkets.map((market, index) => (
+              <MarketCard key={market.address} market={market} index={index} />
             ))}
           </div>
         )}

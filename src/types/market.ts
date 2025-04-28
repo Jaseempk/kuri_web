@@ -12,17 +12,18 @@ export enum IntervalType {
 
 export interface KuriData {
   creator: string;
-  kuriAmount: bigint;
-  totalParticipantsCount: number;
-  totalActiveParticipantsCount: number;
-  intervalDuration: number;
-  nextRaffleTime: number;
-  nextIntervalDepositTime: number;
-  launchPeriod: number;
-  startTime: number;
-  endTime: number;
-  intervalType: IntervalType;
-  state: KuriState;
+  kuriAmount: string;
+  totalParticipantsCount: string;
+  currentParticipantsCount: string;
+  intervalType: string;
+  intervalCount: string;
+  startTime: string;
+  endTime: string;
+  lastContributionTime: string;
+  isActive: boolean;
+  isCompleted: boolean;
+  isCancelled: boolean;
+  name: string;
 }
 
 export interface MarketTimings {
