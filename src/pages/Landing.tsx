@@ -14,6 +14,9 @@ import {
   Github,
   ChevronUp,
 } from "lucide-react";
+import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
+import { MarketCard } from "../components/markets/MarketCard";
+import { KuriMarket } from "../hooks/useKuriMarkets";
 
 // Hero section background images
 const heroBackgrounds = [
@@ -108,6 +111,8 @@ const activeCircles = [
 
 function App() {
   const navigate = useNavigate();
+  const { getAllMarkets, isLoading, error } = useKuriFactory();
+  const [inLaunchMarkets, setInLaunchMarkets] = useState<KuriMarket[]>([]);
   // State for navigation
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
@@ -214,6 +219,22 @@ function App() {
       behavior: "smooth",
     });
   };
+
+  useEffect(() => {
+    const fetchMarkets = async () => {
+      try {
+        const allMarkets = await getAllMarkets();
+        const latestInLaunch = allMarkets
+          .filter((m) => m.state === 0)
+          .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
+          .slice(0, 3);
+        setInLaunchMarkets(latestInLaunch);
+      } catch (err) {
+        console.error("Error fetching markets:", err);
+      }
+    };
+    fetchMarkets();
+  }, [getAllMarkets]);
 
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
@@ -415,21 +436,19 @@ function App() {
                 transition={{ duration: 0.6, delay: 0.9 }}
               >
                 <Button
-                  className="bg-[#C84E31] hover:bg-[#B64529] text-white rounded-xl px-6 py-3 font-medium text-[17px] flex items-center gap-2.5 shadow-sm border-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/20 group relative overflow-hidden"
+                  className="bg-[#C84E31] text-white rounded-xl px-6 py-3 font-medium text-[17px] flex items-center gap-2.5 shadow-sm border-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/20 group relative overflow-hidden"
                   onClick={() => navigate("/markets")}
                 >
                   <span className="relative z-10">Get Started</span>
                   <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 relative z-10" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#C84E31] to-[#B64529] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </Button>
 
                 <Button
                   variant="outline"
-                  className="bg-transparent border border-[#C84E31] text-[#C84E31] hover:bg-[#C84E31]/5 rounded-xl px-6 py-3 font-medium text-[17px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/10 relative overflow-hidden group"
+                  className="bg-transparent border border-[#C84E31] text-[#C84E31] rounded-xl px-6 py-3 font-medium text-[17px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/10 relative overflow-hidden group"
                   onClick={() => scrollToSection("how-it-works")}
                 >
                   <span className="relative z-10">Learn More</span>
-                  <div className="absolute inset-0 bg-[#C84E31]/5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                 </Button>
               </motion.div>
             </motion.div>
@@ -1176,58 +1195,30 @@ function App() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {activeCircles.map((circle, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-background rounded-2xl overflow-hidden hover-lift shadow-lg"
-              >
-                <div className="relative h-48">
-                  <img
-                    src={circle.imageUrl}
-                    alt={circle.name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  <div className="absolute bottom-4 left-4">
-                    <h3 className="text-xl font-sans font-semibold text-white">
-                      {circle.name}
-                    </h3>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Members</p>
-                      <p className="font-medium">{circle.members}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        Contribution
-                      </p>
-                      <p className="font-medium">{circle.contribution}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-xs text-muted-foreground">Next Draw</p>
-                      <p className="font-medium font-mono">{circle.nextDraw}</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    View Details
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+            {isLoading ? (
+              <div className="col-span-3 text-center text-muted-foreground">
+                Loading circles...
+              </div>
+            ) : inLaunchMarkets.length === 0 ? (
+              <div className="col-span-3 text-center text-muted-foreground">
+                No live circles in launch phase
+              </div>
+            ) : (
+              inLaunchMarkets.map((market, index) => (
+                <MarketCard
+                  key={market.address}
+                  market={market}
+                  index={index}
+                />
+              ))
+            )}
           </div>
           <div className="text-center mt-12">
             <Button
               variant="gold"
               size="lg"
               className="bg-[hsl(var(--gold))] hover:bg-white hover:text-[hsl(var(--gold))] text-white border border-[hsl(var(--gold))] group"
+              onClick={() => navigate("/markets")}
             >
               View All Circles
               <ChevronRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-1" />

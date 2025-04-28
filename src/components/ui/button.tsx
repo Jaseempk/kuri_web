@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[hsl(var(--terracotta))] text-white hover:bg-[hsl(var(--terracotta))/90]",
+          "bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))]",
         destructive: "bg-red-500 text-white hover:bg-red-500/90",
         outline:
           "border border-[hsl(var(--gold))] bg-transparent text-foreground hover:bg-[hsl(var(--gold))/10]",
