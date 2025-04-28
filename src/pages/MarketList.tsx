@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
-import { MarketStatus, IntervalType } from "../graphql/types";
 import { formatEther } from "viem";
-import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
+import { MarketStatus, IntervalType } from "../graphql/types";
+import { Button } from "../components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../components/ui/dialog";
-import { Plus } from "lucide-react";
+
 import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
 import { MarketCard } from "../components/markets/MarketCard";
@@ -117,7 +117,7 @@ export default function MarketList() {
         </p>
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="px-6 py-2 text-sm bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full">
+            <Button className="px-6 py-2 text-sm bg-[#8B6F47] text-white hover:bg-white hover:text-[#8B6F47] rounded-full">
               Start a Circle
             </Button>
           </DialogTrigger>
@@ -164,7 +164,7 @@ export default function MarketList() {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="px-8 py-3 text-base bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
+              <Button className="px-8 py-3 text-base bg-[#8B6F47] text-white hover:bg-white hover:text-[#8B6F47] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
                 Start Your Journey Now
               </Button>
             </DialogTrigger>
