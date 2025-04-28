@@ -155,6 +155,40 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
     }
   };
 
+  // Add status section at the top
+  const renderStatus = () => {
+    if (!marketData) return null;
+
+    const { totalParticipantsCount, totalActiveParticipantsCount } = marketData;
+    const progress =
+      (totalActiveParticipantsCount / totalParticipantsCount) * 100;
+
+    return (
+      <div className="mb-6 space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">
+            Members: {totalActiveParticipantsCount}/{totalParticipantsCount}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {progress.toFixed(0)}% Full
+          </span>
+        </div>
+        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[hsl(var(--forest))]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        {totalActiveParticipantsCount === totalParticipantsCount && (
+          <div className="text-sm text-[hsl(var(--forest))] bg-[hsl(var(--forest))]/10 p-2 rounded">
+            Circle is ready to initialize! You can close this dialog and click
+            the "Initialize Kuri" button.
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (queryLoading || isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -173,6 +207,7 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
 
   return (
     <div className="space-y-4">
+      {renderStatus()}
       <Table>
         <TableHeader>
           <TableRow>

@@ -70,25 +70,34 @@ export const CreateMarketForm = ({
     if (!validateForm()) return;
 
     try {
+      setError("");
       const tx = await initialiseKuriMarket(
         parseUnits(monthlyContribution, 6), // USDC has 6 decimal places
         Number(formData.participantCount),
         Number(formData.intervalType) as 0 | 1
       );
 
-      toast.success("Circle created successfully! Redirecting to details...");
-      onSuccess?.();
+      // Close the modal immediately after transaction confirmation
       onClose?.();
 
-      // Redirect to the new circle after a short delay
+      // Show success toast with redirect message
+      toast.success("Circle created successfully! Redirecting to details...", {
+        duration: 4000,
+      });
+
+      // Call success callback if provided
+      onSuccess?.();
+
+      // Redirect to the markets page after a delay to allow toast to be visible
       setTimeout(() => {
-        window.location.href = `/markets`; ///${tx}
+        window.location.href = `/markets`;
       }, 2000);
     } catch (err) {
       if (!isUserRejection(err)) {
-        setError(
-          err instanceof Error ? err.message : "Failed to create circle"
-        );
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create circle";
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     }
   };

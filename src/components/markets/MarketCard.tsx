@@ -14,8 +14,9 @@ import { config } from "../../providers/Web3Provider";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
-import { Clock } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { IntervalType } from "../../graphql/types";
+import { toast } from "sonner";
 
 interface MarketCardProps {
   market: KuriMarket;
@@ -45,9 +46,13 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   const account = getAccount(config);
-  const { requestMembership, getMemberStatus, isRequesting } = useKuriCore(
-    market.address as `0x${string}`
-  );
+  const {
+    requestMembership,
+    getMemberStatus,
+    isRequesting,
+    initializeKuri,
+    marketData,
+  } = useKuriCore(market.address as `0x${string}`);
 
   // Default values until implemented in Market type
   const defaultDescription =
@@ -105,9 +110,51 @@ export const MarketCard = ({ market }: MarketCardProps) => {
     fetchMemberStatus();
   }, [account.address, getMemberStatus]);
 
+  // Check if market is ready to initialize
+  const canInitialize = useMemo(() => {
+    return (
+      market.state === 0 && // INLAUNCH state
+      market.activeParticipants === market.totalParticipants
+    );
+  }, [market.state, market.activeParticipants, market.totalParticipants]);
+
+  // Check if market is full
+  const isMarketFull = useMemo(() => {
+    return market.activeParticipants >= market.totalParticipants;
+  }, [market.activeParticipants, market.totalParticipants]);
+
+  // Handle Kuri initialization
+  const handleInitialize = async () => {
+    if (!account.address) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await initializeKuri();
+      toast.success("Kuri cycle initialized successfully!");
+    } catch (err) {
+      console.error("Error initializing Kuri:", err);
+      if (!isUserRejection(err)) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to initialize Kuri";
+        toast.error(errorMsg);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update the join request handler to check if market is full
   const handleJoinRequest = async () => {
     if (!account.address) {
       setError("Please connect your wallet first");
+      return;
+    }
+
+    if (isMarketFull) {
+      setError("This circle is already full");
       return;
     }
 
@@ -116,13 +163,14 @@ export const MarketCard = ({ market }: MarketCardProps) => {
 
     try {
       await requestMembership();
-      // After requesting membership, user's state will still be NONE until accepted
       setMembershipStatus(0); // NONE state
+      toast.success("Membership requested successfully!");
     } catch (err) {
       if (!isUserRejection(err)) {
-        setError(
-          err instanceof Error ? err.message : "Failed to request membership"
-        );
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to request membership";
+        setError(errorMsg);
+        toast.error(errorMsg);
       }
     } finally {
       setIsLoading(false);
@@ -178,6 +226,58 @@ export const MarketCard = ({ market }: MarketCardProps) => {
   const isCreator =
     account.address?.toLowerCase() === market.creator.toLowerCase();
 
+  // In the render section, update the action buttons
+  const renderActionButton = () => {
+    if (isCreator) {
+      if (canInitialize) {
+        return (
+          <Button
+            onClick={handleInitialize}
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Initialize Kuri"
+            )}
+          </Button>
+        );
+      }
+      return (
+        <ManageMembersDialog market={market}>
+          <Button className="w-full">
+            Manage Members ({market.activeParticipants}/
+            {market.totalParticipants})
+          </Button>
+        </ManageMembersDialog>
+      );
+    }
+
+    // For non-creators
+    if (membershipStatus === 0) {
+      // NONE state
+      return (
+        <Button
+          onClick={handleJoinRequest}
+          disabled={isLoading || isMarketFull || isRequesting}
+          className="w-full"
+          title={isMarketFull ? "This circle is already full" : undefined}
+        >
+          {isLoading || isRequesting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isMarketFull ? (
+            "Circle Full"
+          ) : (
+            "Request to Join"
+          )}
+        </Button>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardHeader>
@@ -222,26 +322,7 @@ export const MarketCard = ({ market }: MarketCardProps) => {
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
       </CardContent>
-      <CardFooter>
-        {!isCreator &&
-          membershipStatus === 0 && ( // NONE state
-            <Button
-              variant="default"
-              className="w-full hover:bg-white hover:text-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))]"
-              onClick={handleJoinRequest}
-              disabled={isRequesting || isLoading}
-            >
-              {isRequesting ? "Requesting..." : "Request to Join"}
-            </Button>
-          )}
-        {isCreator && (
-          <ManageMembersDialog
-            marketAddress={market.address}
-            marketName={`Kuri`}
-            isCreator={isCreator}
-          />
-        )}
-      </CardFooter>
+      <CardFooter className="pt-4">{renderActionButton()}</CardFooter>
     </Card>
   );
 };

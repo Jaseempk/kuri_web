@@ -131,47 +131,69 @@ export default function MarketList() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-[#FEF6F0]/50 p-6 rounded-xl mb-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-[1fr,auto] gap-6 items-center">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-[#8B6F47]">
-                Ready to Start Your Financial Journey?
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-2">
-                  <img src="/target.svg" alt="Target" className="w-5 h-5" />
-                  <span className="text-sm">Set financial goals</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <img
-                    src="/handshake.svg"
-                    alt="Handshake"
-                    className="w-5 h-5"
-                  />
-                  <span className="text-sm">Build trust & community</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <img src="/lock.svg" alt="Lock" className="w-5 h-5" />
-                  <span className="text-sm">Secure your savings</span>
-                </div>
+      <section className="bg-[#FEF6F0]/50 p-12 rounded-2xl mb-12">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-semibold text-[#8B6F47] mb-8">
+            Ready to Start Your Financial Journey?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto mb-8">
+            <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-white/50">
+              <div className="w-12 h-12 rounded-full bg-[#8B6F47]/10 flex items-center justify-center">
+                <img src="/target.svg" alt="Target" className="w-6 h-6" />
               </div>
+              <span className="text-sm font-medium text-[#8B6F47]">
+                Set financial goals
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-white/50">
+              <div className="w-12 h-12 rounded-full bg-[#8B6F47]/10 flex items-center justify-center">
+                <img src="/handshake.svg" alt="Handshake" className="w-6 h-6" />
+              </div>
+              <span className="text-sm font-medium text-[#8B6F47]">
+                Build trust & community
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-white/50">
+              <div className="w-12 h-12 rounded-full bg-[#8B6F47]/10 flex items-center justify-center">
+                <img src="/lock.svg" alt="Lock" className="w-6 h-6" />
+              </div>
+              <span className="text-sm font-medium text-[#8B6F47]">
+                Secure your savings
+              </span>
             </div>
           </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="px-8 py-3 text-base bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
+                Start Your Journey Now
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Create New Circle</DialogTitle>
+              </DialogHeader>
+              <CreateMarketForm />
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
 
       {/* In Launch Markets */}
       <section className="mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Launching Circles</h2>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-semibold text-[#8B6F47]">
+            Launching Circles
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            Circles that are getting ready to start their journey
+          </p>
         </div>
         {inLaunchMarkets.length === 0 ? (
-          <div className="text-center py-12 bg-muted rounded-lg">
+          <div className="text-center py-12 bg-muted rounded-xl">
             <p className="text-muted-foreground">No circles in launch phase</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {inLaunchMarkets.map((market) => (
               <MarketCard key={market.address} market={market} />
             ))}
@@ -181,15 +203,20 @@ export default function MarketList() {
 
       {/* Active Markets */}
       <section className="mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Active Circles</h2>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-semibold text-[#8B6F47]">
+            Active Circles
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            Currently active circles accepting deposits
+          </p>
         </div>
         {activeMarkets.length === 0 ? (
-          <div className="text-center py-12 bg-muted rounded-lg">
+          <div className="text-center py-12 bg-muted rounded-xl">
             <p className="text-muted-foreground">No active circles found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {activeMarkets.map((market) => (
               <MarketCard key={market.address} market={market} />
             ))}
@@ -198,14 +225,21 @@ export default function MarketList() {
       </section>
 
       {/* Completed Markets */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-6">Completed Circles</h2>
+      <section className="mb-12">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-semibold text-[#8B6F47]">
+            Completed Circles
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            Circles that have completed their saving journey
+          </p>
+        </div>
         {completedMarkets.length === 0 ? (
-          <div className="text-center py-12 bg-muted rounded-lg">
+          <div className="text-center py-12 bg-muted rounded-xl">
             <p className="text-muted-foreground">No completed circles found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {completedMarkets.map((market) => (
               <MarketCard key={market.address} market={market} />
             ))}

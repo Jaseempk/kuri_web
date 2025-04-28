@@ -6,29 +6,30 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
 import { ManageMembers } from "./ManageMembers";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { useAccount } from "wagmi";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { KuriMarket } from "../../hooks/useKuriMarkets";
+import { Button } from "../ui/button";
 
 interface ManageMembersDialogProps {
-  marketAddress: string;
-  marketName: string;
-  isCreator: boolean;
+  market: KuriMarket;
+  children?: React.ReactNode;
 }
 
 export const ManageMembersDialog = ({
-  marketAddress,
-  marketName,
-  isCreator,
+  market,
+  children,
 }: ManageMembersDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { requestMembership, isRequesting } = useKuriCore(
-    marketAddress as `0x${string}`
+  const { requestMembership, isRequesting, marketData } = useKuriCore(
+    market.address as `0x${string}`
   );
   const { address } = useAccount();
+
+  const isCreator = address?.toLowerCase() === market.creator.toLowerCase();
 
   const handleRequestMembership = async () => {
     try {
@@ -39,29 +40,45 @@ export const ManageMembersDialog = ({
     }
   };
 
+  // Check if market is ready to initialize
+  const isReadyToInitialize =
+    marketData &&
+    marketData.totalActiveParticipantsCount ===
+      marketData.totalParticipantsCount;
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-[#D35C2A] text-white hover:bg-[#B84D23]">
-          {isCreator ? "Manage Members" : "Request To Join"}
-        </Button>
+        {children || (
+          <Button className="w-full">
+            {isCreator ? "Manage Members" : "Request To Join"}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isCreator
-              ? `Manage Members - ${marketName}`
-              : `Join ${marketName}`}
+            {isCreator ? "Manage Members" : "Join Circle"}
           </DialogTitle>
           <DialogDescription>
             {isCreator
-              ? "Review and manage membership requests for your market."
+              ? "Review and manage membership requests for your circle."
               : "Request to join this Kuri circle and participate in the savings pool."}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
           {isCreator ? (
-            <ManageMembers marketAddress={marketAddress} />
+            <>
+              {isReadyToInitialize && (
+                <div className="mb-4 p-3 bg-[hsl(var(--forest))]/10 rounded-lg">
+                  <p className="text-[hsl(var(--forest))] text-sm">
+                    Circle is ready to initialize! You can close this dialog and
+                    click the "Initialize Kuri" button.
+                  </p>
+                </div>
+              )}
+              <ManageMembers marketAddress={market.address} />
+            </>
           ) : (
             <div className="flex flex-col items-center gap-4 py-6">
               <p className="text-center text-muted-foreground">

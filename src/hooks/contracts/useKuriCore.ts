@@ -88,8 +88,8 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
     try {
       const { request } = await simulateContract(config, {
-        address: kuriAddress,
         abi: KuriCoreABI,
+        address: kuriAddress,
         functionName: "initialiseKuri",
       });
 
