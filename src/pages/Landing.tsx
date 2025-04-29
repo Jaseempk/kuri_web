@@ -371,11 +371,11 @@ function App() {
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className="min-h-screen relative overflow-hidden bg-[#f8f5f0] flex items-center"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#f8f5f0]"
         id="hero"
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 md:py-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative py-12 md:py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left content column */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -385,7 +385,7 @@ function App() {
             >
               <div className="space-y-2">
                 <motion.h1
-                  className="text-[52px] lg:text-6xl font-semibold tracking-tight text-[#402e32] leading-[1.1]"
+                  className="text-[42px] sm:text-[52px] lg:text-6xl font-semibold tracking-tight text-[#402e32] leading-[1.1]"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
@@ -460,10 +460,10 @@ function App() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="relative flex justify-center lg:justify-start items-center lg:pl-12"
             >
-              <div className="relative w-[520px] h-[520px] flex items-center justify-center transform hover:scale-[1.02] transition-transform duration-700">
+              <div className="relative w-[280px] h-[280px] sm:w-[440px] sm:h-[440px] md:w-[520px] md:h-[520px] flex items-center justify-center transform hover:scale-[1.02] transition-transform duration-700">
                 {/* Outer circle with gradient border */}
                 <motion.div
-                  className="absolute w-[520px] h-[520px] rounded-full bg-[#f8f5f0]"
+                  className="absolute w-full h-full rounded-full bg-[#f8f5f0]"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
@@ -473,7 +473,7 @@ function App() {
 
                 {/* Inner circle with gradient */}
                 <motion.div
-                  className="absolute w-[480px] h-[480px] rounded-full overflow-hidden"
+                  className="absolute w-[calc(100%-40px)] h-[calc(100%-40px)] rounded-full overflow-hidden"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.8 }}
@@ -483,7 +483,7 @@ function App() {
 
                 {/* Image container with enhanced effects */}
                 <motion.div
-                  className="relative w-[440px] h-[440px] rounded-full overflow-hidden"
+                  className="relative w-[calc(100%-80px)] h-[calc(100%-80px)] rounded-full overflow-hidden"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 1 }}
@@ -494,8 +494,6 @@ function App() {
                     alt="People joining hands in a circle showing community trust"
                     className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
                     loading="lazy"
-                    width={440}
-                    height={440}
                   />
                 </motion.div>
               </div>
