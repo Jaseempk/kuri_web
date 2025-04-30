@@ -1,0 +1,19 @@
+.farcaster-layout {
+  /* Styles specific to Farcaster mini-app layout */
+  max-width: 100%;
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+.farcaster-adapted {
+  /* Styles for Farcaster-adapted components */
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Add Farcaster-specific responsive adjustments */
+@media (max-width: 640px) {
+  .farcaster-layout {
+    padding: 0.5rem;
+  }
+}

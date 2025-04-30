@@ -2,7 +2,11 @@ import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { ConnectButton } from "./ui/ConnectButton";
 
-const Layout = () => {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
 
   return (
@@ -19,20 +23,20 @@ const Layout = () => {
             <nav className="flex gap-6">
               <Link
                 to="/markets"
-                className={`text-foreground hover:text-[hsl(var(--gold))] transition-colors duration-300 ${
-                  location.pathname.startsWith("/markets")
+                className={`text-sm font-medium transition-colors hover:text-[hsl(var(--gold))] ${
+                  location.pathname === "/markets"
                     ? "text-[hsl(var(--gold))]"
-                    : ""
+                    : "text-muted-foreground"
                 }`}
               >
                 Markets
               </Link>
               <Link
                 to="/dashboard"
-                className={`text-foreground hover:text-[hsl(var(--gold))] transition-colors duration-300 ${
+                className={`text-sm font-medium transition-colors hover:text-[hsl(var(--gold))] ${
                   location.pathname === "/dashboard"
                     ? "text-[hsl(var(--gold))]"
-                    : ""
+                    : "text-muted-foreground"
                 }`}
               >
                 Dashboard
@@ -44,9 +48,7 @@ const Layout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 min-h-[calc(100vh-12rem)]">
-        <Outlet />
-      </main>
+      <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
 
       {/* Footer */}
       <footer className="bg-[hsl(var(--sand))/10 border-t border-[hsl(var(--gold))/20]">
