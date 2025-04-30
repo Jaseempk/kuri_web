@@ -1,0 +1,18 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjQxODE4OCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDZFQWFiRGIwY2RBNWI4NTMzZDU5M2YyNWQ4OTgwQzg5YUNjNzMxMjkifQ",
+    "payload": "eyJkb21haW4iOiJrdXJpLXdlYi1ydXN0LnZlcmNlbC5hcHAifQ",
+    "signature": "MHhkMTE1YWRjMzRkYWUwY2ZkMWRkOGNmMzgxNGU2OWVmYTFjNzg3YWZmMWE5ZTEyZTJkOTE0Yjk1OTFhYTQzYjRkNjJiMjU4YjlmMzMyYmEwNmEwYTQwNWZhYzU2YjgwNWFmNDA5NjJkYTk4NTNmNWUyOTVjOWI2Zjc4MjVhNDYyOTFi"
+  },
+  "frame": {
+    "version": "1",
+    "name": "Example Frame",
+    "iconUrl": "https://kuri-web-rust.vercel.app/icon.png",
+    "homeUrl": "https://kuri-web-rust.vercel.app",
+    "imageUrl": "https://kuri-web-rust.vercel.app/image.png",
+    "buttonTitle": "Check this out",
+    "splashImageUrl": "https://kuri-web-rust.vercel.app/splash.png",
+    "splashBackgroundColor": "#eeccff",
+    "webhookUrl": "https://kuri-web-rust.vercel.app/api/webhook"
+  }
+}
