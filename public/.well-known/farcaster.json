@@ -7,11 +7,11 @@
   "frame": {
     "version": "1",
     "name": "Example Frame",
-    "iconUrl": "https://kuri-web-rust.vercel.app/icon.png",
+    "iconUrl": "https://kuri-web-rust.vercel.app/images/trust.jpg",
     "homeUrl": "https://kuri-web-rust.vercel.app",
-    "imageUrl": "https://kuri-web-rust.vercel.app/image.png",
+    "imageUrl": "https://kuri-web-rust.vercel.app/images/financialempowerment.jpg",
     "buttonTitle": "Check this out",
-    "splashImageUrl": "https://kuri-web-rust.vercel.app/splash.png",
+    "splashImageUrl": "https://kuri-web-rust.vercel.app/images/communityvibe.jpg",
     "splashBackgroundColor": "#eeccff",
     "webhookUrl": "https://kuri-web-rust.vercel.app/api/webhook"
   }
