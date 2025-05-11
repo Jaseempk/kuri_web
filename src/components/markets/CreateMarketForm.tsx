@@ -95,6 +95,7 @@ export const CreateMarketForm = ({
         Number(formData.participantCount),
         Number(formData.intervalType) as 0 | 1
       );
+      console.log("formData", formData);
 
       // Close the modal immediately after transaction confirmation
       onClose?.();
@@ -107,40 +108,39 @@ export const CreateMarketForm = ({
       // Call success callback if provided
       onSuccess?.();
 
-      // Redirect to the markets page after a delay to allow toast to be visible
-      setTimeout(() => {
-        window.location.href = `/markets`;
-      }, 2000);
-
       // 2. Get market address from transaction
       // TODO: Replace this with the correct extraction logic for the deployed market address
       // For now, assume tx has a property 'marketAddress' or similar
       const marketAddress = tx || "";
       console.log("Market Address:", marketAddress);
 
+      console.log("file", formData.image);
+
       // 3. Save metadata
       let imageUrl = "";
       if (formData.image) {
-        const fileExt = formData.image.name.split(".").pop();
-        const fileName = `${Math.random()
-          .toString(36)
-          .substring(2)}_${Date.now()}.${fileExt}`;
-        const filePath = `kuri_web/${fileName}`;
-        const { error } = await supabase.storage
+        const filePath = formData.image.name;
+        const { data, error } = await supabase.storage
           .from("kuri")
           .upload(filePath, formData.image);
+        console.log("data", data);
         if (error) throw error;
         const {
           data: { publicUrl },
         } = supabase.storage.from("kuri").getPublicUrl(filePath);
         imageUrl = publicUrl;
       }
-      await supabase.from("market_metadata").insert({
+      await supabase.from("kuri_web").insert({
         market_address: marketAddress,
         short_description: formData.shortDescription,
         long_description: formData.longDescription,
         image_url: imageUrl,
       });
+
+      // Redirect to the markets page after a delay to allow toast to be visible
+      setTimeout(() => {
+        window.location.href = `/markets`;
+      }, 30000);
     } catch (err) {
       if (!isUserRejection(err)) {
         const errorMessage =

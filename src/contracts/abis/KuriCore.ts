@@ -2,7 +2,11 @@ export const KuriCoreABI = [
   {
     inputs: [
       { internalType: "uint64", name: "_kuriAmount", type: "uint64" },
-      { internalType: "uint16", name: "_participantCount", type: "uint16" },
+      {
+        internalType: "uint16",
+        name: "_participantCount",
+        type: "uint16",
+      },
       { internalType: "address", name: "_initialiser", type: "address" },
       {
         internalType: "enum KuriCore.IntervalType",
@@ -22,20 +26,44 @@ export const KuriCoreABI = [
     name: "AccessControlUnauthorizedAccount",
     type: "error",
   },
-  { inputs: [], name: "KuriCore__AlreadyPastLaunchPeriod", type: "error" },
+  {
+    inputs: [],
+    name: "KuriCore__AlreadyPastLaunchPeriod",
+    type: "error",
+  },
   { inputs: [], name: "KuriCore__AlreadyRejected", type: "error" },
   { inputs: [], name: "KuriCore__CallerNotAccepted", type: "error" },
-  { inputs: [], name: "KuriCore__CantAcceptWhenNotInLaunch", type: "error" },
+  {
+    inputs: [],
+    name: "KuriCore__CantAcceptWhenNotInLaunch",
+    type: "error",
+  },
   { inputs: [], name: "KuriCore__CantFlagForFutureIndex", type: "error" },
-  { inputs: [], name: "KuriCore__CantFlagUserAlreadyPaid", type: "error" },
-  { inputs: [], name: "KuriCore__CantRejectWhenNotInLaunch", type: "error" },
-  { inputs: [], name: "KuriCore__CantRequestWhenNotInLaunch", type: "error" },
+  {
+    inputs: [],
+    name: "KuriCore__CantFlagUserAlreadyPaid",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "KuriCore__CantRejectWhenNotInLaunch",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "KuriCore__CantRequestWhenNotInLaunch",
+    type: "error",
+  },
   {
     inputs: [],
     name: "KuriCore__CantWithdrawWhenCycleIsActive",
     type: "error",
   },
-  { inputs: [], name: "KuriCore__DepositIntervalNotReached", type: "error" },
+  {
+    inputs: [],
+    name: "KuriCore__DepositIntervalNotReached",
+    type: "error",
+  },
   {
     inputs: [],
     name: "KuriCore__InsufficientActiveParticipantCount",
@@ -136,14 +164,26 @@ export const KuriCoreABI = [
             name: "totalActiveParticipantsCount",
             type: "uint16",
           },
-          { internalType: "uint24", name: "intervalDuration", type: "uint24" },
-          { internalType: "uint48", name: "nexRaffleTime", type: "uint48" },
+          {
+            internalType: "uint24",
+            name: "intervalDuration",
+            type: "uint24",
+          },
+          {
+            internalType: "uint48",
+            name: "nexRaffleTime",
+            type: "uint48",
+          },
           {
             internalType: "uint48",
             name: "nextIntervalDepositTime",
             type: "uint48",
           },
-          { internalType: "uint48", name: "launchPeriod", type: "uint48" },
+          {
+            internalType: "uint48",
+            name: "launchPeriod",
+            type: "uint48",
+          },
           { internalType: "uint48", name: "startTime", type: "uint48" },
           { internalType: "uint48", name: "endTime", type: "uint48" },
           {
@@ -219,8 +259,18 @@ export const KuriCoreABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "from", type: "address" },
-      { indexed: true, internalType: "address", name: "to", type: "address" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
     ],
     name: "OwnershipTransferRequested",
     type: "event",
@@ -228,8 +278,18 @@ export const KuriCoreABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "from", type: "address" },
-      { indexed: true, internalType: "address", name: "to", type: "address" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
     ],
     name: "OwnershipTransferred",
     type: "event",
@@ -274,7 +334,12 @@ export const KuriCoreABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
       {
         indexed: true,
         internalType: "bytes32",
@@ -294,7 +359,12 @@ export const KuriCoreABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
       {
         indexed: true,
         internalType: "address",
@@ -314,7 +384,12 @@ export const KuriCoreABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
       {
         indexed: true,
         internalType: "address",
@@ -615,7 +690,11 @@ export const KuriCoreABI = [
         name: "totalActiveParticipantsCount",
         type: "uint16",
       },
-      { internalType: "uint24", name: "intervalDuration", type: "uint24" },
+      {
+        internalType: "uint24",
+        name: "intervalDuration",
+        type: "uint24",
+      },
       { internalType: "uint48", name: "nexRaffleTime", type: "uint48" },
       {
         internalType: "uint48",
@@ -630,7 +709,11 @@ export const KuriCoreABI = [
         name: "intervalType",
         type: "uint8",
       },
-      { internalType: "enum KuriCore.KuriState", name: "state", type: "uint8" },
+      {
+        internalType: "enum KuriCore.KuriState",
+        name: "state",
+        type: "uint8",
+      },
     ],
     stateMutability: "view",
     type: "function",
@@ -675,7 +758,11 @@ export const KuriCoreABI = [
   {
     inputs: [
       { internalType: "uint256", name: "requestId", type: "uint256" },
-      { internalType: "uint256[]", name: "randomWords", type: "uint256[]" },
+      {
+        internalType: "uint256[]",
+        name: "randomWords",
+        type: "uint256[]",
+      },
     ],
     name: "rawFulfillRandomWords",
     outputs: [],
@@ -692,7 +779,11 @@ export const KuriCoreABI = [
   {
     inputs: [
       { internalType: "bytes32", name: "role", type: "bytes32" },
-      { internalType: "address", name: "callerConfirmation", type: "address" },
+      {
+        internalType: "address",
+        name: "callerConfirmation",
+        type: "address",
+      },
     ],
     name: "renounceRole",
     outputs: [],
@@ -775,7 +866,11 @@ export const KuriCoreABI = [
   },
   {
     inputs: [
-      { internalType: "address", name: "_vrfCoordinator", type: "address" },
+      {
+        internalType: "address",
+        name: "_vrfCoordinator",
+        type: "address",
+      },
     ],
     name: "setCoordinator",
     outputs: [],
