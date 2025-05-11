@@ -124,9 +124,6 @@ export default function MarketList() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Circle</DialogTitle>
-            </DialogHeader>
             <CreateMarketForm />
           </DialogContent>
         </Dialog>
@@ -171,9 +168,6 @@ export default function MarketList() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Circle</DialogTitle>
-              </DialogHeader>
               <CreateMarketForm />
             </DialogContent>
           </Dialog>

@@ -10,6 +10,8 @@ import { KuriMarket } from "../../hooks/useKuriMarkets";
 import { Clock, Loader2 } from "lucide-react";
 import { IntervalType } from "../../graphql/types";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { MarketCardExpanded } from "./MarketCardExpanded";
 
 interface MarketCardProps {
   market: KuriMarket;
@@ -46,11 +48,43 @@ const getIntervalTypeText = (intervalType: number): string => {
   }
 };
 
+// Define MarketMetadata type and getMetadata function here
+export interface MarketMetadata {
+  id: number;
+  created_at: string;
+  market_address: string;
+  short_description: string;
+  long_description: string;
+  image_url: string;
+}
+
+// Dummy getMetadata function (replace with actual implementation if needed)
+export const getMetadata = async (
+  marketAddress: string
+): Promise<MarketMetadata | null> => {
+  // This should call Supabase or your backend to fetch metadata
+  return null;
+};
+
+// Hardcoded fallback data for markets without Supabase metadata
+const HARDCODED_MARKET_METADATA: Record<string, MarketMetadata> = {
+  // Example:
+  // "0x123...": {
+  //   id: 0,
+  //   created_at: "",
+  //   market_address: "0x123...",
+  //   short_description: "A community savings circle powered by Kuri protocol.",
+  //   long_description: "This is a hardcoded long story for the market.",
+  //   image_url: "/images/default-market.jpg",
+  // },
+};
+
 export const MarketCard = ({ market, index }: MarketCardProps) => {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const account = getAccount(config);
   const {
@@ -60,6 +94,11 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
     initializeKuri,
     marketData,
   } = useKuriCore(market.address as `0x${string}`);
+
+  const { data: metadata } = useQuery({
+    queryKey: ["market-metadata", market.address],
+    queryFn: () => getMetadata(market.address),
+  });
 
   // Default values until implemented in Market type
   const defaultDescription =
@@ -234,6 +273,20 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   // Get circle image based on index
   const imageUrl = CIRCLE_IMAGES[index % CIRCLE_IMAGES.length];
 
+  // Fallback to hardcoded data if no Supabase metadata
+  const fallbackMetadata: MarketMetadata = {
+    id: 0,
+    created_at: "",
+    market_address: market.address,
+    short_description:
+      market.name || "A community savings circle powered by Kuri protocol.",
+    long_description:
+      "This is a community savings circle powered by Kuri protocol. Join to save and win!",
+    image_url: "/images/default-market.jpg",
+  };
+
+  const displayMetadata = metadata || fallbackMetadata;
+
   // Render action button based on user role and market state
   const renderActionButton = () => {
     if (isCreator) {
@@ -286,81 +339,92 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   };
 
   return (
-    <div className="bg-background rounded-2xl overflow-hidden hover-lift shadow-lg">
-      {/* Image Section with Status and Title */}
-      <div className="relative h-48">
-        <img
-          src={imageUrl}
-          alt={market.name || "Kuri Circle"}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = CIRCLE_IMAGES[0]; // Fallback to first image
-          }}
+    <>
+      <div className="cursor-pointer" onClick={() => setIsExpanded(true)}>
+        <div className="bg-background rounded-2xl overflow-hidden hover-lift shadow-lg">
+          {/* Image Section with Status and Title */}
+          <div className="relative h-48">
+            <img
+              src={imageUrl}
+              alt={market.name || "Kuri Circle"}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src = CIRCLE_IMAGES[0]; // Fallback to first image
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+            {/* Title and Membership Status */}
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+              <h3 className="text-xl font-sans font-semibold text-white">
+                {market.name || "Kuri"}
+              </h3>
+              <div className="flex items-center gap-2">
+                {getMembershipStatusDisplay()}
+              </div>
+            </div>
+          </div>
+
+          {/* Content Section */}
+          <div className="p-6 space-y-4">
+            {/* Description */}
+            <div>
+              <p
+                className="text-sm text-muted-foreground line-clamp-2"
+                title={defaultDescription}
+              >
+                {defaultDescription}
+              </p>
+            </div>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Members</p>
+                <p className="font-medium">
+                  {market.activeParticipants}/{market.totalParticipants}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Contribution</p>
+                <p className="font-medium">
+                  $
+                  {(Number(market.kuriAmount) / 1_000_000) % 1 === 0
+                    ? (Number(market.kuriAmount) / 1_000_000).toFixed(0)
+                    : (Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
+                  {getIntervalTypeText(market.intervalType)}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-muted-foreground">
+                  {market.state === 0 ? "Launch Ends In" : "Next Draw"}
+                </p>
+                <p className="font-medium font-mono">
+                  {market.state === 0 ? timeLeft : market.nextDraw || "--"}
+                </p>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            )}
+
+            {/* Action Button */}
+            <div className="mt-4">{renderActionButton()}</div>
+          </div>
+        </div>
+      </div>
+      {isExpanded && (
+        <MarketCardExpanded
+          market={market}
+          metadata={displayMetadata}
+          onClose={() => setIsExpanded(false)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-        {/* Title and Membership Status */}
-        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-          <h3 className="text-xl font-sans font-semibold text-white">
-            {market.name || "Kuri"}
-          </h3>
-          <div className="flex items-center gap-2">
-            {getMembershipStatusDisplay()}
-          </div>
-        </div>
-      </div>
-
-      {/* Content Section */}
-      <div className="p-6 space-y-4">
-        {/* Description */}
-        <div>
-          <p
-            className="text-sm text-muted-foreground line-clamp-2"
-            title={defaultDescription}
-          >
-            {defaultDescription}
-          </p>
-        </div>
-
-        {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground">Members</p>
-            <p className="font-medium">
-              {market.activeParticipants}/{market.totalParticipants}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Contribution</p>
-            <p className="font-medium">
-              $
-              {(Number(market.kuriAmount) / 1_000_000) % 1 === 0
-                ? (Number(market.kuriAmount) / 1_000_000).toFixed(0)
-                : (Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
-              {getIntervalTypeText(market.intervalType)}
-            </p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-xs text-muted-foreground">
-              {market.state === 0 ? "Launch Ends In" : "Next Draw"}
-            </p>
-            <p className="font-medium font-mono">
-              {market.state === 0 ? timeLeft : market.nextDraw || "--"}
-            </p>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
-            {error}
-          </div>
-        )}
-
-        {/* Action Button */}
-        <div className="mt-4">{renderActionButton()}</div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };

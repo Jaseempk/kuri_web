@@ -6,11 +6,16 @@ import { LoadingSkeleton } from "../ui/loading-states";
 import { parseUnits } from "viem";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
+import { supabase } from "../../lib/supabase";
 
 interface FormData {
   totalAmount: string;
   participantCount: string;
   intervalType: "0" | "1"; // 0 for WEEKLY, 1 for MONTHLY
+  shortDescription: string;
+  longDescription: string;
+  image: File | null;
+  imagePreview: string | null;
 }
 
 interface CreateMarketFormProps {
@@ -26,6 +31,10 @@ export const CreateMarketForm = ({
     totalAmount: "",
     participantCount: "",
     intervalType: "1", // Default to Monthly
+    shortDescription: "",
+    longDescription: "",
+    image: null,
+    imagePreview: null,
   });
   const [error, setError] = useState<string>("");
 
@@ -47,6 +56,16 @@ export const CreateMarketForm = ({
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError("");
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFormData((prev) => ({
+      ...prev,
+      image: file,
+      imagePreview: URL.createObjectURL(file),
+    }));
   };
 
   const validateForm = (): boolean => {
@@ -92,6 +111,36 @@ export const CreateMarketForm = ({
       setTimeout(() => {
         window.location.href = `/markets`;
       }, 2000);
+
+      // 2. Get market address from transaction
+      // TODO: Replace this with the correct extraction logic for the deployed market address
+      // For now, assume tx has a property 'marketAddress' or similar
+      const marketAddress = tx || "";
+      console.log("Market Address:", marketAddress);
+
+      // 3. Save metadata
+      let imageUrl = "";
+      if (formData.image) {
+        const fileExt = formData.image.name.split(".").pop();
+        const fileName = `${Math.random()
+          .toString(36)
+          .substring(2)}_${Date.now()}.${fileExt}`;
+        const filePath = `kuri_web/${fileName}`;
+        const { error } = await supabase.storage
+          .from("kuri")
+          .upload(filePath, formData.image);
+        if (error) throw error;
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("kuri").getPublicUrl(filePath);
+        imageUrl = publicUrl;
+      }
+      await supabase.from("market_metadata").insert({
+        market_address: marketAddress,
+        short_description: formData.shortDescription,
+        long_description: formData.longDescription,
+        image_url: imageUrl,
+      });
     } catch (err) {
       if (!isUserRejection(err)) {
         const errorMessage =
@@ -103,63 +152,62 @@ export const CreateMarketForm = ({
   };
 
   return (
-    <div className="py-4">
+    <div className="w-full max-w-md mx-auto bg-white rounded-lg md:rounded-2xl shadow-xl p-4 md:p-8 space-y-8 max-h-[90vh] overflow-y-auto mt-2 md:mt-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-[#E8DED1] scrollbar-track-[#f5f5f5]">
+      <h2 className="text-2xl font-bold text-center mb-4">Create New Circle</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Total Kuri Amount (USDC)
-          </label>
-          <input
-            type="number"
-            name="totalAmount"
-            value={formData.totalAmount}
-            onChange={handleChange}
-            className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent"
-            placeholder="1000"
-            min="100"
-            step="100"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            This is the total amount anyone can win monthly
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Number of Participants
-          </label>
-          <input
-            type="number"
-            name="participantCount"
-            value={formData.participantCount}
-            onChange={handleChange}
-            className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent"
-            placeholder="10"
-            min="2"
-            max="500"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Min: 2, Max: 500 participants
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Monthly Deposit per Participant (USDC)
-          </label>
-          <input
-            type="text"
-            value={monthlyContribution}
-            readOnly
-            className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-[#F9F5F1] focus:outline-none cursor-not-allowed"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Contribution Interval
-          </label>
-          <div className="relative">
+        {/* Amount & Participants Section */}
+        <div className="flex flex-col gap-6">
+          <div>
+            <label className="block font-semibold mb-1 text-[#8B6F47]">
+              Total Kuri Amount (USDC)
+            </label>
+            <input
+              type="number"
+              name="totalAmount"
+              value={formData.totalAmount}
+              onChange={handleChange}
+              className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent placeholder-gray-400"
+              placeholder="1000"
+              min="100"
+              step="100"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This is the total amount anyone can win monthly
+            </p>
+          </div>
+          <div>
+            <label className="block font-semibold mb-1 text-[#8B6F47]">
+              Number of Participants
+            </label>
+            <input
+              type="number"
+              name="participantCount"
+              value={formData.participantCount}
+              onChange={handleChange}
+              className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent placeholder-gray-400"
+              placeholder="10"
+              min="2"
+              max="500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Min: 2, Max: 500 participants
+            </p>
+          </div>
+          <div>
+            <label className="block font-semibold mb-1 text-[#8B6F47]">
+              Monthly Deposit per Participant (USDC)
+            </label>
+            <input
+              type="text"
+              value={monthlyContribution}
+              readOnly
+              className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-gray-100 focus:outline-none cursor-not-allowed text-gray-700"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-1 text-[#8B6F47]">
+              Contribution Interval
+            </label>
             <select
               name="intervalType"
               value={formData.intervalType}
@@ -169,39 +217,82 @@ export const CreateMarketForm = ({
               <option value="1">Monthly</option>
               <option value="0">Weekly</option>
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg
-                className="w-4 h-4 text-[#8B6F47]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              How often participants will contribute
+            </p>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            How often participants will contribute
-          </p>
         </div>
-
+        <hr className="my-4 border-[#E8DED1]" />
+        {/* Description Section */}
+        <div className="flex flex-col gap-6">
+          <div>
+            <label className="block font-semibold mb-1 text-[#8B6F47]">
+              Short Description (1-2 lines)
+            </label>
+            <input
+              type="text"
+              name="shortDescription"
+              value={formData.shortDescription}
+              onChange={handleChange}
+              maxLength={120}
+              className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent placeholder-gray-400"
+              placeholder="A brief description of your circle"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-1 text-[#8B6F47]">
+              Full Story
+            </label>
+            <textarea
+              name="longDescription"
+              value={formData.longDescription}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  longDescription: e.target.value,
+                }))
+              }
+              rows={4}
+              className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent placeholder-gray-400"
+              placeholder="Tell the full story of your circle..."
+            />
+          </div>
+        </div>
+        <hr className="my-4 border-[#E8DED1]" />
+        {/* Image Upload Section */}
+        <div className="flex flex-col gap-4">
+          <label className="block font-semibold mb-1 text-[#8B6F47]">
+            Circle Image
+          </label>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#E8DED1] file:text-[#8B6F47] hover:file:bg-[#e0d3b8] border border-[#E8DED1] rounded-lg p-2 bg-white"
+            />
+            {formData.imagePreview && (
+              <img
+                src={formData.imagePreview}
+                alt="Preview"
+                className="rounded-lg border border-[#E8DED1] shadow w-32 h-32 object-cover"
+              />
+            )}
+          </div>
+        </div>
+        {/* Error Message */}
         {error && (
-          <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+          <div className="bg-red-100 text-red-700 p-3 rounded-lg text-center font-semibold">
             {error}
           </div>
         )}
-
-        <div className="flex gap-3 pt-4">
+        {/* Buttons */}
+        <div className="flex gap-4 pt-6">
           <DialogClose asChild>
             <Button
               type="button"
               variant="outline"
-              className="flex-1 border-[#8B6F47] text-[#8B6F47] hover:bg-[#8B6F47] hover:text-white rounded-full"
+              className="flex-1 border-2 border-[#8B6F47] text-[#8B6F47] hover:bg-[#F9F5F1] hover:text-[#8B6F47] rounded-full py-2 font-semibold"
             >
               Cancel
             </Button>
@@ -209,7 +300,7 @@ export const CreateMarketForm = ({
           <Button
             type="submit"
             disabled={isCreating}
-            className="flex-1 bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full"
+            className="flex-1 bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full py-2 font-semibold text-lg shadow-md"
           >
             {isCreating ? (
               <div className="flex items-center justify-center gap-2">
