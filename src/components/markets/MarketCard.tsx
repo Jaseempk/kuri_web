@@ -52,8 +52,8 @@ const getIntervalTypeText = (intervalType: number): string => {
 // Define MarketMetadata type and getMetadata function here
 export interface MarketMetadata {
   id: number;
-  created_at: string;
   market_address: string;
+  created_at: string;
   short_description: string;
   long_description: string;
   image_url: string;
@@ -67,7 +67,7 @@ export const getMetadata = async (
   const { data, error } = await supabase
     .from("kuri_web")
     .select("*")
-    .eq("market_address", marketAddress)
+    .ilike("market_address", marketAddress)
     .single();
 
   console.log("Supabase data:", data);
@@ -109,6 +109,10 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
     queryKey: ["market-metadata", market.address],
     queryFn: () => getMetadata(market.address),
   });
+
+  // Use metadata for image URL with fallback
+  const imageUrl =
+    metadata?.image_url || CIRCLE_IMAGES[index % CIRCLE_IMAGES.length];
 
   // Default values until implemented in Market type
   const defaultDescription =
@@ -280,9 +284,6 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   const isCreator =
     account.address?.toLowerCase() === market.creator.toLowerCase();
 
-  // Get circle image based on index
-  const imageUrl = CIRCLE_IMAGES[index % CIRCLE_IMAGES.length];
-
   // Fallback to hardcoded data if no Supabase metadata
   const fallbackMetadata: MarketMetadata = {
     id: 0,
@@ -294,8 +295,6 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
       "This is a community savings circle powered by Kuri protocol. Join to save and win!",
     image_url: "/images/default-market.jpg",
   };
-
-  const displayMetadata = metadata || fallbackMetadata;
 
   // Render action button based on user role and market state
   const renderActionButton = () => {
@@ -378,13 +377,17 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
 
           {/* Content Section */}
           <div className="p-6 space-y-4">
-            {/* Description */}
+            {/* Description - Now using metadata */}
             <div>
               <p
                 className="text-sm text-muted-foreground line-clamp-2"
-                title={defaultDescription}
+                title={
+                  metadata?.short_description ||
+                  "A community savings circle powered by Kuri protocol."
+                }
               >
-                {defaultDescription}
+                {metadata?.short_description ||
+                  "A community savings circle powered by Kuri protocol."}
               </p>
             </div>
 
@@ -399,10 +402,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
               <div>
                 <p className="text-xs text-muted-foreground">Contribution</p>
                 <p className="font-medium">
-                  $
-                  {(Number(market.kuriAmount) / 1_000_000) % 1 === 0
-                    ? (Number(market.kuriAmount) / 1_000_000).toFixed(0)
-                    : (Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
+                  ${(Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
                   {getIntervalTypeText(market.intervalType)}
                 </p>
               </div>
@@ -431,7 +431,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
       {isExpanded && (
         <MarketCardExpanded
           market={market}
-          metadata={displayMetadata}
+          metadata={metadata || fallbackMetadata}
           onClose={() => setIsExpanded(false)}
         />
       )}
