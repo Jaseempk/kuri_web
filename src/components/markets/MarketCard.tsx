@@ -12,6 +12,7 @@ import { IntervalType } from "../../graphql/types";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { MarketCardExpanded } from "./MarketCardExpanded";
+import { supabase } from "../../lib/supabase";
 
 interface MarketCardProps {
   market: KuriMarket;
@@ -62,8 +63,17 @@ export interface MarketMetadata {
 export const getMetadata = async (
   marketAddress: string
 ): Promise<MarketMetadata | null> => {
-  // This should call Supabase or your backend to fetch metadata
-  return null;
+  console.log("Fetching metadata for:", marketAddress);
+  const { data, error } = await supabase
+    .from("kuri_web")
+    .select("*")
+    .eq("market_address", marketAddress)
+    .single();
+
+  console.log("Supabase data:", data);
+
+  if (error || !data) return null;
+  return data as MarketMetadata;
 };
 
 // Hardcoded fallback data for markets without Supabase metadata

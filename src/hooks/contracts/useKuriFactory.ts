@@ -4,7 +4,9 @@ import {
   writeContract,
   simulateContract,
   getAccount,
+  waitForTransactionReceipt,
 } from "@wagmi/core";
+import { decodeEventLog } from "viem";
 import { useAccount } from "wagmi";
 import { KuriFactoryABI } from "../../contracts/abis/KuriFactory";
 import { getContractAddress } from "../../config/contracts";
@@ -57,11 +59,38 @@ export const useKuriFactory = () => {
         console.log("Simulation request:", request);
 
         // If simulation succeeds, send the transaction
-        const tx = await writeContract(config, request);
-        console.log("Transaction request:", tx);
+        const txHash = await writeContract(config, request);
+        console.log("Transaction request:", txHash);
+
+        // Wait for the transaction to be mined
+        const receipt = await waitForTransactionReceipt(config, {
+          hash: txHash,
+        });
+        // Parse logs for the KuriMarketDeployed event
+        let marketAddress = undefined;
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: KuriFactoryABI,
+              data: log.data,
+              topics: log.topics,
+            });
+
+            console.log("Decoded log:", decoded);
+            if (decoded.eventName === "KuriMarketDeployed") {
+              marketAddress = decoded.args.marketAddress;
+              break;
+            }
+          } catch (e) {
+            // Not the right event, skip
+          }
+        }
+        if (!marketAddress)
+          throw new Error("Market address not found in event logs");
+        console.log("New market address:", marketAddress);
 
         // Handle transaction status and notifications
-        await handleTransaction(tx, {
+        await handleTransaction(txHash, {
           loadingMessage: "Creating your Kuri market...",
           successMessage: "Kuri market created successfully!",
           errorMessage: "Failed to create Kuri market",
@@ -69,7 +98,7 @@ export const useKuriFactory = () => {
 
         // Refetch markets after successful creation
         await refetchMarkets();
-        return tx;
+        return marketAddress;
       } catch (error) {
         console.error("Error creating Kuri market:", error);
         throw handleContractError(error);
