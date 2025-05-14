@@ -140,7 +140,7 @@ export const CreateMarketForm = ({
       // Redirect to the markets page after a delay to allow toast to be visible
       setTimeout(() => {
         window.location.href = `/markets`;
-      }, 30000);
+      }, 3000);
     } catch (err) {
       if (!isUserRejection(err)) {
         const errorMessage =

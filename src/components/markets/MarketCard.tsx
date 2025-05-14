@@ -184,7 +184,9 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   }, [market.activeParticipants, market.totalParticipants]);
 
   // Handle Kuri initialization
-  const handleInitialize = async () => {
+  const handleInitialize = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event from bubbling up to parent
+
     if (!account.address) {
       toast.error("Please connect your wallet first");
       return;
@@ -206,7 +208,9 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   };
 
   // Update the join request handler to check if market is full
-  const handleJoinRequest = async () => {
+  const handleJoinRequest = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event from bubbling up to parent
+
     if (!account.address) {
       setError("Please connect your wallet first");
       return;
@@ -316,7 +320,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
       }
       return (
         <ManageMembersDialog market={market}>
-          <Button className="w-full">
+          <Button className="w-full" onClick={(e) => e.stopPropagation()}>
             Manage Members ({market.activeParticipants}/
             {market.totalParticipants})
           </Button>
@@ -367,7 +371,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
             {/* Title and Membership Status */}
             <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
               <h3 className="text-xl font-sans font-semibold text-white">
-                {market.name || "Kuri"}
+                {metadata?.short_description || "Kuri"}
               </h3>
               <div className="flex items-center gap-2">
                 {getMembershipStatusDisplay()}
@@ -378,7 +382,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
           {/* Content Section */}
           <div className="p-6 space-y-4">
             {/* Description - Now using metadata */}
-            <div>
+            {/* <div>
               <p
                 className="text-sm text-muted-foreground line-clamp-2"
                 title={
@@ -389,7 +393,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
                 {metadata?.short_description ||
                   "A community savings circle powered by Kuri protocol."}
               </p>
-            </div>
+            </div> */}
 
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-4">

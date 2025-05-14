@@ -198,8 +198,24 @@ export const KuriFactoryABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "s_vrfSubscriber",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "address", name: "_newAdmin", type: "address" }],
     name: "setKuriAdmin",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "_vrfSubscriber", type: "address" },
+    ],
+    name: "setVRFSubscriber",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

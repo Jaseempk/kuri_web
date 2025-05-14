@@ -130,7 +130,7 @@ export default function MarketList() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-[#FEF6F0]/50 p-6 sm:p-12 rounded-2xl mb-8 sm:mb-12">
+      {/* <section className="bg-[#FEF6F0]/50 p-6 sm:p-12 rounded-2xl mb-8 sm:mb-12">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-semibold text-[#8B6F47] mb-6 sm:mb-8">
             Ready to Start Your Financial Journey?
@@ -172,7 +172,7 @@ export default function MarketList() {
             </DialogContent>
           </Dialog>
         </div>
-      </section>
+      </section> */}
 
       {/* Market Sections */}
       {marketSections.map(({ title, description, filter }) => (
