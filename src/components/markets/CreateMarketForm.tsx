@@ -300,7 +300,7 @@ export const CreateMarketForm = ({
           <Button
             type="submit"
             disabled={isCreating}
-            className="flex-1 bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full py-2 font-semibold text-lg shadow-md"
+            className="flex-1 bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200 rounded-full py-2 font-semibold text-lg shadow-md"
           >
             {isCreating ? (
               <div className="flex items-center justify-center gap-2">

@@ -219,7 +219,7 @@ export default function MarketList() {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-[#8B6F47] text-white hover:bg-[#725A3A] rounded-full px-6">
+              <Button className="bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent rounded-full px-6 transition-all duration-200">
                 Start a Circle
               </Button>
             </DialogTrigger>
