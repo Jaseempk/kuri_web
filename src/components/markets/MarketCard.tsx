@@ -280,6 +280,8 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
         return <Badge variant="destructive">Rejected</Badge>;
       case 3: // FLAGGED
         return <Badge variant="destructive">Flagged</Badge>;
+      case 4: // APPLIED
+        return <Badge variant="warning">Applied</Badge>;
       default:
         return null;
     }
@@ -308,7 +310,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
           <Button
             onClick={handleInitialize}
             disabled={isLoading}
-            className="w-full"
+            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -320,7 +322,10 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
       }
       return (
         <ManageMembersDialog market={market}>
-          <Button className="w-full" onClick={(e) => e.stopPropagation()}>
+          <Button
+            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             Manage Members ({market.activeParticipants}/
             {market.totalParticipants})
           </Button>
@@ -328,27 +333,74 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
       );
     }
 
-    // For non-creators
-    if (membershipStatus === 0) {
-      return (
-        <Button
-          onClick={handleJoinRequest}
-          disabled={isLoading || isMarketFull || isRequesting}
-          className="w-full"
-          title={isMarketFull ? "This circle is already full" : undefined}
-        >
-          {isLoading || isRequesting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : isMarketFull ? (
-            "Circle Full"
-          ) : (
-            "Request to Join"
-          )}
-        </Button>
-      );
-    }
+    // For non-creators, handle different user states
+    switch (membershipStatus) {
+      case 0: // NONE
+        return (
+          <Button
+            onClick={handleJoinRequest}
+            disabled={isLoading || isMarketFull || isRequesting}
+            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
+            title={isMarketFull ? "This circle is already full" : undefined}
+          >
+            {isLoading || isRequesting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isMarketFull ? (
+              "Circle Full"
+            ) : (
+              "Request to Join"
+            )}
+          </Button>
+        );
 
-    return null;
+      case 1: // ACCEPTED
+        return (
+          <Button
+            disabled
+            className="w-full bg-[#F9F5F1] text-[#8B6F47] border-[#E8DED1] cursor-not-allowed"
+          >
+            Member
+          </Button>
+        );
+
+      case 2: // REJECTED
+        return (
+          <Button
+            onClick={handleJoinRequest}
+            disabled={isLoading || isMarketFull || isRequesting}
+            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
+          >
+            {isLoading || isRequesting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Request Again"
+            )}
+          </Button>
+        );
+
+      case 3: // FLAGGED
+        return (
+          <Button
+            disabled
+            className="w-full bg-[#FEF2F2] text-[#DC2626] border-[#FEE2E2] cursor-not-allowed"
+          >
+            Flagged
+          </Button>
+        );
+
+      case 4: // APPLIED
+        return (
+          <Button
+            disabled
+            className="w-full bg-[#F9F5F1] text-[#8B6F47] font-medium border-[#E8DED1] cursor-not-allowed hover:bg-[#F9F5F1]"
+          >
+            Applied
+          </Button>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
