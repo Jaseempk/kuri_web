@@ -6,61 +6,79 @@ interface LoadingSkeletonProps {
 
 export const LoadingSkeleton = ({ className }: LoadingSkeletonProps) => {
   return (
-    <div className={cn("container mx-auto px-4 py-8", className)}>
-      {/* Market Sections */}
-      {["Launching", "Active", "Completed"].map((section) => (
-        <section key={section} className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {[1, 2, 3].map((card) => (
+    <div className={cn("min-h-screen bg-background", className)}>
+      {/* Stats Banner Skeleton */}
+      <div className="bg-[#F9F5F1] border-b border-[#E8DED1]">
+        <div className="container mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
               <div
-                key={card}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 animate-pulse"
+                key={i}
+                className="bg-white rounded-xl p-6 shadow-sm border border-[#E8DED1] animate-pulse"
               >
-                {/* Card Header */}
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div className="h-6 bg-gray-200 rounded w-24" />{" "}
-                    {/* Title */}
-                    <div className="h-5 bg-gray-200 rounded-full w-16" />{" "}
-                    {/* Status Badge */}
-                  </div>
-                </div>
-
-                {/* Card Content */}
-                <div className="p-6 space-y-4">
-                  {/* Timer Box (for launch state) */}
-                  <div className="bg-amber-50/30 p-3 rounded-lg space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-32" />
-                    <div className="h-4 bg-gray-200 rounded w-24" />
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <div className="h-3 bg-gray-200 rounded w-16" />{" "}
-                      {/* Label */}
-                      <div className="h-4 bg-gray-200 rounded w-20" />{" "}
-                      {/* Value */}
-                    </div>
-                    <div className="space-y-1">
-                      <div className="h-3 bg-gray-200 rounded w-16" />{" "}
-                      {/* Label */}
-                      <div className="h-4 bg-gray-200 rounded w-20" />{" "}
-                      {/* Value */}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Footer */}
-                <div className="p-6 border-t border-gray-100">
-                  <div className="h-9 bg-gray-200 rounded-lg w-full" />{" "}
-                  {/* Action Button */}
-                </div>
+                <div className="h-4 bg-gray-200 rounded w-24 mb-4" />
+                <div className="h-8 bg-gray-200 rounded w-32" />
               </div>
             ))}
           </div>
-        </section>
-      ))}
+        </div>
+      </div>
+
+      {/* Main Content Skeleton */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Header Skeleton */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+          <div className="text-left mb-4 md:mb-0">
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-64" />
+          </div>
+          <div className="h-10 bg-gray-200 rounded w-32" />
+        </div>
+
+        {/* Filter Bar Skeleton */}
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-[#E8DED1] py-4 mb-8">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex-1 min-w-[200px]">
+              <div className="h-10 bg-gray-200 rounded-full" />
+            </div>
+            <div className="flex gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-10 bg-gray-200 rounded-full w-24" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Market Sections Skeleton */}
+        {[1, 2].map((section) => (
+          <section key={section} className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <div className="h-6 bg-gray-200 rounded w-40 mb-2" />
+                <div className="h-4 bg-gray-200 rounded w-64" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((card) => (
+                <div
+                  key={card}
+                  className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse"
+                >
+                  <div className="h-48 bg-gray-200" />
+                  <div className="p-6 space-y-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="h-4 bg-gray-200 rounded" />
+                      <div className="h-4 bg-gray-200 rounded" />
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </div>
   );
 };
