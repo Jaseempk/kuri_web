@@ -502,6 +502,51 @@ function App() {
         </div>
       </section>
 
+      {/* Live Circles Section */}
+      <section ref={liveCirclesRef} className="py-16 bg-sand/30" id="circles">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-sans font-semibold mb-4">
+              Live Circles
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Join one of our active circles or create your own to start your
+              saving journey.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {isLoading ? (
+              <div className="col-span-3 text-center text-muted-foreground">
+                Loading circles...
+              </div>
+            ) : inLaunchMarkets.length === 0 ? (
+              <div className="col-span-3 text-center text-muted-foreground">
+                No live circles in launch phase
+              </div>
+            ) : (
+              inLaunchMarkets.map((market, index) => (
+                <MarketCard
+                  key={market.address}
+                  market={market}
+                  index={index}
+                />
+              ))
+            )}
+          </div>
+          <div className="text-center mt-12">
+            <Button
+              variant="gold"
+              size="lg"
+              className="bg-[hsl(var(--gold))] hover:bg-white hover:text-[hsl(var(--gold))] text-white border border-[hsl(var(--gold))] group"
+              onClick={() => navigate("/markets")}
+            >
+              View All Circles
+              <ChevronRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* About Section */}
       <section
         ref={aboutRef}
@@ -1176,51 +1221,6 @@ function App() {
                 </div>
               </blockquote>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Live Circles Section */}
-      <section ref={liveCirclesRef} className="py-16 bg-sand/30" id="circles">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-sans font-semibold mb-4">
-              Live Circles
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Join one of our active circles or create your own to start your
-              saving journey.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {isLoading ? (
-              <div className="col-span-3 text-center text-muted-foreground">
-                Loading circles...
-              </div>
-            ) : inLaunchMarkets.length === 0 ? (
-              <div className="col-span-3 text-center text-muted-foreground">
-                No live circles in launch phase
-              </div>
-            ) : (
-              inLaunchMarkets.map((market, index) => (
-                <MarketCard
-                  key={market.address}
-                  market={market}
-                  index={index}
-                />
-              ))
-            )}
-          </div>
-          <div className="text-center mt-12">
-            <Button
-              variant="gold"
-              size="lg"
-              className="bg-[hsl(var(--gold))] hover:bg-white hover:text-[hsl(var(--gold))] text-white border border-[hsl(var(--gold))] group"
-              onClick={() => navigate("/markets")}
-            >
-              View All Circles
-              <ChevronRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Button>
           </div>
         </div>
       </section>
