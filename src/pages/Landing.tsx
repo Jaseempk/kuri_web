@@ -1249,13 +1249,6 @@ function App() {
                 Create Your Circle
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button
-                size="xl"
-                variant="outline"
-                onClick={() => navigate("/dapp")}
-              >
-                Join Existing Circle
-              </Button>
             </div>
           </div>
         </div>

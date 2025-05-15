@@ -11,6 +11,8 @@ import { MarketCard } from "../components/markets/MarketCard";
 import { KuriMarket } from "../hooks/useKuriMarkets";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { formatEther } from "viem";
+import { supabase } from "../lib/supabase";
+import { MarketMetadata } from "../components/markets/MarketCard";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -90,6 +92,9 @@ export default function MarketList() {
   const [markets, setMarkets] = useState<KuriMarket[]>([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [marketMetadata, setMarketMetadata] = useState<
+    Record<string, MarketMetadata | null>
+  >({});
   const [previousStats, setPreviousStats] = useState({
     tvl: BigInt(0),
     activeCircles: 0,
@@ -101,6 +106,20 @@ export default function MarketList() {
       try {
         const fetchedMarkets = await getAllMarkets();
         setMarkets(fetchedMarkets);
+
+        // Fetch metadata for all markets from Supabase
+        const { data } = await supabase.from("kuri_web").select("*");
+
+        // Create a lookup map by market address
+        if (data) {
+          const metadataMap: Record<string, MarketMetadata> = {};
+          data.forEach((item: any) => {
+            // Store with lowercase address for case-insensitive lookup
+            const address = item.market_address.toLowerCase();
+            metadataMap[address] = item as MarketMetadata;
+          });
+          setMarketMetadata(metadataMap);
+        }
 
         // Store current stats for comparison
         const currentStats = {
@@ -133,25 +152,57 @@ export default function MarketList() {
     return <div>Error loading markets: {error.message}</div>;
   }
 
-  const filteredMarkets = markets.filter((market) => {
-    if (searchQuery) {
-      return market.name.toLowerCase().includes(searchQuery.toLowerCase());
+  // First apply interval type filter if selected
+  const intervalFilteredMarkets = markets.filter((market) => {
+    if (activeFilter === "weekly") {
+      return market.intervalType === INTERVAL_TYPE.WEEKLY;
+    } else if (activeFilter === "monthly") {
+      return market.intervalType === INTERVAL_TYPE.MONTHLY;
     }
-    return true;
+    return true; // Show all if no interval filter
   });
 
-  // Calculate current statistics
-  const totalValueLocked = markets.reduce(
+  // Then apply search filter on top of the interval filtered markets
+  const filteredMarkets = intervalFilteredMarkets.filter((market) => {
+    if (searchQuery) {
+      // Get metadata for this market (case-insensitive)
+      const metadata = marketMetadata[market.address.toLowerCase()];
+
+      // Search in metadata short_description if available
+      if (metadata?.short_description) {
+        return metadata.short_description
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+      }
+
+      // Fallback to address search if no metadata
+      return market.address.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+
+    return true; // Show all if no search query
+  });
+
+  // Calculate current statistics for displayed markets based on the active filter
+  const marketsForStats =
+    activeFilter === "all" ? markets : intervalFilteredMarkets;
+
+  const totalValueLocked = marketsForStats.reduce(
     (acc, market) => acc + BigInt(market.kuriAmount),
     BigInt(0)
   );
 
-  const activeCircles = markets.filter((m) => m.state === 2).length;
+  const activeCircles = marketsForStats.filter((m) => m.state === 2).length;
 
-  const totalParticipants = markets.reduce(
+  const totalParticipants = marketsForStats.reduce(
     (acc, market) => acc + market.totalParticipants,
     0
   );
+
+  // Helper function to count markets by interval type
+  const countMarketsByIntervalType = (intervalType: number) => {
+    return markets.filter((market) => market.intervalType === intervalType)
+      .length;
+  };
 
   // Calculate changes (comparing with previous stats)
   const tvlChange = previousStats.tvl
@@ -256,24 +307,13 @@ export default function MarketList() {
                 active={activeFilter === "weekly"}
                 onClick={() => setActiveFilter("weekly")}
               >
-                Weekly (
-                {
-                  markets.filter((m) => m.intervalType === INTERVAL_TYPE.WEEKLY)
-                    .length
-                }
-                )
+                Weekly ({countMarketsByIntervalType(INTERVAL_TYPE.WEEKLY)})
               </FilterButton>
               <FilterButton
                 active={activeFilter === "monthly"}
                 onClick={() => setActiveFilter("monthly")}
               >
-                Monthly (
-                {
-                  markets.filter(
-                    (m) => m.intervalType === INTERVAL_TYPE.MONTHLY
-                  ).length
-                }
-                )
+                Monthly ({countMarketsByIntervalType(INTERVAL_TYPE.MONTHLY)})
               </FilterButton>
             </div>
             <button className="ml-auto p-2 rounded-full hover:bg-[#F9F5F1] transition-colors">

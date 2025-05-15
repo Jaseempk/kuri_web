@@ -172,7 +172,7 @@ export const CreateMarketForm = ({
               step="100"
             />
             <p className="text-xs text-gray-500 mt-1">
-              This is the total amount anyone can win monthly
+              This is the total amount anyone can win on each cycle.
             </p>
           </div>
           <div>
