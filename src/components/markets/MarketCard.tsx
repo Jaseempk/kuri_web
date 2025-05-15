@@ -472,7 +472,17 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
                   {getIntervalTypeText(market.intervalType)}
                 </p>
               </div>
-              <div className="col-span-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Win Amount</p>
+                <p className="font-medium text-[hsl(var(--forest))]">
+                  $
+                  {(
+                    (Number(market.kuriAmount) / 1_000_000) *
+                    market.totalParticipants
+                  ).toFixed(2)}
+                </p>
+              </div>
+              <div>
                 <p className="text-xs text-muted-foreground">
                   {market.state === 0 ? "Launch Ends In" : "Next Draw"}
                 </p>
