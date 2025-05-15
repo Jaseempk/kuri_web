@@ -62,6 +62,8 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
     },
     fetchPolicy: "network-only",
   });
+  console.log("marketAddress:", marketAddress);
+  console.log("daata:", data);
 
   // Fetch member states from contract
   useEffect(() => {
@@ -76,10 +78,10 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
                 const state = await getMemberStatus(
                   request.user as `0x${string}`
                 );
-                return { ...request, state: state ?? 0 };
+                return { ...request, state: state ?? 4 }; // Default to APPLIED state
               } catch (err) {
                 console.error(`Error fetching state for ${request.user}:`, err);
-                return { ...request, state: 0 }; // Default to NONE state on error
+                return { ...request, state: 4 }; // Default to APPLIED state on error
               }
             }
           )
@@ -108,7 +110,7 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
       const state = await getMemberStatus(address);
       setMemberRequests((prev) =>
         prev.map((req) =>
-          req.user === address ? { ...req, state: state ?? 0 } : req
+          req.user === address ? { ...req, state: state ?? 4 } : req
         )
       );
     } catch (err) {
@@ -129,7 +131,7 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
       const state = await getMemberStatus(address);
       setMemberRequests((prev) =>
         prev.map((req) =>
-          req.user === address ? { ...req, state: state ?? 0 } : req
+          req.user === address ? { ...req, state: state ?? 4 } : req
         )
       );
     } catch (err) {
@@ -143,13 +145,15 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
   const getMembershipStatusBadge = (state: number) => {
     switch (state) {
       case 0: // NONE
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">None</Badge>;
       case 1: // ACCEPTED
         return <Badge variant="success">Accepted</Badge>;
       case 2: // REJECTED
         return <Badge variant="destructive">Rejected</Badge>;
       case 3: // FLAGGED
         return <Badge variant="destructive">Flagged</Badge>;
+      case 4: // APPLIED
+        return <Badge variant="warning">Applied</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -230,7 +234,7 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
               </TableCell>
               <TableCell>{getMembershipStatusBadge(request.state)}</TableCell>
               <TableCell className="text-right">
-                {request.state === 0 && (
+                {request.state === 4 && (
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"

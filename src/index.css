@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');
-@import url('https://use.typekit.net/xwp2kln.css'); /* For Canela font */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
+@import url("https://use.typekit.net/xwp2kln.css"); /* For Canela font */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -13,19 +13,19 @@
     /* Base colors */
     --background: 36 40% 95%;
     --foreground: 30 25% 15%;
-    
+
     /* Warm Earth tones */
     --terracotta: 18 80% 45%;
     --ochre: 35 80% 50%;
     --forest: 150 30% 35%;
-    
+
     /* Neutrals */
     --sand: 35 40% 90%;
     --ivory: 40 33% 96%;
-    
+
     /* Accent */
     --gold: 35 70% 60%;
-    
+
     /* UI colors */
     --primary: 18 80% 45%; /* Terracotta */
     --primary-foreground: 40 33% 98%;
@@ -65,23 +65,39 @@
 
 /* Gradient effects */
 .gradient-blur {
-  background: radial-gradient(circle at center, hsl(var(--ochre) / 0.25) 0%, hsl(var(--ochre) / 0) 70%);
+  background: radial-gradient(
+    circle at center,
+    hsl(var(--ochre) / 0.25) 0%,
+    hsl(var(--ochre) / 0) 70%
+  );
   filter: blur(64px);
 }
 
 .gradient-overlay {
-  background: linear-gradient(to bottom, transparent, hsl(var(--background) / 0.9));
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    hsl(var(--background) / 0.9)
+  );
 }
 
 .text-gradient {
-  background: linear-gradient(to right, hsl(var(--terracotta)), hsl(var(--gold)));
+  background: linear-gradient(
+    to right,
+    hsl(var(--terracotta)),
+    hsl(var(--gold))
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-reverse {
-  background: linear-gradient(to right, hsl(var(--gold)), hsl(var(--terracotta)));
+  background: linear-gradient(
+    to right,
+    hsl(var(--gold)),
+    hsl(var(--terracotta))
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -153,13 +169,13 @@
 }
 
 .btn-tactile::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -218,7 +234,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
 }
 
 /* Decorative elements */
@@ -233,26 +253,31 @@
 .diagonal-line {
   position: absolute;
   height: 1px;
-  background: linear-gradient(to right, transparent, hsl(var(--gold)/0.3), transparent);
+  background: linear-gradient(
+    to right,
+    transparent,
+    hsl(var(--gold) / 0.3),
+    transparent
+  );
   transform: rotate(-45deg);
 }
 
 /* Custom typography */
 .display-title {
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
 .elegant-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: "Cormorant Garamond", serif;
   font-weight: 600;
   line-height: 1.2;
 }
 
 .elegant-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: "Cormorant Garamond", serif;
   font-weight: 500;
   line-height: 1.5;
 }
@@ -357,7 +382,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: hsl(var(--terracotta)/0.1);
+  background: hsl(var(--terracotta) / 0.1);
   border-radius: inherit;
 }
 
@@ -368,7 +393,7 @@
 }
 
 .image-reveal::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -436,13 +461,17 @@
 }
 
 .glow::after {
-  content: '';
+  content: "";
   position: absolute;
   top: -20px;
   left: -20px;
   right: -20px;
   bottom: -20px;
-  background: radial-gradient(circle at center, hsl(var(--gold)/0.3) 0%, transparent 70%);
+  background: radial-gradient(
+    circle at center,
+    hsl(var(--gold) / 0.3) 0%,
+    transparent 70%
+  );
   filter: blur(20px);
   z-index: -1;
   opacity: 0;

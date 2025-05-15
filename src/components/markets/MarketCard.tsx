@@ -95,6 +95,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   const [error, setError] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const account = getAccount(config);
   const {
@@ -302,6 +303,14 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
     image_url: "/images/default-market.jpg",
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't expand if dialog is open or if clicking on the action button
+    if (isDialogOpen || e.target instanceof HTMLButtonElement) {
+      return;
+    }
+    setIsExpanded(true);
+  };
+
   // Render action button based on user role and market state
   const renderActionButton = () => {
     if (isCreator) {
@@ -321,11 +330,12 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
         );
       }
       return (
-        <ManageMembersDialog market={market}>
-          <Button
-            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <ManageMembersDialog
+          market={market}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+        >
+          <Button className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200">
             Manage Members ({market.activeParticipants}/
             {market.totalParticipants})
           </Button>
@@ -405,7 +415,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
 
   return (
     <>
-      <div className="cursor-pointer" onClick={() => setIsExpanded(true)}>
+      <div className="cursor-pointer" onClick={handleCardClick}>
         <div className="bg-background rounded-2xl overflow-hidden hover-lift shadow-lg">
           {/* Image Section with Status and Title */}
           <div className="relative h-48">

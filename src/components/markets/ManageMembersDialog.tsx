@@ -17,13 +17,16 @@ import { Button } from "../ui/button";
 interface ManageMembersDialogProps {
   market: KuriMarket;
   children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ManageMembersDialog = ({
   market,
   children,
+  open,
+  onOpenChange,
 }: ManageMembersDialogProps) => {
-  const [isOpen, setIsOpen] = useState(false);
   const { requestMembership, isRequesting, marketData } = useKuriCore(
     market.address as `0x${string}`
   );
@@ -34,7 +37,7 @@ export const ManageMembersDialog = ({
   const handleRequestMembership = async () => {
     try {
       await requestMembership();
-      setIsOpen(false);
+      onOpenChange?.(false);
     } catch (error) {
       console.error("Error requesting membership:", error);
     }
@@ -47,7 +50,7 @@ export const ManageMembersDialog = ({
       marketData.totalParticipantsCount;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         {children || (
           <Button className="w-full">

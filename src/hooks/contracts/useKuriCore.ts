@@ -201,12 +201,10 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   }, [kuriAddress, account.address, handleTransaction]);
 
   // Accept member
-  const acceptMember = useCallback(
+  const acceptUserMembershipRequest = useCallback(
     async (address: `0x${string}`) => {
       if (!kuriAddress || !account.address)
         throw new Error("Invalid parameters");
-
-      console.log("acceptMember address:", address);
 
       try {
         const { request } = await simulateContract(config, {
@@ -234,7 +232,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   );
 
   // Reject member
-  const rejectMember = useCallback(
+  const rejectUserMembershipRequest = useCallback(
     async (address: `0x${string}`) => {
       if (!kuriAddress || !account.address)
         throw new Error("Invalid parameters");
@@ -298,8 +296,8 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
     // Actions
     requestMembership,
-    acceptMember,
-    rejectMember,
+    acceptMember: acceptUserMembershipRequest,
+    rejectMember: rejectUserMembershipRequest,
     getMemberStatus,
     initializeKuri,
     deposit,
