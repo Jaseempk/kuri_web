@@ -1,10 +1,10 @@
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useKuriMarkets } from "../../hooks/useKuriMarkets";
 import { motion } from "framer-motion";
 import { Badge } from "../ui/badge";
 import { formatEther } from "viem";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
-import { useState, useEffect } from "react";
 
 export function PendingRequests() {
   const { address } = useAccount();
@@ -21,7 +21,7 @@ export function PendingRequests() {
       const pendingPromises = markets.map(async (market) => {
         try {
           const status = await getMemberStatus(market.address as `0x${string}`);
-          return status === 4 ? market : null; // 4 = APPLIED/PENDING
+          return status === 0 ? market : null; // 0 = PENDING
         } catch (error) {
           console.error("Error fetching member status:", error);
           return null;
@@ -38,69 +38,76 @@ export function PendingRequests() {
 
   if (loading || loadingStatus) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="bg-white/5 animate-pulse backdrop-blur-sm rounded-xl p-6 border border-white/10"
+            className="bg-white/5 animate-pulse backdrop-blur-sm rounded-xl p-4 md:p-6 border border-white/10 h-[200px] md:h-[250px]"
           >
-            <div className="h-6 w-3/4 bg-white/10 rounded mb-4" />
-            <div className="h-4 w-1/2 bg-white/10 rounded mb-2" />
-            <div className="h-4 w-1/3 bg-white/10 rounded" />
+            <div className="h-5 md:h-6 w-3/4 bg-white/10 rounded mb-3 md:mb-4" />
+            <div className="h-3 md:h-4 w-1/2 bg-white/10 rounded mb-2" />
+            <div className="h-3 md:h-4 w-1/3 bg-white/10 rounded" />
           </div>
         ))}
       </div>
     );
   }
 
-  if (!pendingMarkets.length) {
+  if (pendingMarkets.length === 0) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-semibold mb-2">No Pending Requests</h3>
-        <p className="text-muted-foreground">
-          Your membership requests will appear here once you apply to join
-          circles.
+      <div className="text-center py-8 md:py-12">
+        <h3 className="text-lg md:text-xl font-semibold mb-2">
+          No Pending Requests
+        </h3>
+        <p className="text-sm md:text-base text-muted-foreground">
+          You don't have any pending circle membership requests.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
       {pendingMarkets.map((market, index) => (
         <motion.div
           key={market.address}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="group bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-gold/20 transition-all hover-lift"
+          className="group bg-white/5 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-white/10 hover:border-gold/20 transition-all hover-lift"
         >
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-1">{market.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                Created by {market.creator.slice(0, 6)}...
-                {market.creator.slice(-4)}
-              </p>
+          <div className="flex flex-col h-full">
+            <div className="flex items-start justify-between mb-3 md:mb-4">
+              <div>
+                <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2 line-clamp-1">
+                  {market.name}
+                </h3>
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                  Created by {market.creator}
+                </p>
+              </div>
+              <Badge variant="outline" className="text-xs md:text-sm">
+                Pending
+              </Badge>
             </div>
-            <Badge
-              variant="outline"
-              className="bg-gold/10 text-gold border-gold/20"
-            >
-              Pending
-            </Badge>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Deposit Amount</p>
-              <p className="text-lg font-semibold">
-                {formatEther(BigInt(market.depositAmount))} ETH
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Members</p>
-              <p className="text-lg font-semibold">{market.memberCount || 0}</p>
+            <div className="mt-auto grid grid-cols-2 gap-2 md:gap-3">
+              <div className="bg-white/5 rounded-lg p-2 md:p-3">
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">
+                  Deposit
+                </p>
+                <p className="text-sm md:text-base font-medium">
+                  {formatEther(market.depositAmount)} ETH
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-2 md:p-3">
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">
+                  Members
+                </p>
+                <p className="text-sm md:text-base font-medium">
+                  {market.totalMembers}
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>

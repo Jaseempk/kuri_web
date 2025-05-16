@@ -3,6 +3,9 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       fontFamily: {
         display: ['Canela', 'Tiempos Fine', 'serif'],
         sans: ['Inter', 'General Sans', 'system-ui', 'sans-serif'],

@@ -38,68 +38,89 @@ export function Memberships() {
 
   if (loading || loadingStatus) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 md:gap-6">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="bg-white/5 animate-pulse backdrop-blur-sm rounded-xl p-6 border border-white/10"
+            className="bg-white/5 animate-pulse backdrop-blur-sm rounded-xl 
+              p-3 xs:p-4 md:p-6 border border-white/10 
+              h-[180px] xs:h-[200px] md:h-[250px]"
           >
-            <div className="h-6 w-3/4 bg-white/10 rounded mb-4" />
-            <div className="h-4 w-1/2 bg-white/10 rounded mb-2" />
-            <div className="h-4 w-1/3 bg-white/10 rounded" />
+            <div className="h-4 xs:h-5 md:h-6 w-3/4 bg-white/10 rounded mb-2 xs:mb-3 md:mb-4" />
+            <div className="h-3 xs:h-3.5 md:h-4 w-1/2 bg-white/10 rounded mb-2" />
+            <div className="h-3 xs:h-3.5 md:h-4 w-1/3 bg-white/10 rounded" />
           </div>
         ))}
       </div>
     );
   }
 
-  if (!memberMarkets.length) {
+  if (memberMarkets.length === 0) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-semibold mb-2">No Circle Memberships</h3>
-        <p className="text-muted-foreground">
-          Join circles from the Markets page to see them here.
+      <div className="text-center py-6 sm:py-8 md:py-12">
+        <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-2">
+          No Circle Memberships
+        </h3>
+        <p className="text-sm md:text-base text-muted-foreground">
+          Join a circle to see your memberships here.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 md:gap-6">
       {memberMarkets.map((market, index) => (
         <motion.div
           key={market.address}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="group bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-gold/20 transition-all hover-lift"
+          className="group bg-white/5 backdrop-blur-sm rounded-xl 
+            p-3 xs:p-4 md:p-6 border border-white/10 
+            hover:border-gold/20 transition-all hover-lift"
         >
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-1">{market.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                Created by {market.creator.slice(0, 6)}...
-                {market.creator.slice(-4)}
-              </p>
+          <div className="flex flex-col h-full">
+            <div className="flex items-start justify-between mb-2 xs:mb-3 md:mb-4">
+              <div className="flex-1 min-w-0">
+                <h3
+                  className="text-sm xs:text-base md:text-lg font-semibold 
+                  mb-1 md:mb-2 line-clamp-1"
+                >
+                  {market.name}
+                </h3>
+                <p
+                  className="text-xs md:text-sm text-muted-foreground 
+                  line-clamp-1 break-all"
+                >
+                  Created by {market.creator}
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className="text-xs md:text-sm ml-2 flex-shrink-0"
+              >
+                Member
+              </Badge>
             </div>
-            <Badge
-              variant="outline"
-              className="bg-gold/10 text-gold border-gold/20"
-            >
-              Member
-            </Badge>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Deposit Amount</p>
-              <p className="text-lg font-semibold">
-                {formatEther(BigInt(market.kuriAmount))} ETH
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Members</p>
-              <p className="text-lg font-semibold">{market.memberCount || 0}</p>
+            <div className="mt-auto grid grid-cols-2 gap-2 md:gap-3">
+              <div className="bg-white/5 rounded-lg p-2 xs:p-3">
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">
+                  Deposit
+                </p>
+                <p className="text-xs xs:text-sm md:text-base font-medium">
+                  {formatEther(market.depositAmount)} ETH
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-2 xs:p-3">
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">
+                  Members
+                </p>
+                <p className="text-xs xs:text-sm md:text-base font-medium">
+                  {market.totalMembers}
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
