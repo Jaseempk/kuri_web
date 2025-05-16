@@ -49,12 +49,14 @@ const StatsCard = ({
   value: string;
   change: string;
 }) => (
-  <div className="bg-white rounded-xl p-6 shadow-sm border border-[#E8DED1]">
-    <h3 className="text-sm text-muted-foreground mb-2">{title}</h3>
-    <div className="flex items-end gap-2">
-      <p className="text-2xl font-bold">{value}</p>
+  <div className="bg-white rounded-xl p-4 xs:p-5 sm:p-6 shadow-sm border border-[#E8DED1]">
+    <h3 className="text-xs xs:text-sm text-muted-foreground mb-1.5 xs:mb-2">
+      {title}
+    </h3>
+    <div className="flex items-end gap-1.5 xs:gap-2">
+      <p className="text-xl xs:text-2xl font-bold">{value}</p>
       <span
-        className={`text-sm ${
+        className={`text-xs xs:text-sm ${
           Number(change) > 0
             ? "text-green-600"
             : Number(change) < 0
@@ -79,7 +81,7 @@ const FilterButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+    className={`px-3 xs:px-4 py-1.5 xs:py-2 rounded-full text-xs xs:text-sm font-medium transition-colors border whitespace-nowrap ${
       active
         ? "bg-[#8B6F47] text-white border-[#8B6F47] hover:bg-[#725A3A]"
         : "border-[#E8DED1] hover:bg-[#F9F5F1]"
@@ -244,8 +246,8 @@ export default function MarketList() {
     <div className="min-h-screen bg-background">
       {/* Stats Banner */}
       <div className="bg-[#F9F5F1] border-b border-[#E8DED1]">
-        <div className="container mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="container mx-auto px-3 xs:px-4 py-4 xs:py-5 sm:py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
             <StatsCard
               title="Total Value Locked"
               value={`$${Number(
@@ -268,14 +270,14 @@ export default function MarketList() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 xs:px-4 py-6 xs:py-8">
         {/* Enhanced Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <div className="text-left mb-4 md:mb-0">
-            <h1 className="text-3xl font-bold text-[#8B6F47]">
+        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 mb-6 xs:mb-8">
+          <div className="text-left">
+            <h1 className="text-2xl xs:text-3xl font-bold text-[#8B6F47]">
               Explore Circles
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-sm xs:text-base text-muted-foreground mt-1 xs:mt-2">
               Join trusted savings circles and achieve your goals together
             </p>
           </div>
@@ -287,7 +289,7 @@ export default function MarketList() {
                     e.preventDefault();
                   }
                 }}
-                className="bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent rounded-full px-6 transition-all duration-200"
+                className="w-full xs:w-auto bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent rounded-full px-4 xs:px-6 transition-all duration-200"
               >
                 Start a Circle
               </Button>
@@ -298,10 +300,10 @@ export default function MarketList() {
           </Dialog>
         </div>
 
-        {/* New Filter Bar - Sticky */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-[#E8DED1] py-4 mb-8">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-[200px] relative">
+        {/* Filter Bar - Sticky */}
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-[#E8DED1] py-3 xs:py-4 mb-6 xs:mb-8">
+          <div className="flex flex-col xs:flex-row gap-3 xs:gap-4">
+            <div className="flex-1 min-w-0 relative">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                 size={18}
@@ -311,10 +313,13 @@ export default function MarketList() {
                 placeholder="Search circles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-full border border-[#E8DED1] focus:outline-none focus:ring-2 focus:ring-[#8B6F47]"
+                className="w-full pl-10 pr-4 py-2 rounded-full border border-[#E8DED1] focus:outline-none focus:ring-2 focus:ring-[#8B6F47] text-sm"
               />
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2">
+            <div
+              className="flex gap-2 xs:gap-3 overflow-x-auto pb-2 xs:pb-0 
+              scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent"
+            >
               <FilterButton
                 active={activeFilter === "all"}
                 onClick={() => setActiveFilter("all")}
@@ -334,7 +339,7 @@ export default function MarketList() {
                 Monthly ({countMarketsByIntervalType(INTERVAL_TYPE.MONTHLY)})
               </FilterButton>
             </div>
-            <button className="ml-auto p-2 rounded-full hover:bg-[#F9F5F1] transition-colors">
+            <button className="hidden xs:flex p-2 rounded-full hover:bg-[#F9F5F1] transition-colors">
               <SlidersHorizontal size={20} className="text-[#8B6F47]" />
             </button>
           </div>
@@ -346,25 +351,27 @@ export default function MarketList() {
           if (sectionMarkets.length === 0) return null;
 
           return (
-            <section key={title} className="mb-12">
-              <div className="flex items-center justify-between mb-6">
+            <section key={title} className="mb-8 xs:mb-12">
+              <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-4 xs:mb-6">
                 <div>
-                  <h2 className="text-2xl font-semibold text-[#8B6F47]">
+                  <h2 className="text-xl xs:text-2xl font-semibold text-[#8B6F47]">
                     {title} ({sectionMarkets.length})
                   </h2>
-                  <p className="text-muted-foreground mt-1">{description}</p>
+                  <p className="text-sm xs:text-base text-muted-foreground mt-0.5 xs:mt-1">
+                    {description}
+                  </p>
                 </div>
                 {sectionMarkets.length > 3 && (
                   <Button
                     variant="outline"
-                    className="text-[#8B6F47] border-[#E8DED1]"
+                    className="hidden xs:inline-flex text-[#8B6F47] border-[#E8DED1]"
                   >
                     View All
                   </Button>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
                 {sectionMarkets.map((market, index) => (
                   <MarketCard
                     key={market.address}

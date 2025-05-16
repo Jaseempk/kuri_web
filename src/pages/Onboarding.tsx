@@ -48,7 +48,9 @@ export default function Onboarding() {
     try {
       let profile_image_url = "";
       if (formData.image) {
-        const filePath = formData.image.name;
+        const filePath = `${address.toLowerCase()}_${Date.now()}_${
+          formData.image.name
+        }`;
         const { error: uploadError } = await supabase.storage
           .from("kuriprofiles")
           .upload(filePath, formData.image);

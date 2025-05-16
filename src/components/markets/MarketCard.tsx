@@ -429,63 +429,51 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
       <div className="cursor-pointer" onClick={handleCardClick}>
         <div className="bg-background rounded-2xl overflow-hidden hover-lift shadow-lg">
           {/* Image Section with Status and Title */}
-          <div className="relative h-48">
+          <div className="relative h-36 xs:h-40 sm:h-48">
             <img
               src={imageUrl}
               alt={market.name || "Kuri Circle"}
               className="w-full h-full object-cover"
               loading="lazy"
               onError={(e) => {
-                e.currentTarget.src = CIRCLE_IMAGES[0]; // Fallback to first image
+                e.currentTarget.src = CIRCLE_IMAGES[0];
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
             {/* Title and Membership Status */}
-            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-              <h3 className="text-xl font-sans font-semibold text-white">
+            <div className="absolute bottom-3 xs:bottom-4 left-3 xs:left-4 right-3 xs:right-4 flex justify-between items-end">
+              <h3 className="text-lg xs:text-xl font-sans font-semibold text-white line-clamp-2">
                 {metadata?.short_description || "Kuri"}
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {getMembershipStatusDisplay()}
               </div>
             </div>
           </div>
 
           {/* Content Section */}
-          <div className="p-6 space-y-4">
-            {/* Description - Now using metadata */}
-            {/* <div>
-              <p
-                className="text-sm text-muted-foreground line-clamp-2"
-                title={
-                  metadata?.short_description ||
-                  "A community savings circle powered by Kuri protocol."
-                }
-              >
-                {metadata?.short_description ||
-                  "A community savings circle powered by Kuri protocol."}
-              </p>
-            </div> */}
-
+          <div className="p-4 xs:p-5 sm:p-6 space-y-3 xs:space-y-4">
             {/* Info Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 xs:gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Members</p>
-                <p className="font-medium">
+                <p className="text-xs text-muted-foreground mb-1">Members</p>
+                <p className="text-sm xs:text-base font-medium">
                   {market.activeParticipants}/{market.totalParticipants}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Contribution</p>
-                <p className="font-medium">
+                <p className="text-xs text-muted-foreground mb-1">
+                  Contribution
+                </p>
+                <p className="text-sm xs:text-base font-medium">
                   ${(Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
                   {getIntervalTypeText(market.intervalType)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Win Amount</p>
-                <p className="font-medium text-[hsl(var(--forest))]">
+                <p className="text-xs text-muted-foreground mb-1">Win Amount</p>
+                <p className="text-sm xs:text-base font-medium text-[hsl(var(--forest))]">
                   $
                   {(
                     (Number(market.kuriAmount) / 1_000_000) *
@@ -494,10 +482,13 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mb-1">
                   {market.state === 0 ? "Launch Ends In" : "Next Draw"}
                 </p>
-                <p className="font-medium font-mono">
+                <p className="text-sm xs:text-base font-medium font-mono flex items-center gap-1.5">
+                  {market.state === 0 && (
+                    <Clock className="h-3 w-3 xs:h-4 xs:w-4" />
+                  )}
                   {market.state === 0 ? timeLeft : market.nextDraw || "--"}
                 </p>
               </div>
@@ -505,13 +496,13 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
 
             {/* Error Message */}
             {error && (
-              <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+              <div className="text-xs xs:text-sm text-red-500 bg-red-50 p-2 rounded">
                 {error}
               </div>
             )}
 
             {/* Action Button */}
-            <div className="mt-4">{renderActionButton()}</div>
+            <div className="pt-1 xs:pt-2">{renderActionButton()}</div>
           </div>
         </div>
       </div>
