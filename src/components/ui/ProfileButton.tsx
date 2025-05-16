@@ -13,12 +13,16 @@ export function ProfileButton() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+  // Check if current path is a profile path
+  const isProfilePath =
+    location.pathname.startsWith("/u/") || location.pathname === "/me";
+
   return (
-    <Link to="/profile">
+    <Link to="/me">
       <Button
         variant="outline"
         className={`flex items-center gap-2 hover:bg-[hsl(var(--gold))/10] ${
-          location.pathname === "/profile"
+          isProfilePath
             ? "bg-[hsl(var(--gold))/10] text-[hsl(var(--gold))] border-[hsl(var(--gold))]"
             : "text-muted-foreground"
         }`}

@@ -14,6 +14,7 @@ import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
 import UserDashboard from "./pages/UserDashboard";
 import EnhancedProfile from "./pages/EnhancedProfile";
+import ProfileRedirect from "./pages/ProfileRedirect";
 import Onboarding from "./pages/Onboarding";
 
 function App() {
@@ -36,7 +37,8 @@ function App() {
                 <Route path="/markets" element={<MarketList />} />
                 <Route path="/markets/:address" element={<MarketDetail />} />
                 <Route path="/dashboard" element={<UserDashboard />} />
-                <Route path="/profile" element={<EnhancedProfile />} />
+                <Route path="/u/:identifier" element={<EnhancedProfile />} />
+                <Route path="/me" element={<ProfileRedirect />} />
               </Route>
             </Routes>
           </Router>
