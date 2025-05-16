@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
-import { config } from "../../providers/Web3Provider";
+import { config } from "../../config/wagmi";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { MarketCardExpanded } from "./MarketCardExpanded";
 import { supabase } from "../../lib/supabase";
+import { useProfileRequired } from "../../hooks/useProfileRequired";
 
 interface MarketCardProps {
   market: KuriMarket;
@@ -96,6 +97,11 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const { requireProfile } = useProfileRequired({
+    strict: false,
+    action: "join_circle",
+  });
 
   const account = getAccount(config);
   const {
@@ -214,6 +220,11 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
 
     if (!account.address) {
       setError("Please connect your wallet first");
+      return;
+    }
+
+    // Add profile check before proceeding
+    if (!requireProfile()) {
       return;
     }
 

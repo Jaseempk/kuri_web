@@ -11,7 +11,7 @@ import { useAccount } from "wagmi";
 import { KuriFactoryABI } from "../../contracts/abis/KuriFactory";
 import { getContractAddress } from "../../config/contracts";
 import { handleContractError } from "../../utils/errors";
-import { config } from "../../providers/Web3Provider";
+import { config } from "../../config/wagmi";
 import { baseSepolia } from "viem/chains";
 import { useTransactionStatus } from "../useTransactionStatus";
 import { useKuriMarkets } from "../useKuriMarkets";

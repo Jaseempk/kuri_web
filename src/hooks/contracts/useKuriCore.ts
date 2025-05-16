@@ -7,7 +7,7 @@ import {
 } from "@wagmi/core";
 import { KuriCoreABI } from "../../contracts/abis/KuriCore";
 import { handleContractError } from "../../utils/errors";
-import { config } from "../../providers/Web3Provider";
+import { config } from "../../config/wagmi";
 import { useTransactionStatus } from "../useTransactionStatus";
 
 export enum KuriState {

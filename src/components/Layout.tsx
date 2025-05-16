@@ -1,6 +1,8 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { ConnectButton } from "./ui/ConnectButton";
+import { useAccount } from "wagmi";
+import { useUserProfile } from "../hooks/useUserProfile";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,6 +10,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const { isConnected } = useAccount();
+  const { profile } = useUserProfile();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -41,6 +45,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 Dashboard
               </Link>
+              {isConnected && (
+                <Link
+                  to="/profile"
+                  className={`text-sm font-medium transition-colors hover:text-[hsl(var(--gold))] ${
+                    location.pathname === "/profile"
+                      ? "text-[hsl(var(--gold))]"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {profile?.display_name || "Profile"}
+                </Link>
+              )}
             </nav>
           </div>
           <ConnectButton />

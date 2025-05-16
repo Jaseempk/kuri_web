@@ -13,6 +13,8 @@ import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
 import UserDashboard from "./pages/UserDashboard";
+import UserProfile from "./pages/UserProfile";
+import Onboarding from "./pages/Onboarding";
 
 function App() {
   return (
@@ -23,6 +25,7 @@ function App() {
           <Router>
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route
                 element={
                   <FarcasterAwareLayout>
@@ -33,6 +36,7 @@ function App() {
                 <Route path="/markets" element={<MarketList />} />
                 <Route path="/markets/:address" element={<MarketDetail />} />
                 <Route path="/dashboard" element={<UserDashboard />} />
+                <Route path="/profile" element={<UserProfile />} />
               </Route>
             </Routes>
           </Router>

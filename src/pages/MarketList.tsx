@@ -13,6 +13,8 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { formatEther } from "viem";
 import { supabase } from "../lib/supabase";
 import { MarketMetadata } from "../components/markets/MarketCard";
+import { useProfileRequired } from "../hooks/useProfileRequired";
+import { useNavigate } from "react-router-dom";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -99,6 +101,11 @@ export default function MarketList() {
     tvl: BigInt(0),
     activeCircles: 0,
     totalParticipants: 0,
+  });
+  const navigate = useNavigate();
+  const { requireProfile } = useProfileRequired({
+    strict: false, // Don't enforce on page load
+    action: "market_action",
   });
 
   useEffect(() => {
@@ -229,6 +236,10 @@ export default function MarketList() {
       ).toFixed(1)
     : "0";
 
+  const handleCreateMarket = () => {
+    return requireProfile(); // This will handle the navigation if needed
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Stats Banner */}
@@ -270,7 +281,14 @@ export default function MarketList() {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent rounded-full px-6 transition-all duration-200">
+              <Button
+                onClick={(e) => {
+                  if (!handleCreateMarket()) {
+                    e.preventDefault();
+                  }
+                }}
+                className="bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent rounded-full px-6 transition-all duration-200"
+              >
                 Start a Circle
               </Button>
             </DialogTrigger>

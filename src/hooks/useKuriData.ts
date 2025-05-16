@@ -1,6 +1,6 @@
 import { readContract } from "@wagmi/core";
 import { KuriCoreABI } from "../contracts/abis/KuriCore";
-import { config } from "../providers/Web3Provider";
+import { config } from "../config/wagmi";
 import { useCallback, useEffect, useState } from "react";
 
 interface KuriData {
