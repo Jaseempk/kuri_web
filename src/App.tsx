@@ -13,7 +13,7 @@ import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
 import UserDashboard from "./pages/UserDashboard";
-import UserProfile from "./pages/UserProfile";
+import EnhancedProfile from "./pages/EnhancedProfile";
 import Onboarding from "./pages/Onboarding";
 
 function App() {
@@ -36,7 +36,7 @@ function App() {
                 <Route path="/markets" element={<MarketList />} />
                 <Route path="/markets/:address" element={<MarketDetail />} />
                 <Route path="/dashboard" element={<UserDashboard />} />
-                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/profile" element={<EnhancedProfile />} />
               </Route>
             </Routes>
           </Router>

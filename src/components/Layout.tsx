@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { ConnectButton } from "./ui/ConnectButton";
 import { useAccount } from "wagmi";
 import { useUserProfile } from "../hooks/useUserProfile";
+import { User } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -24,7 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               KURI
             </Link>
             {/* Navigation */}
-            <nav className="flex gap-6">
+            <nav className="flex items-center gap-6">
               <Link
                 to="/markets"
                 className={`text-sm font-medium transition-colors hover:text-[hsl(var(--gold))] ${
@@ -48,13 +49,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {isConnected && (
                 <Link
                   to="/profile"
-                  className={`text-sm font-medium transition-colors hover:text-[hsl(var(--gold))] ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors hover:bg-[hsl(var(--gold))/10] ${
                     location.pathname === "/profile"
-                      ? "text-[hsl(var(--gold))]"
+                      ? "bg-[hsl(var(--gold))/10] text-[hsl(var(--gold))]"
                       : "text-muted-foreground"
                   }`}
                 >
-                  {profile?.display_name || "Profile"}
+                  {profile?.profile_image_url ? (
+                    <img
+                      src={profile.profile_image_url}
+                      alt="Profile"
+                      className="w-6 h-6 rounded-full border border-[hsl(var(--gold))/20]"
+                    />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {profile?.display_name || "My Profile"}
+                  </span>
                 </Link>
               )}
             </nav>
