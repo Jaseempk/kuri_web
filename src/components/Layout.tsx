@@ -1,9 +1,10 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { ConnectButton } from "./ui/ConnectButton";
-import { useAccount } from "wagmi";
-import { useUserProfile } from "../hooks/useUserProfile";
-import { User } from "lucide-react";
+
+import { getAccount } from "@wagmi/core";
+import { config } from "../config/wagmi";
+import { ProfileButton } from "./ui/ProfileButton";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,8 +12,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { isConnected } = useAccount();
-  const { profile } = useUserProfile();
+  const account = getAccount(config);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,32 +46,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 Dashboard
               </Link>
-              {isConnected && (
-                <Link
-                  to="/profile"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors hover:bg-[hsl(var(--gold))/10] ${
-                    location.pathname === "/profile"
-                      ? "bg-[hsl(var(--gold))/10] text-[hsl(var(--gold))]"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {profile?.profile_image_url ? (
-                    <img
-                      src={profile.profile_image_url}
-                      alt="Profile"
-                      className="w-6 h-6 rounded-full border border-[hsl(var(--gold))/20]"
-                    />
-                  ) : (
-                    <User className="w-5 h-5" />
-                  )}
-                  <span className="text-sm font-medium">
-                    {profile?.display_name || "My Profile"}
-                  </span>
-                </Link>
-              )}
             </nav>
           </div>
-          <ConnectButton />
+          {/* Right side: Conditional rendering of Connect/Profile button */}
+          {account.address ? <ProfileButton /> : <ConnectButton />}
         </div>
       </header>
 
