@@ -21,8 +21,10 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "connectkit": "^1.7.2",
+    "dompurify": "^3.0.9",
     "framer-motion": "^12.9.0",
     "graphql": "^16.10.0",
+    "helmet": "^7.1.0",
     "lucide-react": "^0.344.0",
     "process": "^0.11.10",
     "react": "^18.2.0",
@@ -36,6 +38,7 @@
     "wagmi": "^2.5.7"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20.11.24",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",

@@ -1,12 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { Button } from "../components/ui/button";
-import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
+import { sanitizeInput } from "../utils/sanitize";
+import { setCsrfToken, validateCsrfToken } from "../utils/csrf";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ export default function Onboarding() {
   const { address } = useAccount();
   const { profile, updateProfile } = useUserProfile();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [csrfToken, setCsrfTokenState] = useState<string>("");
   const returnUrl = location.state?.returnUrl || "/markets";
 
   const [formData, setFormData] = useState({
@@ -23,6 +26,12 @@ export default function Onboarding() {
     imagePreview: null as string | null,
   });
 
+  // Set CSRF token on mount
+  useEffect(() => {
+    const token = setCsrfToken();
+    setCsrfTokenState(token);
+  }, []);
+
   // Redirect if user already has a profile
   useEffect(() => {
     if (profile) {
@@ -30,9 +39,51 @@ export default function Onboarding() {
     }
   }, [profile, navigate, returnUrl]);
 
+  const validateForm = (): boolean => {
+    if (!validateCsrfToken(csrfToken)) {
+      setError("Invalid form submission. Please try again.");
+      return false;
+    }
+
+    if (!formData.username.trim()) {
+      setError("Username is required");
+      return false;
+    }
+
+    if (!formData.display_name.trim()) {
+      setError("Display name is required");
+      return false;
+    }
+
+    // Username validation
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(formData.username)) {
+      setError(
+        "Username must be 3-20 characters and contain only letters, numbers, and underscores"
+      );
+      return false;
+    }
+
+    return true;
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      setError("Please upload a valid image file (JPEG, JPG, PNG, or GIF)");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB");
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       image: file,
@@ -43,14 +94,18 @@ export default function Onboarding() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!address) return;
+    if (!validateForm()) return;
 
     setLoading(true);
+    setError("");
+
     try {
       let profile_image_url = "";
       if (formData.image) {
-        const filePath = `${address.toLowerCase()}_${Date.now()}_${
-          formData.image.name
-        }`;
+        const filePath = `${address.toLowerCase()}_${Date.now()}_${formData.image.name.replace(
+          /[^a-zA-Z0-9.]/g,
+          "_"
+        )}`;
         const { error: uploadError } = await supabase.storage
           .from("kuriprofiles")
           .upload(filePath, formData.image);
@@ -65,17 +120,26 @@ export default function Onboarding() {
       }
 
       await updateProfile({
-        username: formData.username,
-        display_name: formData.display_name,
+        username: sanitizeInput(formData.username),
+        display_name: sanitizeInput(formData.display_name),
         profile_image_url,
         reputation_score: 0,
       });
+
+      // Generate new CSRF token after successful submission
+      const newToken = setCsrfToken();
+      setCsrfTokenState(newToken);
 
       toast.success("Profile created successfully!");
       navigate(returnUrl, { replace: true });
     } catch (error) {
       console.error("Error creating profile:", error);
-      toast.error("Failed to create profile. Please try again.");
+      const errorMessage =
+        error instanceof Error
+          ? sanitizeInput(error.message)
+          : "Failed to create profile. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -96,6 +160,12 @@ export default function Onboarding() {
             Set up your profile to unlock full access to Kuri's features,
             including creating and joining circles.
           </p>
+
+          {error && (
+            <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col gap-4">
@@ -134,6 +204,8 @@ export default function Onboarding() {
                   }))
                 }
                 required
+                pattern="^[a-zA-Z0-9_]{3,20}$"
+                title="Username must be 3-20 characters and contain only letters, numbers, and underscores"
                 className="border-[#E8DED1]"
               />
             </div>
@@ -153,6 +225,7 @@ export default function Onboarding() {
                   }))
                 }
                 required
+                maxLength={50}
                 className="border-[#E8DED1]"
               />
             </div>

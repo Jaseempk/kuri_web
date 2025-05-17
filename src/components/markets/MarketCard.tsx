@@ -64,14 +64,11 @@ export interface MarketMetadata {
 export const getMetadata = async (
   marketAddress: string
 ): Promise<MarketMetadata | null> => {
-  console.log("Fetching metadata for:", marketAddress);
   const { data, error } = await supabase
     .from("kuri_web")
     .select("*")
     .ilike("market_address", marketAddress)
     .single();
-
-  console.log("Supabase data:", data);
 
   if (error || !data) return null;
   return data as MarketMetadata;

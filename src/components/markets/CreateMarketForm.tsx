@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
@@ -7,6 +7,8 @@ import { parseUnits } from "viem";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 import { supabase } from "../../lib/supabase";
+import { sanitizeInput } from "../../utils/sanitize";
+import { setCsrfToken, validateCsrfToken } from "../../utils/csrf";
 
 interface FormData {
   totalAmount: string;
@@ -37,9 +39,16 @@ export const CreateMarketForm = ({
     imagePreview: null,
   });
   const [error, setError] = useState<string>("");
+  const [csrfToken, setCsrfTokenState] = useState<string>("");
 
   const { initialiseKuriMarket, isCreating, isCreationSuccess } =
     useKuriFactory();
+
+  useEffect(() => {
+    // Set CSRF token when component mounts
+    const token = setCsrfToken();
+    setCsrfTokenState(token);
+  }, []);
 
   // Calculate monthly contribution per participant
   const monthlyContribution = useMemo(() => {
@@ -54,13 +63,32 @@ export const CreateMarketForm = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Sanitize text inputs
+    const sanitizedValue =
+      name === "shortDescription" || name === "longDescription"
+        ? sanitizeInput(value)
+        : value;
+    setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
     setError("");
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      setError("Please upload a valid image file (JPEG, JPG, PNG, or GIF)");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB");
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       image: file,
@@ -81,6 +109,11 @@ export const CreateMarketForm = ({
       setError("Maximum 500 participants allowed per circle");
       return false;
     }
+    // Validate CSRF token
+    if (!validateCsrfToken(csrfToken)) {
+      setError("Invalid form submission. Please try again.");
+      return false;
+    }
     return true;
   };
 
@@ -95,7 +128,6 @@ export const CreateMarketForm = ({
         Number(formData.participantCount),
         Number(formData.intervalType) as 0 | 1
       );
-      console.log("formData", formData);
 
       // Close the modal immediately after transaction confirmation
       onClose?.();
@@ -108,34 +140,36 @@ export const CreateMarketForm = ({
       // Call success callback if provided
       onSuccess?.();
 
-      // 2. Get market address from transaction
-      // TODO: Replace this with the correct extraction logic for the deployed market address
-      // For now, assume tx has a property 'marketAddress' or similar
       const marketAddress = tx || "";
-      console.log("Market Address:", marketAddress);
 
-      console.log("file", formData.image);
-
-      // 3. Save metadata
+      // Save metadata with sanitized content
       let imageUrl = "";
       if (formData.image) {
-        const filePath = formData.image.name;
+        const filePath = `${Date.now()}_${formData.image.name.replace(
+          /[^a-zA-Z0-9.]/g,
+          "_"
+        )}`;
         const { data, error } = await supabase.storage
           .from("kuri")
           .upload(filePath, formData.image);
-        console.log("data", data);
+
         if (error) throw error;
         const {
           data: { publicUrl },
         } = supabase.storage.from("kuri").getPublicUrl(filePath);
         imageUrl = publicUrl;
       }
+
       await supabase.from("kuri_web").insert({
         market_address: marketAddress,
-        short_description: formData.shortDescription,
-        long_description: formData.longDescription,
+        short_description: sanitizeInput(formData.shortDescription),
+        long_description: sanitizeInput(formData.longDescription),
         image_url: imageUrl,
       });
+
+      // Generate new CSRF token after successful submission
+      const newToken = setCsrfToken();
+      setCsrfTokenState(newToken);
 
       // Redirect to the markets page after a delay to allow toast to be visible
       setTimeout(() => {
@@ -144,7 +178,9 @@ export const CreateMarketForm = ({
     } catch (err) {
       if (!isUserRejection(err)) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to create circle";
+          err instanceof Error
+            ? sanitizeInput(err.message)
+            : "Failed to create circle";
         setError(errorMessage);
         toast.error(errorMessage);
       }

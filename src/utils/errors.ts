@@ -1,5 +1,5 @@
 export class ContractError extends Error {
-  constructor(message: string, public cause?: unknown) {
+  constructor(message: string, public originalError?: unknown) {
     super(message);
     this.name = "ContractError";
   }
@@ -15,24 +15,28 @@ export const isUserRejection = (error: unknown): boolean => {
   return false;
 };
 
+// Enhanced error handling with sanitized messages
 export const handleContractError = (error: unknown): ContractError => {
+  // Log the original error for debugging but don't expose to user
+  console.error("Original error:", error);
+
   if (error instanceof ContractError) {
     return error;
   }
 
-  // Handle specific error types
+  // Handle specific error types with user-friendly messages
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
     // User rejected transaction
     if (message.includes("user rejected") || message.includes("user denied")) {
-      return new ContractError("Transaction was rejected by user", error);
+      return new ContractError("Transaction was cancelled by user", error);
     }
 
     // Insufficient funds
     if (message.includes("insufficient funds")) {
       return new ContractError(
-        "Insufficient funds to complete transaction",
+        "Insufficient funds to complete this transaction",
         error
       );
     }
@@ -40,7 +44,7 @@ export const handleContractError = (error: unknown): ContractError => {
     // Gas estimation failed
     if (message.includes("gas required exceeds allowance")) {
       return new ContractError(
-        "Transaction would fail - gas estimation error",
+        "Transaction cannot be completed - gas estimation failed",
         error
       );
     }
@@ -48,48 +52,46 @@ export const handleContractError = (error: unknown): ContractError => {
     // Network error
     if (message.includes("network")) {
       return new ContractError(
-        "Network error occurred. Please check your connection",
+        "Network connection issue. Please check your connection",
         error
       );
     }
 
     // Contract execution reverted
     if (message.includes("execution reverted")) {
-      // Extract revert reason if available
-      const revertReason = message.includes("reason:")
-        ? message.split("reason:")[1].trim()
-        : "Transaction failed - contract reverted";
-      return new ContractError(revertReason, error);
+      return new ContractError(
+        "Transaction failed - contract requirements not met",
+        error
+      );
     }
 
-    // Kuri specific errors
+    // Kuri specific errors with sanitized messages
     if (message.includes("not active")) {
-      return new ContractError("Market is not active", error);
+      return new ContractError("This market is not currently active", error);
     }
 
     if (message.includes("already deposited")) {
-      return new ContractError("Already deposited for this interval", error);
+      return new ContractError(
+        "You have already made a deposit for this interval",
+        error
+      );
     }
 
     if (message.includes("not winner")) {
       return new ContractError(
-        "You are not the winner for this interval",
+        "You are not eligible to claim for this interval",
         error
       );
     }
 
     if (message.includes("invalid interval")) {
-      return new ContractError("Invalid interval for claiming", error);
-    }
-
-    if (message.includes("not member")) {
-      return new ContractError("You are not a member of this Kuri", error);
+      return new ContractError("Invalid interval for this operation", error);
     }
   }
 
-  // Default error
+  // Generic error for unknown cases
   return new ContractError(
-    "An unexpected error occurred during contract interaction",
+    "An unexpected error occurred. Please try again later.",
     error
   );
 };
