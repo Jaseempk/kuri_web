@@ -168,6 +168,7 @@ export const USER_ACTIVITY_QUERY = gql`
     ) {
       id
       timestamp
+      contractAddress
     }
     userDepositeds(
       where: { user: $userAddress }
@@ -178,6 +179,7 @@ export const USER_ACTIVITY_QUERY = gql`
       intervalIndex
       amountDeposited
       depositTimestamp
+      contractAddress
     }
     kuriSlotClaimeds(
       where: { user: $userAddress }
@@ -188,6 +190,7 @@ export const USER_ACTIVITY_QUERY = gql`
       timestamp
       kuriAmount
       intervalIndex
+      contractAddress
     }
   }
 `;

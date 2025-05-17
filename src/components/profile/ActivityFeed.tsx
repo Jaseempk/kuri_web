@@ -4,6 +4,15 @@ import { motion } from "framer-motion";
 import { formatEther } from "viem";
 import { useUserActivity } from "../../hooks/useUserActivity";
 import { ArrowUpIcon, ArrowDownIcon, UserPlusIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
+
+interface MarketMetadata {
+  id: number;
+  market_address: string;
+  short_description: string;
+  created_at: string;
+}
 
 type Activity = {
   type: "deposit" | "claim" | "join";
@@ -16,6 +25,50 @@ export function ActivityFeed() {
   const { address } = useAccount();
   const { activity, loading } = useUserActivity(address || "");
   const { markets } = useKuriMarkets();
+  const [marketMetadata, setMarketMetadata] = useState<
+    Record<string, MarketMetadata>
+  >({});
+
+  // Fetch metadata for markets that appear in activities
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      if (!activity) return;
+
+      // Get unique market addresses from activities
+      const marketAddresses = new Set([
+        ...(activity.deposits?.map((d) => d.marketId.toLowerCase()) || []),
+        ...(activity.claims?.map((c) => c.marketId.toLowerCase()) || []),
+        ...(activity.memberships?.map((m) => m.marketId.toLowerCase()) || []),
+      ]);
+
+      console.log("Market addresses to fetch:", Array.from(marketAddresses));
+
+      // Fetch metadata for each market using ilike for case-insensitive matching
+      const promises = Array.from(marketAddresses).map((address) =>
+        supabase
+          .from("kuri_web")
+          .select("*")
+          .ilike("market_address", address)
+          .single()
+      );
+      console.log("Promises to fetch metadata:", promises);
+
+      const results = await Promise.all(promises);
+
+      const metadataMap: Record<string, MarketMetadata> = {};
+      results.forEach((result, index) => {
+        if (!result.error && result.data) {
+          const address = Array.from(marketAddresses)[index];
+          metadataMap[address] = result.data;
+          console.log("Stored metadata for:", address, result.data);
+        }
+      });
+
+      setMarketMetadata(metadataMap);
+    };
+
+    fetchMetadata();
+  }, [activity]);
 
   if (loading) {
     return (
@@ -79,17 +132,43 @@ export function ActivityFeed() {
   }
 
   const getMarketName = (marketId: string) => {
-    const market = markets?.find((m) => m.address === marketId);
+    // Ensure we're using lowercase for comparison
+    const normalizedMarketId = marketId.toLowerCase();
+    const metadata = marketMetadata[normalizedMarketId];
+
+    console.log("Looking up metadata for:", normalizedMarketId, metadata);
+
+    if (metadata?.short_description) {
+      return metadata.short_description;
+    }
+
+    const market = markets?.find(
+      (m) => m.address.toLowerCase() === normalizedMarketId
+    );
     return market?.name || "Unknown Circle";
   };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    try {
+      // Handle both ISO string and Unix timestamp formats
+      const date = timestamp.includes("T")
+        ? new Date(timestamp)
+        : new Date(parseInt(timestamp) * 1000);
+
+      if (isNaN(date.getTime())) {
+        console.error("Invalid timestamp:", timestamp);
+        return "Date unavailable";
+      }
+
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting timestamp:", error);
+      return "Date unavailable";
+    }
   };
 
   const formatAmount = (amount: bigint) => {
@@ -149,7 +228,7 @@ export function ActivityFeed() {
                   {formatTimestamp(item.timestamp)}
                 </span>
               </div>
-              {item.amount && (
+              {item.amount !== undefined && item.amount > 0n && (
                 <p className="text-xs md:text-sm text-muted-foreground truncate">
                   Amount: {formatAmount(item.amount)}
                 </p>

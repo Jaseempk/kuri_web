@@ -50,7 +50,12 @@ export const MarketCardExpanded = ({
         <div className="mt-6 grid grid-cols-2 gap-4">
           <div className="bg-[#F9F5F1] p-4 rounded-xl">
             <p className="text-sm text-gray-500">Total Kuri Amount</p>
-            <p className="text-lg font-semibold">${market.kuriAmount} USDC</p>
+            <p className="text-lg font-semibold">
+              $
+              {(Number(market.kuriAmount) / 1e6) *
+                Number(market.totalParticipants)}{" "}
+              USDC
+            </p>
           </div>
           <div className="bg-[#F9F5F1] p-4 rounded-xl">
             <p className="text-sm text-gray-500">Participants</p>

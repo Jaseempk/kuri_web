@@ -89,6 +89,7 @@ export interface UserDeposited {
   intervalIndex: string;
   amountDeposited: string;
   depositTimestamp: string;
+  contractAddress: string;
   blockNumber: string;
   blockTimestamp: string;
   transactionHash: string;
@@ -110,6 +111,7 @@ export interface MembershipRequested {
   id: string;
   user: string;
   timestamp: string;
+  contractAddress: string;
   blockNumber: string;
   blockTimestamp: string;
   transactionHash: string;
@@ -131,6 +133,7 @@ export interface KuriSlotClaimed {
   timestamp: string;
   kuriAmount: string;
   intervalIndex: number;
+  contractAddress: string;
   blockNumber: string;
   blockTimestamp: string;
   transactionHash: string;

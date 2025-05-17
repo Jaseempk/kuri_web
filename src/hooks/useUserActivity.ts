@@ -45,17 +45,17 @@ export const useUserActivity = (userAddress: string) => {
 
     return {
       memberships: data.membershipRequesteds.map((request) => ({
-        marketId: request.id.split("-")[0], // Assuming ID format is "marketAddress-txHash"
+        marketId: request.contractAddress,
         timestamp: request.timestamp,
       })),
       deposits: data.userDepositeds.map((deposit) => ({
-        marketId: deposit.id.split("-")[0],
+        marketId: deposit.contractAddress,
         intervalIndex: deposit.intervalIndex,
         amount: deposit.amountDeposited,
         timestamp: deposit.depositTimestamp,
       })),
       claims: data.kuriSlotClaimeds.map((claim) => ({
-        marketId: claim.id.split("-")[0],
+        marketId: claim.contractAddress,
         intervalIndex: claim.intervalIndex,
         amount: claim.kuriAmount,
         timestamp: claim.timestamp,
