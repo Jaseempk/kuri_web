@@ -163,6 +163,19 @@ export default function MarketList() {
 
   // First apply interval type filter if selected
   const intervalFilteredMarkets = markets.filter((market) => {
+    // Check if this is a market that should be hidden
+    const currentTimestamp = Math.floor(Date.now() / 1000); // Current time in seconds
+    const launchPeriodEnded = Number(market.launchPeriod) < currentTimestamp;
+    const isInLaunchState = market.state === 0; // KuriState.INLAUNCH
+    const participantsMismatch =
+      market.activeParticipants !== market.totalParticipants;
+
+    // Hide markets that meet all three conditions
+    if (launchPeriodEnded && isInLaunchState && participantsMismatch) {
+      return false;
+    }
+
+    // Then apply the interval type filter
     if (activeFilter === "weekly") {
       return market.intervalType === INTERVAL_TYPE.WEEKLY;
     } else if (activeFilter === "monthly") {
@@ -324,19 +337,31 @@ export default function MarketList() {
                 active={activeFilter === "all"}
                 onClick={() => setActiveFilter("all")}
               >
-                All ({markets.length})
+                All ({intervalFilteredMarkets.length})
               </FilterButton>
               <FilterButton
                 active={activeFilter === "weekly"}
                 onClick={() => setActiveFilter("weekly")}
               >
-                Weekly ({countMarketsByIntervalType(INTERVAL_TYPE.WEEKLY)})
+                Weekly (
+                {
+                  intervalFilteredMarkets.filter(
+                    (m) => m.intervalType === INTERVAL_TYPE.WEEKLY
+                  ).length
+                }
+                )
               </FilterButton>
               <FilterButton
                 active={activeFilter === "monthly"}
                 onClick={() => setActiveFilter("monthly")}
               >
-                Monthly ({countMarketsByIntervalType(INTERVAL_TYPE.MONTHLY)})
+                Monthly (
+                {
+                  intervalFilteredMarkets.filter(
+                    (m) => m.intervalType === INTERVAL_TYPE.MONTHLY
+                  ).length
+                }
+                )
               </FilterButton>
             </div>
             <button className="hidden xs:flex p-2 rounded-full hover:bg-[#F9F5F1] transition-colors">

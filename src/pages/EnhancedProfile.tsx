@@ -226,20 +226,86 @@ export default function EnhancedProfile() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 md:gap-6">
-                    {markets
-                      ?.filter(
-                        (market) =>
-                          market.creator.toLowerCase() ===
-                          address?.toLowerCase()
-                      )
-                      .map((market, index) => (
-                        <MarketCard
-                          key={market.address}
-                          market={market}
-                          index={index}
-                        />
-                      ))}
+                  <div className="space-y-8">
+                    {/* Active Circles Section */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">
+                        Active Circles
+                      </h3>
+                      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 md:gap-6">
+                        {markets
+                          ?.filter((market) => {
+                            const currentTimestamp = Math.floor(
+                              Date.now() / 1000
+                            );
+                            const launchPeriodEnded =
+                              Number(market.launchPeriod) < currentTimestamp;
+                            const isInLaunchState = market.state === 0;
+                            const participantsMismatch =
+                              market.activeParticipants !==
+                              market.totalParticipants;
+
+                            // Show markets that are either:
+                            // 1. Not in launch state (active or completed)
+                            // 2. In launch state but launch period hasn't ended
+                            // 3. In launch state, launch period ended, but has all participants
+                            return (
+                              market.creator.toLowerCase() ===
+                                address?.toLowerCase() &&
+                              (!isInLaunchState ||
+                                !launchPeriodEnded ||
+                                !participantsMismatch)
+                            );
+                          })
+                          .map((market, index) => (
+                            <MarketCard
+                              key={market.address}
+                              market={market}
+                              index={index}
+                            />
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Failed Launches Section */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">
+                        Failed Launches
+                      </h3>
+                      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 md:gap-6">
+                        {markets
+                          ?.filter((market) => {
+                            const currentTimestamp = Math.floor(
+                              Date.now() / 1000
+                            );
+                            const launchPeriodEnded =
+                              Number(market.launchPeriod) < currentTimestamp;
+                            const isInLaunchState = market.state === 0;
+                            const participantsMismatch =
+                              market.activeParticipants !==
+                              market.totalParticipants;
+
+                            // Show markets that meet all three conditions:
+                            // 1. In launch state
+                            // 2. Launch period has ended
+                            // 3. Doesn't have all participants
+                            return (
+                              market.creator.toLowerCase() ===
+                                address?.toLowerCase() &&
+                              isInLaunchState &&
+                              launchPeriodEnded &&
+                              participantsMismatch
+                            );
+                          })
+                          .map((market, index) => (
+                            <MarketCard
+                              key={market.address}
+                              market={market}
+                              index={index}
+                            />
+                          ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </TabsContent>
