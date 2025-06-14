@@ -15,6 +15,7 @@ import { supabase } from "../lib/supabase";
 import { MarketMetadata } from "../components/markets/MarketCard";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useNavigate } from "react-router-dom";
+import { PostCreationShare } from "../components/markets/PostCreationShare";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -104,6 +105,9 @@ export default function MarketList() {
     activeCircles: 0,
     totalParticipants: 0,
   });
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [createdMarket, setCreatedMarket] = useState<any>(null);
   const navigate = useNavigate();
   const { requireProfile } = useProfileRequired({
     strict: false, // Don't enforce on page load
@@ -255,6 +259,17 @@ export default function MarketList() {
     return requireProfile(); // This will handle the navigation if needed
   };
 
+  const handleMarketCreated = (market: any) => {
+    // Set the created market first
+    setCreatedMarket(market);
+    // Then update both modal states in the same render cycle
+    setShowCreateForm(false);
+    // Use requestAnimationFrame to ensure the share modal opens in the next frame
+    requestAnimationFrame(() => {
+      setShowShareModal(true);
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Stats Banner */}
@@ -294,7 +309,7 @@ export default function MarketList() {
               Join trusted savings circles and achieve your goals together
             </p>
           </div>
-          <Dialog>
+          <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
             <DialogTrigger asChild>
               <Button
                 onClick={(e) => {
@@ -308,10 +323,24 @@ export default function MarketList() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
-              <CreateMarketForm />
+              <CreateMarketForm
+                onSuccess={handleMarketCreated}
+                onClose={() => setShowCreateForm(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>
+
+        {showShareModal && createdMarket && (
+          <PostCreationShare
+            market={createdMarket}
+            onClose={() => setShowShareModal(false)}
+            onViewMarket={() => {
+              setShowShareModal(false);
+              navigate(`/markets/${createdMarket.address}`);
+            }}
+          />
+        )}
 
         {/* Filter Bar - Sticky */}
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-[#E8DED1] py-3 xs:py-4 mb-6 xs:mb-8">

@@ -57,3 +57,17 @@ export interface KuriContractData {
   winnerAddress: string;
   winnerAmount: bigint;
 }
+
+export interface KuriMarket {
+  address: string;
+  name: string;
+  description?: string;
+  totalParticipants: number;
+  activeParticipants: number;
+  kuriAmount: string;
+  intervalType: number;
+  state: number;
+  imageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

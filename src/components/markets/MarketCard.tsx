@@ -14,11 +14,17 @@ import { useQuery } from "@tanstack/react-query";
 import { MarketCardExpanded } from "./MarketCardExpanded";
 import { supabase } from "../../lib/supabase";
 import { useProfileRequired } from "../../hooks/useProfileRequired";
+import { ShareButton } from "../ui/ShareButton";
+import { useShare } from "../../hooks/useShare";
+import { cn } from "../../lib/utils";
+import { ShareModal } from "../modals/ShareModal";
 
 interface MarketCardProps {
   market: KuriMarket;
   index: number;
   onJoinClick?: (market: KuriMarket) => void;
+  onMarketClick?: (market: KuriMarket) => void;
+  className?: string;
 }
 
 const INTERVAL_TYPE = {
@@ -87,18 +93,28 @@ const HARDCODED_MARKET_METADATA: Record<string, MarketMetadata> = {
   // },
 };
 
-export const MarketCard = ({ market, index }: MarketCardProps) => {
+export const MarketCard: React.FC<MarketCardProps> = ({
+  market,
+  index,
+  onJoinClick,
+  onMarketClick,
+  className,
+}) => {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const { requireProfile } = useProfileRequired({
     strict: false,
     action: "join_circle",
   });
+
+  const { quickShare } = useShare();
 
   const account = getAccount(config);
   const {
@@ -312,11 +328,28 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't expand if dialog is open or if clicking on the action button
-    if (isDialogOpen || e.target instanceof HTMLButtonElement) {
+    // Don't expand if dialog is open, clicking on a button, or if the click is from the share button
+    if (
+      isDialogOpen ||
+      isShareModalOpen ||
+      e.target instanceof HTMLButtonElement ||
+      (e.target as HTMLElement).closest('[data-share-button="true"]')
+    ) {
       return;
     }
     setIsExpanded(true);
+  };
+
+  const handleShareClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSharing(true);
+    try {
+      // Share functionality is now handled by the ShareModal
+    } catch (error) {
+      console.error("Error sharing market:", error);
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   // Render action button based on user role and market state
@@ -423,9 +456,23 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
 
   return (
     <>
-      <div className="cursor-pointer" onClick={handleCardClick}>
-        <div className="bg-background rounded-2xl overflow-hidden hover-lift shadow-lg">
-          {/* Image Section with Status and Title */}
+      <div
+        className={cn(
+          "group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md",
+          className
+        )}
+        onClick={(e) => {
+          // Prevent market click if clicking on share button or share modal is open
+          if (
+            (e.target as HTMLElement).closest('[data-share-button="true"]') ||
+            isShareModalOpen
+          ) {
+            return;
+          }
+          onMarketClick?.(market);
+        }}
+      >
+        <div className="cursor-pointer" onClick={handleCardClick}>
           <div className="relative h-36 xs:h-40 sm:h-48">
             <img
               src={imageUrl}
@@ -438,7 +485,20 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-            {/* Title and Membership Status */}
+            <div
+              className="absolute right-2 top-2 z-10"
+              data-share-button="true"
+            >
+              <ShareButton
+                market={market}
+                isLoading={isSharing}
+                onClick={() => {
+                  setIsShareModalOpen(true);
+                  setIsExpanded(false);
+                }}
+              />
+            </div>
+
             <div className="absolute bottom-3 xs:bottom-4 left-3 xs:left-4 right-3 xs:right-4 flex justify-between items-end">
               <h3 className="text-lg xs:text-xl font-sans font-semibold text-white line-clamp-2">
                 {metadata?.short_description || "Kuri"}
@@ -449,9 +509,7 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
             </div>
           </div>
 
-          {/* Content Section */}
           <div className="p-4 xs:p-5 sm:p-6 space-y-3 xs:space-y-4">
-            {/* Info Grid */}
             <div className="grid grid-cols-2 gap-3 xs:gap-4">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Members</p>
@@ -491,19 +549,24 @@ export const MarketCard = ({ market, index }: MarketCardProps) => {
               </div>
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="text-xs xs:text-sm text-red-500 bg-red-50 p-2 rounded">
                 {error}
               </div>
             )}
 
-            {/* Action Button */}
             <div className="pt-1 xs:pt-2">{renderActionButton()}</div>
           </div>
         </div>
       </div>
-      {isExpanded && (
+      {isShareModalOpen && (
+        <ShareModal
+          market={market}
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+        />
+      )}
+      {isExpanded && !isShareModalOpen && (
         <MarketCardExpanded
           market={market}
           metadata={metadata || fallbackMetadata}
