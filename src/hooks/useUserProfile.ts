@@ -61,3 +61,47 @@ export const useUserProfile = () => {
     refreshProfile: fetchProfile,
   };
 };
+
+// Hook to fetch any user's profile by address
+export const useUserProfileByAddress = (userAddress: string | null) => {
+  const [profile, setProfile] = useState<KuriUserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProfileByAddress = useCallback(async (address: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("kuri_user_profiles")
+        .select("*")
+        .eq("user_address", address.toLowerCase())
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error fetching profile by address:", error);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!userAddress) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const profileData = await fetchProfileByAddress(userAddress);
+      setProfile(profileData);
+      setLoading(false);
+    };
+
+    fetchProfile();
+  }, [userAddress, fetchProfileByAddress]);
+
+  return {
+    profile,
+    loading,
+    fetchProfileByAddress,
+  };
+};

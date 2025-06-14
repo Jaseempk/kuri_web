@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
@@ -11,7 +12,6 @@ import { Clock, Loader2 } from "lucide-react";
 import { IntervalType } from "../../graphql/types";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { MarketCardExpanded } from "./MarketCardExpanded";
 import { supabase } from "../../lib/supabase";
 import { useProfileRequired } from "../../hooks/useProfileRequired";
 import { ShareButton } from "../ui/ShareButton";
@@ -100,11 +100,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   onMarketClick,
   className,
 }) => {
+  const navigate = useNavigate();
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState<string>("");
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -328,16 +328,19 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't expand if dialog is open, clicking on a button, or if the click is from the share button
+    // Don't navigate if dialog is open, clicking on a button, or if the click is from the share button
     if (
       isDialogOpen ||
       isShareModalOpen ||
       e.target instanceof HTMLButtonElement ||
-      (e.target as HTMLElement).closest('[data-share-button="true"]')
+      (e.target as HTMLElement).closest('[data-share-button="true"]') ||
+      (e.target as HTMLElement).closest("button")
     ) {
       return;
     }
-    setIsExpanded(true);
+
+    // Navigate to market detail page
+    navigate(`/markets/${market.address}`);
   };
 
   const handleShareClick = async (e: React.MouseEvent) => {
@@ -458,21 +461,12 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     <>
       <div
         className={cn(
-          "group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md",
+          "group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer",
           className
         )}
-        onClick={(e) => {
-          // Prevent market click if clicking on share button or share modal is open
-          if (
-            (e.target as HTMLElement).closest('[data-share-button="true"]') ||
-            isShareModalOpen
-          ) {
-            return;
-          }
-          onMarketClick?.(market);
-        }}
+        onClick={handleCardClick}
       >
-        <div className="cursor-pointer" onClick={handleCardClick}>
+        <div onClick={handleCardClick}>
           <div className="relative h-36 xs:h-40 sm:h-48">
             <img
               src={imageUrl}
@@ -494,7 +488,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 isLoading={isSharing}
                 onClick={() => {
                   setIsShareModalOpen(true);
-                  setIsExpanded(false);
                 }}
               />
             </div>
@@ -564,13 +557,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           market={market}
           isOpen={isShareModalOpen}
           onClose={() => setIsShareModalOpen(false)}
-        />
-      )}
-      {isExpanded && !isShareModalOpen && (
-        <MarketCardExpanded
-          market={market}
-          metadata={metadata || fallbackMetadata}
-          onClose={() => setIsExpanded(false)}
         />
       )}
     </>

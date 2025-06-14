@@ -45,6 +45,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             size="icon"
             className="absolute right-4 top-4"
             onClick={onClose}
+            aria-label="Close share modal"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -58,7 +59,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               id="message"
               placeholder="Add a personal message to your share..."
               value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setCustomMessage(e.target.value)
+              }
               className="min-h-[100px]"
             />
           </div>

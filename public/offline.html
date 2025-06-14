@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - Kuri Finance</title>
+    <style>
+      body {
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        background-color: #f5f5dc;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        text-align: center;
+      }
+
+      .container {
+        max-width: 600px;
+        padding: 40px;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #c84e31;
+        margin-bottom: 20px;
+      }
+
+      p {
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+
+      .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+      }
+
+      .button {
+        background-color: #c84e31;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.2s;
+      }
+
+      .button:hover {
+        background-color: #b03d20;
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 20px;
+          margin: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">📡</div>
+      <h1>You're Offline</h1>
+      <p>
+        Don't worry! You can still access your saved markets and basic
+        information while offline.
+      </p>
+      <p>Please check your internet connection and try again.</p>
+      <a href="/" class="button">Try Again</a>
+    </div>
+  </body>
+</html>
