@@ -327,6 +327,19 @@ export default function MarketDetail() {
     }
   };
 
+  // Handle member action completion (refresh data)
+  const handleMemberActionComplete = async () => {
+    if (!account.address) return;
+
+    try {
+      // Refresh membership status
+      const status = await getMemberStatus(account.address);
+      setMembershipStatus(status ?? 0);
+    } catch (err) {
+      console.error("Error refreshing member status:", err);
+    }
+  };
+
   // Get membership status display
   const getMembershipStatusDisplay = () => {
     switch (membershipStatus) {
@@ -429,6 +442,7 @@ export default function MarketDetail() {
           }}
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
+          onMemberActionComplete={handleMemberActionComplete}
         >
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button className="w-full bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] hover:from-[hsl(var(--terracotta))] hover:to-[hsl(var(--terracotta))] text-white border-0 py-4 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">

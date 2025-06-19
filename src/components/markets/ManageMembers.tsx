@@ -24,9 +24,13 @@ interface MembershipRequest {
 
 interface ManageMembersProps {
   marketAddress: string;
+  onMemberActionComplete?: () => void;
 }
 
-export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
+export const ManageMembers = ({
+  marketAddress,
+  onMemberActionComplete,
+}: ManageMembersProps) => {
   const [memberRequests, setMemberRequests] = useState<MembershipRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,6 +117,7 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
           req.user === address ? { ...req, state: state ?? 4 } : req
         )
       );
+      onMemberActionComplete?.();
     } catch (err) {
       console.error("Error accepting member:", err);
       setError("Failed to accept member");
@@ -134,6 +139,7 @@ export const ManageMembers = ({ marketAddress }: ManageMembersProps) => {
           req.user === address ? { ...req, state: state ?? 4 } : req
         )
       );
+      onMemberActionComplete?.();
     } catch (err) {
       console.error("Error rejecting member:", err);
       setError("Failed to reject member");

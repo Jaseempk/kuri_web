@@ -9,7 +9,7 @@ import {
 import { ManageMembers } from "./ManageMembers";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { useAccount } from "wagmi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
 import { Button } from "../ui/button";
@@ -19,6 +19,7 @@ interface ManageMembersDialogProps {
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onMemberActionComplete?: () => void;
 }
 
 export const ManageMembersDialog = ({
@@ -26,13 +27,21 @@ export const ManageMembersDialog = ({
   children,
   open,
   onOpenChange,
+  onMemberActionComplete,
 }: ManageMembersDialogProps) => {
   const { requestMembership, isRequesting, marketData } = useKuriCore(
     market.address as `0x${string}`
   );
   const { address } = useAccount();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const isCreator = address?.toLowerCase() === market.creator.toLowerCase();
+
+  useEffect(() => {
+    if (open && isCreator) {
+      setRefreshKey((prev) => prev + 1);
+    }
+  }, [open, isCreator]);
 
   const handleRequestMembership = async () => {
     try {
@@ -43,11 +52,15 @@ export const ManageMembersDialog = ({
     }
   };
 
-  // Check if market is ready to initialize
   const isReadyToInitialize =
     marketData &&
     marketData.totalActiveParticipantsCount ===
       marketData.totalParticipantsCount;
+
+  const handleMemberActionComplete = () => {
+    setRefreshKey((prev) => prev + 1);
+    onMemberActionComplete?.();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,7 +93,11 @@ export const ManageMembersDialog = ({
                   </p>
                 </div>
               )}
-              <ManageMembers marketAddress={market.address} />
+              <ManageMembers
+                key={refreshKey}
+                marketAddress={market.address}
+                onMemberActionComplete={handleMemberActionComplete}
+              />
             </>
           ) : (
             <div className="flex flex-col items-center gap-4 py-6">

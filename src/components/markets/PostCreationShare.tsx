@@ -112,13 +112,13 @@ export const PostCreationShare = ({
                 type="text"
                 value={shareUrl}
                 readOnly
-                className="w-full px-4 py-2 pr-12 rounded-xl bg-[#F5F5DC] border border-[#B8860B]/30 focus:outline-none focus:ring-2 focus:ring-[#C84E31] focus:border-transparent"
+                className="w-full px-4 py-2 pr-14 rounded-xl bg-[#F5F5DC] border border-[#B8860B]/30 focus:outline-none focus:ring-2 focus:ring-[#C84E31] focus:border-transparent text-sm"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCopyLink}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-[#C84E31]/10 hover:bg-[#C84E31]/20 text-[#C84E31] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-[#C84E31]/10 hover:bg-[#C84E31]/20 text-[#C84E31] transition-colors"
               >
                 <Copy className="w-4 h-4" />
               </motion.button>

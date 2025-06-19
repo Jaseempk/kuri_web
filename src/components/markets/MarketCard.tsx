@@ -123,6 +123,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     isRequesting,
     initializeKuri,
     marketData,
+    fetchMarketData,
   } = useKuriCore(market.address as `0x${string}`);
 
   const { data: metadata } = useQuery({
@@ -192,16 +193,37 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   // Check if market is ready to initialize
   const canInitialize = useMemo(() => {
+    // Use fresh smart contract data instead of stale GraphQL data
+    const activeCount =
+      marketData?.totalActiveParticipantsCount ?? market.activeParticipants;
+    const totalCount =
+      marketData?.totalParticipantsCount ?? market.totalParticipants;
     return (
       market.state === 0 && // INLAUNCH state
-      market.activeParticipants === market.totalParticipants
+      activeCount === totalCount
     );
-  }, [market.state, market.activeParticipants, market.totalParticipants]);
+  }, [
+    market.state,
+    marketData?.totalActiveParticipantsCount,
+    marketData?.totalParticipantsCount,
+    market.activeParticipants,
+    market.totalParticipants,
+  ]);
 
   // Check if market is full
   const isMarketFull = useMemo(() => {
-    return market.activeParticipants >= market.totalParticipants;
-  }, [market.activeParticipants, market.totalParticipants]);
+    // Use fresh smart contract data instead of stale GraphQL data
+    const activeCount =
+      marketData?.totalActiveParticipantsCount ?? market.activeParticipants;
+    const totalCount =
+      marketData?.totalParticipantsCount ?? market.totalParticipants;
+    return activeCount >= totalCount;
+  }, [
+    marketData?.totalActiveParticipantsCount,
+    marketData?.totalParticipantsCount,
+    market.activeParticipants,
+    market.totalParticipants,
+  ]);
 
   // Handle Kuri initialization
   const handleInitialize = async (e: React.MouseEvent) => {
@@ -251,7 +273,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
     try {
       await requestMembership();
-      setMembershipStatus(0); // NONE state
+
+      // Refresh membership status from contract to get the actual state
+      const status = await getMemberStatus(account.address);
+      setMembershipStatus(status ?? 4); // Default to APPLIED if unable to fetch
+
       toast.success("Membership requested successfully!");
     } catch (err) {
       if (!isUserRejection(err)) {
@@ -262,6 +288,22 @@ export const MarketCard: React.FC<MarketCardProps> = ({
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handle member action completion (refresh data)
+  const handleMemberActionComplete = async () => {
+    if (!account.address) return;
+
+    try {
+      // Refresh membership status
+      const status = await getMemberStatus(account.address);
+      setMembershipStatus(status ?? 0);
+
+      // Refresh market data to update member counts
+      await fetchMarketData();
+    } catch (err) {
+      console.error("Error refreshing member status:", err);
     }
   };
 
@@ -357,6 +399,12 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   // Render action button based on user role and market state
   const renderActionButton = () => {
+    // Use fresh smart contract data for member count display
+    const activeCount =
+      marketData?.totalActiveParticipantsCount ?? market.activeParticipants;
+    const totalCount =
+      marketData?.totalParticipantsCount ?? market.totalParticipants;
+
     if (isCreator) {
       if (canInitialize) {
         return (
@@ -378,10 +426,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           market={market}
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
+          onMemberActionComplete={handleMemberActionComplete}
         >
           <Button className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200">
-            Manage Members ({market.activeParticipants}/
-            {market.totalParticipants})
+            Manage Members ({activeCount}/{totalCount})
           </Button>
         </ManageMembersDialog>
       );
@@ -507,7 +555,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Members</p>
                 <p className="text-sm xs:text-base font-medium">
-                  {market.activeParticipants}/{market.totalParticipants}
+                  {marketData?.totalActiveParticipantsCount ??
+                    market.activeParticipants}
+                  /
+                  {marketData?.totalParticipantsCount ??
+                    market.totalParticipants}
                 </p>
               </div>
               <div>

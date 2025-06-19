@@ -192,13 +192,15 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         errorMessage: "Failed to request membership",
       });
 
+      // Refresh market data after successful request
+      await fetchMarketData();
       return tx;
     } catch (error) {
       throw handleContractError(error);
     } finally {
       setIsRequesting(false);
     }
-  }, [kuriAddress, account.address, handleTransaction]);
+  }, [kuriAddress, account.address, handleTransaction, fetchMarketData]);
 
   // Accept member
   const acceptUserMembershipRequest = useCallback(
@@ -302,6 +304,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     initializeKuri,
     deposit,
     claimKuriAmount,
+    fetchMarketData,
 
     // Loading states
     isRequesting,
