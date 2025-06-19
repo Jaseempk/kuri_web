@@ -14,6 +14,8 @@ import { Badge } from "../ui/badge";
 import { Loader2 } from "lucide-react";
 import { MEMBERSHIP_REQUESTS_QUERY } from "../../graphql/queries";
 import { useAccount } from "wagmi";
+import { useBulkUserProfiles } from "../../hooks/useBulkUserProfiles";
+import { UserProfileCell } from "../ui/UserProfileCell";
 
 interface MembershipRequest {
   id: string;
@@ -45,6 +47,11 @@ export const ManageMembers = ({
     isAccepting,
     isRejecting,
   } = useKuriCore(marketAddress as `0x${string}`);
+
+  // Extract addresses for bulk profile fetching
+  const userAddresses = memberRequests.map((request) => request.user);
+  const { getProfile, isLoading: isProfileLoading } =
+    useBulkUserProfiles(userAddresses);
 
   // Verify creator access
   useEffect(() => {
@@ -221,7 +228,7 @@ export const ManageMembers = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Address</TableHead>
+            <TableHead>User</TableHead>
             <TableHead>Requested</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -230,8 +237,12 @@ export const ManageMembers = ({
         <TableBody>
           {memberRequests.map((request) => (
             <TableRow key={request.id}>
-              <TableCell className="font-mono">
-                {request.user.slice(0, 6)}...{request.user.slice(-4)}
+              <TableCell>
+                <UserProfileCell
+                  profile={getProfile(request.user)}
+                  address={request.user}
+                  isLoading={isProfileLoading(request.user)}
+                />
               </TableCell>
               <TableCell>
                 {new Date(

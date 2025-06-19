@@ -16,6 +16,7 @@ import UserDashboard from "./pages/UserDashboard";
 import EnhancedProfile from "./pages/EnhancedProfile";
 import ProfileRedirect from "./pages/ProfileRedirect";
 import Onboarding from "./pages/Onboarding";
+import UserInsights from "./pages/UserInsights";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/dashboard" element={<UserDashboard />} />
                 <Route path="/u/:identifier" element={<EnhancedProfile />} />
                 <Route path="/me" element={<ProfileRedirect />} />
+                <Route path="/insights/:address" element={<UserInsights />} />
               </Route>
             </Routes>
           </Router>
