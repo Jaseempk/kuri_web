@@ -589,7 +589,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   {market.state === 0 && (
                     <Clock className="h-3 w-3 xs:h-4 xs:w-4" />
                   )}
-                  {market.state === 0 ? timeLeft : market.nextDraw || "--"}
+                  {market.state === 0
+                    ? timeLeft
+                    : new Date(
+                        Number(market.nextDraw) * 1000
+                      ).toLocaleDateString() || "--"}
                 </p>
               </div>
             </div>

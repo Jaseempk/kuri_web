@@ -50,6 +50,7 @@ import { supabase } from "../lib/supabase";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useUserProfileByAddress } from "../hooks/useUserProfile";
 import { isUserRejection } from "../utils/errors";
+import { DualCountdown } from "../components/ui/DotMatrixCountdown";
 
 // Available circle images
 const CIRCLE_IMAGES = [
@@ -155,6 +156,8 @@ export default function MarketDetail() {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const [raffleTimeLeft, setRaffleTimeLeft] = useState<string>("");
+  const [depositTimeLeft, setDepositTimeLeft] = useState<string>("");
   const [isRequesting, setIsRequesting] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
@@ -214,32 +217,98 @@ export default function MarketDetail() {
   }, [marketData]);
 
   useEffect(() => {
-    if (!marketData || marketData.state !== KuriState.INLAUNCH) return;
+    if (!marketData) return;
 
-    const updateTimer = () => {
+    let timer: NodeJS.Timeout;
+
+    const updateTimers = () => {
       const now = Date.now();
-      const end = launchEndTime;
-      const diff = end - now;
 
-      if (diff <= 0) {
-        setTimeLeft("Launch period ended");
-        return;
+      // Handle INLAUNCH countdown (existing logic)
+      if (marketData.state === KuriState.INLAUNCH) {
+        const end = launchEndTime;
+        const diff = end - now;
+
+        if (diff <= 0) {
+          setTimeLeft("Launch period ended");
+        } else {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor(
+            (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+          setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        }
       }
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-      );
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      // Handle ACTIVE market countdowns (new logic)
+      if (marketData.state === KuriState.ACTIVE) {
+        // Raffle countdown
+        const raffleEnd = Number(marketData.nexRaffleTime) * 1000;
+        const raffleDiff = raffleEnd - now;
 
-      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        if (raffleDiff <= 0) {
+          setRaffleTimeLeft("Raffle due now");
+        } else {
+          const days = Math.floor(raffleDiff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor(
+            (raffleDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (raffleDiff % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const seconds = Math.floor((raffleDiff % (1000 * 60)) / 1000);
+
+          if (days > 0) {
+            setRaffleTimeLeft(`${days}d ${hours}h ${minutes}m`);
+          } else if (hours > 0) {
+            setRaffleTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+          } else {
+            setRaffleTimeLeft(`${minutes}m ${seconds}s`);
+          }
+        }
+
+        // Deposit countdown
+        const depositEnd = Number(marketData.nextIntervalDepositTime) * 1000;
+        const depositDiff = depositEnd - now;
+
+        if (depositDiff <= 0) {
+          setDepositTimeLeft("Payment due now");
+        } else {
+          const days = Math.floor(depositDiff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor(
+            (depositDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (depositDiff % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const seconds = Math.floor((depositDiff % (1000 * 60)) / 1000);
+
+          if (days > 0) {
+            setDepositTimeLeft(`${days}d ${hours}h ${minutes}m`);
+          } else if (hours > 0) {
+            setDepositTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+          } else {
+            setDepositTimeLeft(`${minutes}m ${seconds}s`);
+          }
+        }
+      }
     };
 
-    const timer = setInterval(updateTimer, 1000);
-    updateTimer();
+    // Run timer for both INLAUNCH and ACTIVE states
+    if (
+      marketData.state === KuriState.INLAUNCH ||
+      marketData.state === KuriState.ACTIVE
+    ) {
+      timer = setInterval(updateTimers, 1000);
+      updateTimers(); // Initial update
+    }
 
-    return () => clearInterval(timer);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [marketData, launchEndTime]);
 
   // Check if user is creator
@@ -682,7 +751,7 @@ export default function MarketDetail() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-30 bg-white/80 backdrop-blur-xl border-b border-[hsl(var(--border))]"
         >
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-3 xs:px-4 py-3 xs:py-4">
             <Button
               onClick={() => navigate("/markets")}
               variant="ghost"
@@ -697,7 +766,7 @@ export default function MarketDetail() {
         {/* Hero Section with Parallax */}
         <div className="relative overflow-hidden rounded-b-3xl">
           <motion.div
-            className="h-[70vh] relative"
+            className="h-[50vh] sm:h-[60vh] md:h-[70vh] relative"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
@@ -718,7 +787,7 @@ export default function MarketDetail() {
 
             {/* Floating Action Button */}
             <motion.div
-              className="absolute top-6 right-6 z-40"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-40"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
@@ -749,13 +818,13 @@ export default function MarketDetail() {
 
             {/* Hero Content */}
             <div className="absolute inset-0 flex items-end">
-              <div className="container mx-auto px-4 pb-12">
+              <div className="container mx-auto px-4 pb-6 sm:pb-8 md:pb-12">
                 <div className="max-w-4xl">
                   <motion.h1
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 0.8 }}
-                    className="text-5xl md:text-7xl lg:text-8xl font-sans font-semibold text-white mb-8 tracking-tight animate-fade-in-up"
+                    className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-sans font-semibold text-white mb-4 sm:mb-6 md:mb-8 tracking-tight animate-fade-in-up"
                     style={{
                       textShadow:
                         "2px 4px 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.3)",
@@ -769,26 +838,26 @@ export default function MarketDetail() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 0.8 }}
-                    className="flex flex-wrap gap-6 text-white/90"
+                    className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 md:gap-6 text-white/90"
                   >
                     <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-[hsl(var(--gold))]" />
-                      <span className="font-medium">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--gold))]" />
+                      <span className="font-medium text-sm sm:text-base">
                         {marketData.totalActiveParticipantsCount}/
                         {marketData.totalParticipantsCount} Members
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-[hsl(var(--gold))]" />
-                      <span className="font-medium">
+                      <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--gold))]" />
+                      <span className="font-medium text-sm sm:text-base">
                         $
                         {(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}{" "}
                         Contribution
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Trophy className="w-5 h-5 text-[hsl(var(--gold))]" />
-                      <span className="font-medium">
+                      <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--gold))]" />
+                      <span className="font-medium text-sm sm:text-base">
                         $
                         {(
                           (Number(marketData.kuriAmount) / 1_000_000) *
@@ -805,48 +874,48 @@ export default function MarketDetail() {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 pt-8">
+        <div className="relative z-10 pt-4 sm:pt-6 md:pt-8">
           <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {/* Left Sidebar - Stats & Actions */}
-              <div className="lg:col-span-1 space-y-6">
+              <div className="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
                 {/* Interactive Stats Card */}
                 <motion.div
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.7 }}
-                  className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-500"
+                  className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-500"
                 >
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))]">
+                  <div className="flex items-center justify-between mb-4 sm:mb-6">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[hsl(var(--terracotta))]">
                       Circle Stats
                     </h3>
-                    <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-white" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-orange-300 flex items-center justify-center">
+                      <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
-                      className="text-center p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-orange-300 flex items-center justify-center">
-                        <UserCheck className="w-5 h-5 text-white" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-orange-300 flex items-center justify-center">
+                        <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
                       </div>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))] mb-1">
+                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
                         Members
                       </p>
-                      <p className="text-xl font-bold text-[hsl(var(--terracotta))]">
+                      <p className="text-sm sm:text-lg md:text-xl font-bold text-[hsl(var(--terracotta))]">
                         {marketData.totalActiveParticipantsCount}
-                        <span className="text-sm text-[hsl(var(--muted-foreground))]">
+                        <span className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">
                           /{marketData.totalParticipantsCount}
                         </span>
                       </p>
                       {/* Progress Bar */}
-                      <div className="mt-2 w-full bg-[hsl(var(--muted))] rounded-full h-1.5">
+                      <div className="mt-1 sm:mt-2 w-full bg-[hsl(var(--muted))] rounded-full h-1 sm:h-1.5">
                         <motion.div
-                          className="bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] h-1.5 rounded-full"
+                          className="bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] h-1 sm:h-1.5 rounded-full"
                           initial={{ width: 0 }}
                           animate={{
                             width: `${
@@ -866,15 +935,15 @@ export default function MarketDetail() {
 
                     <motion.div
                       whileHover={{ scale: 1.05 }}
-                      className="text-center p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-orange-300 flex items-center justify-center">
-                        <Coins className="w-5 h-5 text-white" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-orange-300 flex items-center justify-center">
+                        <Coins className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
                       </div>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))] mb-1">
+                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
                         Contribution
                       </p>
-                      <p className="text-xl font-bold text-[hsl(var(--terracotta))]">
+                      <p className="text-sm sm:text-lg md:text-xl font-bold text-[hsl(var(--terracotta))]">
                         $
                         {(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
                       </p>
@@ -882,15 +951,15 @@ export default function MarketDetail() {
 
                     <motion.div
                       whileHover={{ scale: 1.05 }}
-                      className="text-center p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] flex items-center justify-center">
-                        <Award className="w-5 h-5 text-white" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] flex items-center justify-center">
+                        <Award className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
                       </div>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))] mb-1">
+                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
                         Win Amount
                       </p>
-                      <p className="text-xl font-bold text-[hsl(var(--forest))]">
+                      <p className="text-sm sm:text-lg md:text-xl font-bold text-[hsl(var(--forest))]">
                         $
                         {(
                           (Number(marketData.kuriAmount) / 1_000_000) *
@@ -901,15 +970,15 @@ export default function MarketDetail() {
 
                     <motion.div
                       whileHover={{ scale: 1.05 }}
-                      className="text-center p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-orange-300 flex items-center justify-center">
-                        <CalendarDays className="w-5 h-5 text-white" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-orange-300 flex items-center justify-center">
+                        <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
                       </div>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))] mb-1">
+                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
                         Frequency
                       </p>
-                      <p className="text-lg font-bold text-[hsl(var(--terracotta))] capitalize">
+                      <p className="text-sm sm:text-base md:text-lg font-bold text-[hsl(var(--terracotta))] capitalize">
                         {getIntervalTypeText(marketData.intervalType)}
                       </p>
                     </motion.div>
@@ -922,12 +991,12 @@ export default function MarketDetail() {
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.8 }}
-                    className="bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden"
+                    className="bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-2xl relative overflow-hidden"
                   >
                     {/* Animated Background Pattern */}
                     <div className="absolute inset-0 opacity-10">
                       <motion.div
-                        className="absolute -top-10 -right-10 w-32 h-32 rounded-full border-4 border-white"
+                        className="absolute -top-10 -right-10 w-20 h-20 sm:w-32 sm:h-32 rounded-full border-2 sm:border-4 border-white"
                         animate={{ rotate: 360 }}
                         transition={{
                           duration: 20,
@@ -936,7 +1005,7 @@ export default function MarketDetail() {
                         }}
                       />
                       <motion.div
-                        className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full border-2 border-white"
+                        className="absolute -bottom-10 -left-10 w-16 h-16 sm:w-24 sm:h-24 rounded-full border-1 sm:border-2 border-white"
                         animate={{ rotate: -360 }}
                         transition={{
                           duration: 15,
@@ -947,20 +1016,22 @@ export default function MarketDetail() {
                     </div>
 
                     <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Timer className="w-6 h-6" />
-                        <h3 className="text-xl font-bold">Launch Countdown</h3>
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <h3 className="text-lg sm:text-xl font-bold">
+                          Launch Countdown
+                        </h3>
                       </div>
                       <div className="text-center">
                         <motion.p
                           key={timeLeft}
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-mono font-bold mb-2"
+                          className="text-2xl sm:text-3xl font-mono font-bold mb-2"
                         >
                           {timeLeft}
                         </motion.p>
-                        <p className="text-white/80">
+                        <p className="text-white/80 text-sm sm:text-base">
                           Time remaining to join this circle
                         </p>
                       </div>
@@ -973,40 +1044,19 @@ export default function MarketDetail() {
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.9 }}
-                  className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-white/20"
+                  className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl border border-white/20"
                 >
                   {renderActionButton()}
                 </motion.div>
-
-                {/* Deposit/Claim Forms for Active Members */}
-                {membershipStatus === 1 &&
-                  marketData.state === KuriState.ACTIVE && (
-                    <>
-                      <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1.0 }}
-                      >
-                        <DepositForm />
-                      </motion.div>
-                      <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1.1 }}
-                      >
-                        <ClaimInterface />
-                      </motion.div>
-                    </>
-                  )}
               </div>
 
               {/* Center & Right Content - Details */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 order-1 lg:order-2">
                 <motion.div
                   initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.7 }}
-                  className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden"
+                  className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden"
                 >
                   {/* Enhanced Tabs */}
                   <div className="border-b border-[hsl(var(--border))] bg-gradient-to-r from-[hsl(var(--sand))] to-white">
@@ -1019,7 +1069,7 @@ export default function MarketDetail() {
                         <motion.button
                           key={id}
                           onClick={() => setActiveTab(id as any)}
-                          className={`flex-1 px-6 py-6 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-3 relative ${
+                          className={`flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 text-xs sm:text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 relative ${
                             activeTab === id
                               ? "text-[hsl(var(--terracotta))] bg-white shadow-lg"
                               : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--terracotta))] hover:bg-white/50"
@@ -1027,8 +1077,9 @@ export default function MarketDetail() {
                           whileHover={{ y: -2 }}
                           whileTap={{ y: 0 }}
                         >
-                          {Icon && <Icon className="w-5 h-5" />}
-                          {label}
+                          {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
+                          <span className="hidden sm:inline">{label}</span>
+                          <span className="sm:hidden">{label.slice(0, 3)}</span>
                           {activeTab === id && (
                             <motion.div
                               layoutId="activeTab"
@@ -1041,7 +1092,7 @@ export default function MarketDetail() {
                   </div>
 
                   {/* Tab Content */}
-                  <div className="p-8">
+                  <div className="p-4 sm:p-6 md:p-8">
                     <AnimatePresence mode="wait">
                       {activeTab === "overview" && (
                         <motion.div
@@ -1129,37 +1180,22 @@ export default function MarketDetail() {
                           </div>
 
                           {marketData.state === KuriState.ACTIVE && (
-                            <div className="grid md:grid-cols-2 gap-6">
-                              <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                className="p-6 bg-gradient-to-br from-[hsl(var(--forest))/10] to-white rounded-2xl border border-[hsl(var(--forest))/20] hover:shadow-lg transition-all duration-300"
-                              >
-                                <h4 className="font-bold text-[hsl(var(--forest))] mb-3 flex items-center gap-2">
-                                  <Trophy className="w-5 h-5" />
-                                  Next Raffle
-                                </h4>
-                                <p className="text-[hsl(var(--foreground))] font-medium">
-                                  {new Date(
-                                    Number(marketData.nexRaffleTime) * 1000
-                                  ).toLocaleString()}
-                                </p>
-                              </motion.div>
-                              <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                className="p-6 bg-gradient-to-br from-[hsl(var(--ochre))/10] to-white rounded-2xl border border-[hsl(var(--ochre))/20] hover:shadow-lg transition-all duration-300"
-                              >
-                                <h4 className="font-bold text-[hsl(var(--ochre))] mb-3 flex items-center gap-2">
-                                  <Calendar className="w-5 h-5" />
-                                  Next Deposit Due
-                                </h4>
-                                <p className="text-[hsl(var(--foreground))] font-medium">
-                                  {new Date(
-                                    Number(marketData.nextIntervalDepositTime) *
-                                      1000
-                                  ).toLocaleString()}
-                                </p>
-                              </motion.div>
-                            </div>
+                            <DualCountdown
+                              raffleTimestamp={
+                                Number(marketData.nexRaffleTime) * 1000
+                              }
+                              depositTimestamp={
+                                Number(marketData.nextIntervalDepositTime) *
+                                1000
+                              }
+                              raffleDate={new Date(
+                                Number(marketData.nexRaffleTime) * 1000
+                              ).toLocaleString()}
+                              depositDate={new Date(
+                                Number(marketData.nextIntervalDepositTime) *
+                                  1000
+                              ).toLocaleString()}
+                            />
                           )}
                         </motion.div>
                       )}
@@ -1242,6 +1278,52 @@ export default function MarketDetail() {
                 </motion.div>
               </div>
             </div>
+
+            {/* Member Actions Section - Full Width Below Main Content */}
+            {membershipStatus === 1 &&
+              marketData.state === KuriState.ACTIVE && (
+                <motion.div
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2, duration: 0.6 }}
+                  className="mt-8 lg:mt-12"
+                >
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-[hsl(var(--terracotta))] mb-2">
+                      Member Actions
+                    </h2>
+                    <p className="text-[hsl(var(--muted-foreground))] text-lg">
+                      Manage your participation in this circle
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-7xl mx-auto">
+                    <motion.div
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.4, duration: 0.5 }}
+                      className="group"
+                    >
+                      <DepositForm
+                        marketData={marketData}
+                        kuriAddress={address as `0x${string}`}
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.6, duration: 0.5 }}
+                      className="group"
+                    >
+                      <ClaimInterface
+                        marketData={marketData}
+                        kuriAddress={address as `0x${string}`}
+                      />
+                    </motion.div>
+                  </div>
+                </motion.div>
+              )}
           </div>
         </div>
       </div>

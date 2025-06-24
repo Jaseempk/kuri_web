@@ -1,100 +1,115 @@
 import { useState } from "react";
-import { useKuriCore } from "../../hooks/contracts/useKuriCore";
+import {
+  useKuriCore,
+  KuriState,
+  IntervalType,
+} from "../../hooks/contracts/useKuriCore";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { formatEther } from "viem";
-import { KuriState } from "../../types/market";
-import {
-  LoadingSkeleton,
-  TransactionLoading,
-  ErrorMessage,
-} from "../ui/loading-states";
+import { TransactionLoading, ErrorMessage } from "../ui/loading-states";
 import { handleContractError } from "../../utils/errors";
-import { KURI_CONTRACT_ADDRESS } from "../../config/contracts";
+import { DollarSign, AlertCircle, Clock, ArrowRight } from "lucide-react";
 
-export const DepositForm = () => {
-  const { marketData, isLoading, error, deposit } = useKuriCore(
-    KURI_CONTRACT_ADDRESS
-  );
-  const [isDepositing, setIsDepositing] = useState(false);
-  const [depositError, setDepositError] = useState<string | null>(null);
+interface KuriData {
+  creator: `0x${string}`;
+  kuriAmount: bigint;
+  totalParticipantsCount: number;
+  totalActiveParticipantsCount: number;
+  intervalDuration: number;
+  nexRaffleTime: bigint;
+  nextIntervalDepositTime: bigint;
+  launchPeriod: bigint;
+  startTime: bigint;
+  endTime: bigint;
+  intervalType: IntervalType;
+  state: KuriState;
+}
 
-  const handleDeposit = async () => {
-    if (!marketData) return;
+interface DepositFormProps {
+  marketData: KuriData;
+  kuriAddress: `0x${string}`;
+}
 
-    try {
-      setIsDepositing(true);
-      setDepositError(null);
-      await deposit();
-    } catch (err) {
-      const error = handleContractError(err);
-      setDepositError(error.message);
-    } finally {
-      setIsDepositing(false);
-    }
-  };
+export const DepositForm: React.FC<DepositFormProps> = ({
+  marketData,
+  kuriAddress,
+}) => {
+  const { deposit, isLoading, error } = useKuriCore(kuriAddress);
 
-  if (isLoading || !marketData) {
-    return (
-      <Card className="p-6">
-        <LoadingSkeleton />
-      </Card>
-    );
-  }
-
-  const isDepositAllowed = marketData.state === KuriState.ACTIVE;
   const nextDepositTime = new Date(
     Number(marketData.nextIntervalDepositTime) * 1000
   );
-  const isDepositDue = nextDepositTime <= new Date();
+  const now = new Date();
+  const canDeposit = now >= nextDepositTime;
+
+  const handleDeposit = async () => {
+    if (!kuriAddress) return;
+
+    try {
+      await deposit();
+    } catch (err) {
+      console.error("Deposit failed:", err);
+    }
+  };
+
+  // Calculate days until next deposit window
+  const daysUntilDeposit = Math.ceil(
+    (nextDepositTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   return (
-    <Card className="p-6">
-      <h3 className="text-xl font-semibold mb-4">Make Deposit</h3>
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Make Deposit</h2>
+      <div className="relative rounded-2xl p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[200px]">
+        {/* Gradient overlay for subtle color hint */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--terracotta))]/20 to-[hsl(var(--ochre))]/20 rounded-2xl" />
 
-      <div className="space-y-4">
-        <div>
-          <p className="text-sm text-gray-500">Required Deposit Amount</p>
-          <p className="text-lg font-medium">
-            {formatEther(marketData.kuriAmount)} ETH
-          </p>
+        {/* Subtle pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `radial-gradient(circle, rgba(139,111,71,0.3) 1px, transparent 1px)`,
+            backgroundSize: "24px 24px",
+          }}
+        />
+
+        <div className="relative z-10 flex items-center justify-between h-full">
+          <div>
+            <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2 font-semibold">
+              Required Amount
+            </h3>
+            <p className="text-3xl font-bold text-[hsl(var(--foreground))]">
+              ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
+            </p>
+          </div>
+
+          {canDeposit ? (
+            <button
+              onClick={handleDeposit}
+              disabled={isLoading}
+              className="bg-[hsl(var(--terracotta))]/80 backdrop-blur-sm text-white border border-[hsl(var(--terracotta))]/30 hover:bg-[hsl(var(--terracotta))] transition-all duration-300 rounded-full px-4 py-2 font-medium text-xs shadow-lg hover:shadow-xl"
+            >
+              {isLoading ? "Processing..." : "Make Deposit"}
+            </button>
+          ) : (
+            <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-4 py-2 font-medium text-xs cursor-not-allowed">
+              Next deposit window opens in{" "}
+              {daysUntilDeposit > 0 ? `${daysUntilDeposit} days` : "soon"}
+            </button>
+          )}
         </div>
 
-        <div>
-          <p className="text-sm text-gray-500">Next Deposit Due</p>
-          <p className="text-lg font-medium">
-            {nextDepositTime.toLocaleString()}
-          </p>
-        </div>
-
-        {depositError && <ErrorMessage message={depositError} />}
-
-        {isDepositing ? (
-          <TransactionLoading message="Processing deposit..." />
-        ) : (
-          <Button
-            onClick={handleDeposit}
-            disabled={
-              !isDepositAllowed || !isDepositDue || isDepositing || isLoading
-            }
-            className="w-full"
-          >
-            Make Deposit
-          </Button>
-        )}
-
-        {!isDepositAllowed && (
-          <p className="text-sm text-yellow-600">
-            Deposits are only allowed when the market is active
-          </p>
-        )}
-
-        {!isDepositDue && isDepositAllowed && (
-          <p className="text-sm text-blue-600">
-            Next deposit will be due at {nextDepositTime.toLocaleString()}
-          </p>
+        {/* Error Display */}
+        {error && (
+          <div className="absolute bottom-4 left-4 right-4 bg-red-500/90 backdrop-blur-sm rounded-lg p-3 text-white text-sm border border-red-400/30">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Deposit failed: {error}</span>
+            </div>
+          </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 };

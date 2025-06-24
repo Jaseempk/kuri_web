@@ -66,22 +66,22 @@ export default function UserInsights() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--sand))] via-background to-[hsl(var(--sand))]/30">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--sand))] via-background to-[hsl(var(--sand))]/30 -mx-3 xs:-mx-4 px-3 xs:px-4">
+      <div className="space-y-6 xs:space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-4 mb-8"
+          className="flex items-center gap-2 xs:gap-4 pt-4 xs:pt-6 sm:pt-8"
         >
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 xs:gap-2 text-xs xs:text-sm"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3 w-3 xs:h-4 xs:w-4" />
             Back
           </Button>
         </motion.div>
@@ -91,47 +91,48 @@ export default function UserInsights() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
         >
           <Card className="border-[hsl(var(--gold))]/20 bg-gradient-to-r from-background to-[hsl(var(--sand))]/10">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-6">
-                <div className="relative">
+            <CardContent className="p-4 xs:p-6 sm:p-8">
+              <div className="flex flex-col xs:flex-row items-center xs:items-start gap-4 xs:gap-6">
+                <div className="relative flex-shrink-0">
                   <UserAvatar
                     profile={profile}
                     address={address || ""}
                     size="lg"
-                    className="w-20 h-20"
+                    className="w-16 h-16 xs:w-20 xs:h-20"
                   />
-                  <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-[hsl(var(--gold))] rounded-full flex items-center justify-center">
-                    <Award className="h-3 w-3 text-white" />
+                  <div className="absolute -bottom-1 -right-1 xs:-bottom-2 xs:-right-2 w-5 h-5 xs:w-6 xs:h-6 bg-[hsl(var(--gold))] rounded-full flex items-center justify-center">
+                    <Award className="h-2.5 w-2.5 xs:h-3 xs:w-3 text-white" />
                   </div>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold">{displayName}</h1>
+                <div className="flex-1 text-center xs:text-left">
+                  <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-3 mb-2">
+                    <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold">
+                      {displayName}
+                    </h1>
                     {profile && (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-[hsl(var(--gold))]/10 rounded-full border border-[hsl(var(--gold))]/20">
-                        <TrendingUp className="h-4 w-4 text-[hsl(var(--gold))]" />
-                        <span className="text-sm font-semibold text-[hsl(var(--gold))]">
+                      <div className="flex items-center justify-center xs:justify-start gap-2 px-2 xs:px-3 py-1 bg-[hsl(var(--gold))]/10 rounded-full border border-[hsl(var(--gold))]/20">
+                        <TrendingUp className="h-3 w-3 xs:h-4 xs:w-4 text-[hsl(var(--gold))]" />
+                        <span className="text-xs xs:text-sm font-semibold text-[hsl(var(--gold))]">
                           {profile.reputation_score ?? 0} pts
                         </span>
                       </div>
                     )}
                   </div>
-                  <p className="text-muted-foreground font-mono text-sm">
+                  <p className="text-muted-foreground font-mono text-xs xs:text-sm break-all">
                     {address}
                   </p>
-                  <div className="flex items-center gap-4 mt-4">
+                  <div className="flex flex-col xs:flex-row items-center gap-2 xs:gap-4 mt-3 xs:mt-4">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
+                      <Users className="h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground" />
+                      <span className="text-xs xs:text-sm text-muted-foreground">
                         {mockStats.totalCircles} circles joined
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
+                      <Calendar className="h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground" />
+                      <span className="text-xs xs:text-sm text-muted-foreground">
                         Member since 2024
                       </span>
                     </div>
@@ -147,22 +148,22 @@ export default function UserInsights() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 sm:gap-6"
         >
           <motion.div variants={itemVariants}>
             <Card className="border-[hsl(var(--gold))]/20 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
+              <CardContent className="p-4 xs:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs xs:text-sm text-muted-foreground">
                       Total Circles
                     </p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xl xs:text-2xl font-bold">
                       {mockStats.totalCircles}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-[hsl(var(--gold))]/10 rounded-full flex items-center justify-center">
-                    <Users className="h-6 w-6 text-[hsl(var(--gold))]" />
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 bg-[hsl(var(--gold))]/10 rounded-full flex items-center justify-center">
+                    <Users className="h-5 w-5 xs:h-6 xs:w-6 text-[hsl(var(--gold))]" />
                   </div>
                 </div>
               </CardContent>
@@ -171,16 +172,18 @@ export default function UserInsights() {
 
           <motion.div variants={itemVariants}>
             <Card className="border-[hsl(var(--forest))]/20 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
+              <CardContent className="p-4 xs:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Completed</p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xs xs:text-sm text-muted-foreground">
+                      Completed
+                    </p>
+                    <p className="text-xl xs:text-2xl font-bold">
                       {mockStats.completedCircles}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-[hsl(var(--forest))]/10 rounded-full flex items-center justify-center">
-                    <Award className="h-6 w-6 text-[hsl(var(--forest))]" />
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 bg-[hsl(var(--forest))]/10 rounded-full flex items-center justify-center">
+                    <Award className="h-5 w-5 xs:h-6 xs:w-6 text-[hsl(var(--forest))]" />
                   </div>
                 </div>
               </CardContent>
@@ -189,16 +192,18 @@ export default function UserInsights() {
 
           <motion.div variants={itemVariants}>
             <Card className="border-[hsl(var(--terracotta))]/20 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
+              <CardContent className="p-4 xs:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Contributed</p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xs xs:text-sm text-muted-foreground">
+                      Contributed
+                    </p>
+                    <p className="text-xl xs:text-2xl font-bold">
                       ${mockStats.totalContributed.toLocaleString()}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-[hsl(var(--terracotta))]/10 rounded-full flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6 text-[hsl(var(--terracotta))]" />
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 bg-[hsl(var(--terracotta))]/10 rounded-full flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 xs:h-6 xs:w-6 text-[hsl(var(--terracotta))]" />
                   </div>
                 </div>
               </CardContent>
@@ -206,19 +211,19 @@ export default function UserInsights() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card className="border-blue-200 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
+            <Card className="border-blue-200 hover:shadow-lg transition-shadow xs:col-span-2 lg:col-span-1">
+              <CardContent className="p-4 xs:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs xs:text-sm text-muted-foreground">
                       Success Rate
                     </p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xl xs:text-2xl font-bold">
                       {mockStats.successRate}%
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <BarChart3 className="h-6 w-6 text-blue-600" />
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 xs:h-6 xs:w-6 text-blue-600" />
                   </div>
                 </div>
               </CardContent>
@@ -231,23 +236,23 @@ export default function UserInsights() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="text-center py-16"
+          className="text-center py-8 xs:py-12 sm:py-16"
         >
           <div className="max-w-2xl mx-auto">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="w-32 h-32 bg-gradient-to-br from-[hsl(var(--gold))] to-[hsl(var(--terracotta))] rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg"
+              className="w-24 h-24 xs:w-32 xs:h-32 bg-gradient-to-br from-[hsl(var(--gold))] to-[hsl(var(--terracotta))] rounded-full flex items-center justify-center mx-auto mb-6 xs:mb-8 shadow-lg"
             >
-              <Activity className="h-16 w-16 text-white" />
+              <Activity className="h-12 w-12 xs:h-16 xs:w-16 text-white" />
             </motion.div>
 
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.7 }}
-              className="text-4xl font-bold mb-4 bg-gradient-to-r from-[hsl(var(--gold))] to-[hsl(var(--terracotta))] bg-clip-text text-transparent"
+              className="text-2xl xs:text-3xl sm:text-4xl font-bold mb-3 xs:mb-4 bg-gradient-to-r from-[hsl(var(--gold))] to-[hsl(var(--terracotta))] bg-clip-text text-transparent"
             >
               Detailed Insights Coming Soon
             </motion.h2>
@@ -256,7 +261,7 @@ export default function UserInsights() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.9 }}
-              className="text-lg text-muted-foreground mb-8 leading-relaxed"
+              className="text-sm xs:text-base sm:text-lg text-muted-foreground mb-6 xs:mb-8 leading-relaxed"
             >
               We're building comprehensive analytics to help you track your
               circle participation, contribution patterns, and community impact.
