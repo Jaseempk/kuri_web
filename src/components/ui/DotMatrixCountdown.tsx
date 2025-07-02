@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Calendar } from "lucide-react";
 
@@ -125,18 +125,16 @@ function CharacterGrid({ char, shouldAnimate }: CharacterGridProps) {
 
   return (
     <motion.div
-      key={shouldAnimate ? `${char}-${Date.now()}` : `static-${char}`}
+      key={`char-${char}`}
       initial={shouldAnimate ? { rotateY: -90, opacity: 0 } : false}
-      animate={shouldAnimate ? { rotateY: 0, opacity: 1 } : {}}
-      transition={
-        shouldAnimate
-          ? {
-              duration: 0.3,
-              type: "spring",
-              stiffness: 120,
-            }
-          : {}
+      animate={
+        shouldAnimate ? { rotateY: 0, opacity: 1 } : { rotateY: 0, opacity: 1 }
       }
+      transition={{
+        duration: 0.25,
+        type: "tween",
+        ease: "easeOut",
+      }}
       className="flex flex-col gap-[1px] sm:gap-[1.5px] lg:gap-[1px]"
     >
       {pattern.map((row, rowIndex) => (
@@ -147,16 +145,16 @@ function CharacterGrid({ char, shouldAnimate }: CharacterGridProps) {
           {row.map((dot, colIndex) => (
             <motion.div
               key={colIndex}
-              initial={{ scale: 0.8, opacity: 0.6 }}
               animate={{
                 scale: dot === 1 ? 1 : 0.8,
                 opacity: dot === 1 ? 1 : 0.3,
               }}
               transition={{
-                duration: 0.2,
-                delay: shouldAnimate ? (rowIndex + colIndex) * 0.01 : 0,
+                duration: 0.25,
+                ease: "easeOut",
+                delay: shouldAnimate ? (rowIndex + colIndex) * 0.005 : 0,
               }}
-              className={`w-[2px] h-[2px] sm:w-[2.5px] sm:h-[2.5px] lg:w-[2px] lg:h-[2px] xl:w-[2.5px] xl:h-[2.5px] rounded-[0.5px] transition-all duration-200 ${
+              className={`w-[2px] h-[2px] sm:w-[2.5px] sm:h-[2.5px] lg:w-[2px] lg:h-[2px] xl:w-[2.5px] xl:h-[2.5px] rounded-[0.5px] ${
                 dot === 1 ? "bg-white" : "bg-gray-600"
               }`}
             />
@@ -231,7 +229,30 @@ export function CountdownCard({
     },
   });
 
-  const [previousTimeString, setPreviousTimeString] = useState<string>("");
+  const previousTimeRef = useRef<string>("");
+
+  const createTimeUnit = useCallback(
+    (newValue: string, prevUnit: TimeUnit): TimeUnit => {
+      const newFirstDigit = newValue[0];
+      const newSecondDigit = newValue[1];
+
+      return {
+        value: newValue,
+        hasChanged: prevUnit.value !== newValue,
+        digits: {
+          first: {
+            value: newFirstDigit,
+            hasChanged: prevUnit.digits.first.value !== newFirstDigit,
+          },
+          second: {
+            value: newSecondDigit,
+            hasChanged: prevUnit.digits.second.value !== newSecondDigit,
+          },
+        },
+      };
+    },
+    []
+  );
 
   useEffect(() => {
     const updateTimer = () => {
@@ -291,39 +312,14 @@ export function CountdownCard({
       const newTimeString = `${newDays}:${newHours}:${newMinutes}:${newSeconds}`;
 
       // Only update if time has actually changed
-      if (newTimeString !== previousTimeString) {
-        setTimeUnits((prev) => {
-          const createTimeUnit = (
-            newValue: string,
-            prevUnit: TimeUnit
-          ): TimeUnit => {
-            const newFirstDigit = newValue[0];
-            const newSecondDigit = newValue[1];
-
-            return {
-              value: newValue,
-              hasChanged: prevUnit.value !== newValue,
-              digits: {
-                first: {
-                  value: newFirstDigit,
-                  hasChanged: prevUnit.digits.first.value !== newFirstDigit,
-                },
-                second: {
-                  value: newSecondDigit,
-                  hasChanged: prevUnit.digits.second.value !== newSecondDigit,
-                },
-              },
-            };
-          };
-
-          return {
-            days: createTimeUnit(newDays, prev.days),
-            hours: createTimeUnit(newHours, prev.hours),
-            minutes: createTimeUnit(newMinutes, prev.minutes),
-            seconds: createTimeUnit(newSeconds, prev.seconds),
-          };
-        });
-        setPreviousTimeString(newTimeString);
+      if (newTimeString !== previousTimeRef.current) {
+        setTimeUnits((prev) => ({
+          days: createTimeUnit(newDays, prev.days),
+          hours: createTimeUnit(newHours, prev.hours),
+          minutes: createTimeUnit(newMinutes, prev.minutes),
+          seconds: createTimeUnit(newSeconds, prev.seconds),
+        }));
+        previousTimeRef.current = newTimeString;
       }
     };
 
@@ -331,7 +327,7 @@ export function CountdownCard({
     updateTimer(); // Initial update
 
     return () => clearInterval(timer);
-  }, [targetTimestamp, previousTimeString]);
+  }, [targetTimestamp, createTimeUnit]);
 
   const getColorClasses = () => {
     switch (accentColor) {
@@ -368,79 +364,82 @@ export function CountdownCard({
   );
 
   // Create the display string with granular digit change detection
-  const displayElements = [
-    {
-      chars: [
-        {
-          value: timeUnits.days.digits.first.value,
-          hasChanged: timeUnits.days.digits.first.hasChanged,
-        },
-        {
-          value: timeUnits.days.digits.second.value,
-          hasChanged: timeUnits.days.digits.second.hasChanged,
-        },
-      ],
-      label: "d",
-      group: "days",
-    },
-    {
-      chars: [{ value: ":", hasChanged: false }],
-      label: "",
-      group: "separator",
-    },
-    {
-      chars: [
-        {
-          value: timeUnits.hours.digits.first.value,
-          hasChanged: timeUnits.hours.digits.first.hasChanged,
-        },
-        {
-          value: timeUnits.hours.digits.second.value,
-          hasChanged: timeUnits.hours.digits.second.hasChanged,
-        },
-      ],
-      label: "h",
-      group: "hours",
-    },
-    {
-      chars: [{ value: ":", hasChanged: false }],
-      label: "",
-      group: "separator",
-    },
-    {
-      chars: [
-        {
-          value: timeUnits.minutes.digits.first.value,
-          hasChanged: timeUnits.minutes.digits.first.hasChanged,
-        },
-        {
-          value: timeUnits.minutes.digits.second.value,
-          hasChanged: timeUnits.minutes.digits.second.hasChanged,
-        },
-      ],
-      label: "m",
-      group: "minutes",
-    },
-    {
-      chars: [{ value: ":", hasChanged: false }],
-      label: "",
-      group: "separator",
-    },
-    {
-      chars: [
-        {
-          value: timeUnits.seconds.digits.first.value,
-          hasChanged: timeUnits.seconds.digits.first.hasChanged,
-        },
-        {
-          value: timeUnits.seconds.digits.second.value,
-          hasChanged: timeUnits.seconds.digits.second.hasChanged,
-        },
-      ],
-      label: "s",
-      group: "seconds",
-    },
-  ];
+  const displayElements = useMemo(
+    () => [
+      {
+        chars: [
+          {
+            value: timeUnits.days.digits.first.value,
+            hasChanged: timeUnits.days.digits.first.hasChanged,
+          },
+          {
+            value: timeUnits.days.digits.second.value,
+            hasChanged: timeUnits.days.digits.second.hasChanged,
+          },
+        ],
+        label: "d",
+        group: "days",
+      },
+      {
+        chars: [{ value: ":", hasChanged: false }],
+        label: "",
+        group: "separator",
+      },
+      {
+        chars: [
+          {
+            value: timeUnits.hours.digits.first.value,
+            hasChanged: timeUnits.hours.digits.first.hasChanged,
+          },
+          {
+            value: timeUnits.hours.digits.second.value,
+            hasChanged: timeUnits.hours.digits.second.hasChanged,
+          },
+        ],
+        label: "h",
+        group: "hours",
+      },
+      {
+        chars: [{ value: ":", hasChanged: false }],
+        label: "",
+        group: "separator",
+      },
+      {
+        chars: [
+          {
+            value: timeUnits.minutes.digits.first.value,
+            hasChanged: timeUnits.minutes.digits.first.hasChanged,
+          },
+          {
+            value: timeUnits.minutes.digits.second.value,
+            hasChanged: timeUnits.minutes.digits.second.hasChanged,
+          },
+        ],
+        label: "m",
+        group: "minutes",
+      },
+      {
+        chars: [{ value: ":", hasChanged: false }],
+        label: "",
+        group: "separator",
+      },
+      {
+        chars: [
+          {
+            value: timeUnits.seconds.digits.first.value,
+            hasChanged: timeUnits.seconds.digits.first.hasChanged,
+          },
+          {
+            value: timeUnits.seconds.digits.second.value,
+            hasChanged: timeUnits.seconds.digits.second.hasChanged,
+          },
+        ],
+        label: "s",
+        group: "seconds",
+      },
+    ],
+    [timeUnits]
+  );
 
   return (
     <div
@@ -474,12 +473,12 @@ export function CountdownCard({
           <div className="flex gap-1 sm:gap-2 lg:gap-1 xl:gap-1.5 items-center justify-center flex-wrap max-w-full">
             {displayElements.map((element, elementIndex) => (
               <div
-                key={elementIndex}
+                key={`element-${elementIndex}`}
                 className="flex gap-1 sm:gap-1.5 lg:gap-0.5 xl:gap-1 items-center"
               >
                 {element.chars.map((char, charIndex) => (
                   <CharacterGrid
-                    key={`${elementIndex}-${charIndex}`}
+                    key={`${elementIndex}-${charIndex}-${char.value}`}
                     char={char.value}
                     shouldAnimate={char.hasChanged && char.value !== ":"}
                   />

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useKuriCore, KuriState } from "../hooks/contracts/useKuriCore";
 import { KuriState as GraphQLKuriState } from "../graphql/types";
+import { useKuriMarketDetail } from "../hooks/useKuriMarketDetail";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { MarketSEO } from "../components/seo/MarketSEO";
@@ -43,6 +44,7 @@ import {
   Coins,
   Award,
   CalendarDays,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -193,6 +195,36 @@ export default function MarketDetail() {
     queryFn: () => getMetadata(address || ""),
     enabled: !!address,
   });
+
+  // Fetch market detail with winners data
+  const { marketDetail } = useKuriMarketDetail(address || "");
+
+  // Determine current winner logic
+  const currentWinner = useMemo(() => {
+    if (!marketDetail?.winners || marketDetail.winners.length === 0)
+      return null;
+    if (marketData?.state !== KuriState.ACTIVE) return null;
+
+    // Get the most recent winner (highest intervalIndex)
+    const latestWinner = marketDetail.winners.reduce((latest, current) =>
+      current.intervalIndex > latest.intervalIndex ? current : latest
+    );
+
+    // Check if we should show the winner (between raffle selection and next raffle)
+    const nextRaffleTime = Number(marketData?.nexRaffleTime || 0) * 1000;
+    const now = Date.now();
+
+    // Show winner if there's time until next raffle
+    if (now < nextRaffleTime) {
+      return latestWinner;
+    }
+
+    return null;
+  }, [marketDetail?.winners, marketData?.state, marketData?.nexRaffleTime]);
+
+  // Fetch winner's profile
+  const { profile: winnerProfile, loading: winnerProfileLoading } =
+    useUserProfileByAddress(currentWinner?.winner || null);
 
   // Fetch membership status
   useEffect(() => {
@@ -1113,6 +1145,94 @@ export default function MarketDetail() {
                                 "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
                             </p>
                           </div>
+
+                          {/* Winner Card - Show when there's a current winner */}
+                          {currentWinner && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.4 }}
+                              className="max-w-md"
+                            >
+                              <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="p-6 bg-gradient-to-br from-[hsl(var(--gold))] via-yellow-50 to-amber-50 rounded-2xl border-2 border-[hsl(var(--gold))] hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+                              >
+                                {/* Crown decoration */}
+                                <div className="absolute top-4 right-4">
+                                  <Crown className="w-8 h-8 text-[hsl(var(--gold))] opacity-20" />
+                                </div>
+
+                                <h4 className="font-bold text-[hsl(var(--terracotta))] mb-3 flex items-center gap-2">
+                                  <Trophy className="w-5 h-5 text-[hsl(var(--gold))]" />
+                                  Round #{currentWinner.intervalIndex} Winner
+                                </h4>
+
+                                {winnerProfileLoading ? (
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-16 h-16 bg-[hsl(var(--muted))] rounded-full animate-pulse" />
+                                    <div className="flex-1">
+                                      <div className="h-5 bg-[hsl(var(--muted))] rounded animate-pulse mb-2" />
+                                      <div className="h-4 bg-[hsl(var(--muted))] rounded animate-pulse w-2/3" />
+                                    </div>
+                                  </div>
+                                ) : winnerProfile ? (
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center border-2 border-white shadow-lg">
+                                      {winnerProfile.profile_image_url ? (
+                                        <img
+                                          src={winnerProfile.profile_image_url}
+                                          alt={
+                                            winnerProfile.display_name ||
+                                            winnerProfile.username ||
+                                            "Winner"
+                                          }
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <Trophy className="w-8 h-8 text-white" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-bold text-[hsl(var(--foreground))] text-lg">
+                                        🎉{" "}
+                                        {winnerProfile.display_name ||
+                                          winnerProfile.username ||
+                                          "Anonymous Winner"}
+                                      </p>
+                                      <p className="text-sm text-[hsl(var(--muted-foreground))] font-mono break-all">
+                                        {currentWinner.winner.slice(0, 6)}...
+                                        {currentWinner.winner.slice(-4)}
+                                      </p>
+                                      <p className="text-xs text-[hsl(var(--terracotta))] mt-1 font-medium">
+                                        Congratulations on winning this round!
+                                        🏆
+                                      </p>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center border-2 border-white shadow-lg">
+                                      <Trophy className="w-8 h-8 text-white" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-bold text-[hsl(var(--foreground))] text-lg">
+                                        🎉 Anonymous Winner
+                                      </p>
+                                      <p className="text-sm text-[hsl(var(--muted-foreground))] font-mono break-all">
+                                        {currentWinner.winner.slice(0, 6)}...
+                                        {currentWinner.winner.slice(-4)}
+                                      </p>
+                                      <p className="text-xs text-[hsl(var(--terracotta))] mt-1 font-medium">
+                                        Congratulations on winning this round!
+                                        🏆
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </motion.div>
+                            </motion.div>
+                          )}
 
                           <div className="max-w-md">
                             <motion.div

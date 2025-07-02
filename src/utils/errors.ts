@@ -87,6 +87,34 @@ export const handleContractError = (error: unknown): ContractError => {
     if (message.includes("invalid interval")) {
       return new ContractError("Invalid interval for this operation", error);
     }
+
+    // Token approval specific errors
+    if (
+      message.includes("insufficient allowance") ||
+      message.includes("erc20: transfer amount exceeds allowance")
+    ) {
+      return new ContractError(
+        "Token approval required. Please approve the contract to spend your tokens",
+        error
+      );
+    }
+
+    if (
+      message.includes("erc20: insufficient balance") ||
+      message.includes("transfer amount exceeds balance")
+    ) {
+      return new ContractError(
+        "Insufficient token balance to complete this transaction",
+        error
+      );
+    }
+
+    if (message.includes("approve")) {
+      return new ContractError(
+        "Token approval failed. Please try again",
+        error
+      );
+    }
   }
 
   // Generic error for unknown cases

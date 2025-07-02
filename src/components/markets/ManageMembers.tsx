@@ -196,12 +196,6 @@ export const ManageMembers = ({
             style={{ width: `${progress}%` }}
           />
         </div>
-        {totalActiveParticipantsCount === totalParticipantsCount && (
-          <div className="text-sm text-[hsl(var(--forest))] bg-[hsl(var(--forest))]/10 p-2 rounded">
-            Circle is ready to initialize! You can close this dialog and click
-            the "Initialize Kuri" button.
-          </div>
-        )}
       </div>
     );
   };

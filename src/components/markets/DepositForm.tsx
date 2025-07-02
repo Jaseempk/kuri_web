@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useKuriCore,
   KuriState,
@@ -9,7 +9,16 @@ import { Card } from "../ui/card";
 import { formatEther } from "viem";
 import { TransactionLoading, ErrorMessage } from "../ui/loading-states";
 import { handleContractError } from "../../utils/errors";
-import { DollarSign, AlertCircle, Clock, ArrowRight } from "lucide-react";
+import { hasSufficientBalance } from "../../utils/tokenUtils";
+import { InsufficientBalanceModal } from "../modals/InsufficientBalanceModal";
+import {
+  DollarSign,
+  AlertCircle,
+  Clock,
+  ArrowRight,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 
 interface KuriData {
   creator: `0x${string}`;
@@ -35,21 +44,68 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   marketData,
   kuriAddress,
 }) => {
-  const { deposit, isLoading, error } = useKuriCore(kuriAddress);
+  const {
+    deposit,
+    isLoading,
+    error,
+    isApproving,
+    userPaymentStatus,
+    userBalance,
+    checkUserBalance,
+    refreshUserData,
+  } = useKuriCore(kuriAddress);
+
+  const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] =
+    useState(false);
+  const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
+
+  console.log("kuriAddress:", kuriAddress);
 
   const nextDepositTime = new Date(
     Number(marketData.nextIntervalDepositTime) * 1000
   );
+  const raffleTime = new Date(Number(marketData.nexRaffleTime) * 1000);
   const now = new Date();
   const canDeposit = now >= nextDepositTime;
+  const isAfterRaffle = now >= raffleTime;
 
   const handleDeposit = async () => {
     if (!kuriAddress) return;
 
     try {
+      // First, check if user has sufficient balance
+      const currentBalance = await checkUserBalance();
+      const requiredAmount = marketData.kuriAmount;
+
+      if (!hasSufficientBalance(currentBalance, requiredAmount)) {
+        setShowInsufficientBalanceModal(true);
+        return;
+      }
+
+      // If balance is sufficient, proceed with deposit
       await deposit();
+
+      // Additional refresh to ensure UI updates immediately
+      // Wait a brief moment for blockchain state to be consistent
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      try {
+        await refreshUserData();
+      } catch (err) {
+        console.error("Failed to refresh user data in component:", err);
+      }
     } catch (err) {
       console.error("Deposit failed:", err);
+    }
+  };
+
+  const handleRefreshBalance = async () => {
+    setIsRefreshingBalance(true);
+    try {
+      await checkUserBalance();
+    } catch (err) {
+      console.error("Failed to refresh balance:", err);
+    } finally {
+      setIsRefreshingBalance(false);
     }
   };
 
@@ -57,6 +113,90 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   const daysUntilDeposit = Math.ceil(
     (nextDepositTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
   );
+
+  const getDepositButtonContent = () => {
+    if (isApproving) {
+      return (
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Approving Tokens...</span>
+        </div>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Processing Deposit...</span>
+        </div>
+      );
+    }
+
+    return "Make Deposit";
+  };
+
+  const getStatusMessage = () => {
+    if (!canDeposit) return null;
+
+    // If user has already paid and it's before raffle time, show paid status
+    if (userPaymentStatus === true && !isAfterRaffle) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-green-600">
+          <CheckCircle className="w-4 h-4" />
+          <span>Payment completed for this interval</span>
+        </div>
+      );
+    }
+
+    if (isApproving) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-amber-600">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Approving tokens for deposit...</span>
+        </div>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-blue-600">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Processing deposit...</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2 text-sm text-green-600">
+        <CheckCircle className="w-4 h-4" />
+        <span>Ready to deposit</span>
+      </div>
+    );
+  };
+
+  const renderActionButton = () => {
+    // If user has already paid and it's before raffle time, show paid status
+    if (userPaymentStatus === true && !isAfterRaffle) {
+      return (
+        <div className="bg-green-600/80 backdrop-blur-sm text-white border border-green-600/30 rounded-full px-4 py-2 font-medium text-xs shadow-lg flex items-center gap-2">
+          <CheckCircle className="w-4 h-4" />
+          <span>Paid</span>
+        </div>
+      );
+    }
+
+    // Show deposit button if user hasn't paid or if it's after raffle time
+    return (
+      <button
+        onClick={handleDeposit}
+        disabled={isLoading || isApproving}
+        className="bg-[hsl(var(--terracotta))]/80 backdrop-blur-sm text-white border border-[hsl(var(--terracotta))]/30 hover:bg-[hsl(var(--terracotta))] transition-all duration-300 rounded-full px-4 py-2 font-medium text-xs shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {getDepositButtonContent()}
+      </button>
+    );
+  };
 
   return (
     <div>
@@ -74,29 +214,36 @@ export const DepositForm: React.FC<DepositFormProps> = ({
           }}
         />
 
-        <div className="relative z-10 flex items-center justify-between h-full">
-          <div>
-            <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2 font-semibold">
-              Required Amount
-            </h3>
-            <p className="text-3xl font-bold text-[hsl(var(--foreground))]">
-              ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
-            </p>
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
+                Required Amount
+              </h3>
+              <p className="text-3xl font-bold text-[hsl(var(--foreground))]">
+                ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
+              </p>
+            </div>
+
+            {canDeposit ? (
+              <div className="flex flex-col items-end gap-2">
+                {getStatusMessage()}
+                {renderActionButton()}
+              </div>
+            ) : (
+              <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-4 py-2 font-medium text-xs cursor-not-allowed">
+                Next deposit window opens in{" "}
+                {daysUntilDeposit > 0 ? `${daysUntilDeposit} days` : "soon"}
+              </button>
+            )}
           </div>
 
-          {canDeposit ? (
-            <button
-              onClick={handleDeposit}
-              disabled={isLoading}
-              className="bg-[hsl(var(--terracotta))]/80 backdrop-blur-sm text-white border border-[hsl(var(--terracotta))]/30 hover:bg-[hsl(var(--terracotta))] transition-all duration-300 rounded-full px-4 py-2 font-medium text-xs shadow-lg hover:shadow-xl"
-            >
-              {isLoading ? "Processing..." : "Make Deposit"}
-            </button>
-          ) : (
-            <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-4 py-2 font-medium text-xs cursor-not-allowed">
-              Next deposit window opens in{" "}
-              {daysUntilDeposit > 0 ? `${daysUntilDeposit} days` : "soon"}
-            </button>
+          {/* Paid status information */}
+          {userPaymentStatus === true && !isAfterRaffle && (
+            <div className="bg-green-50/10 border border-green-200/20 rounded-lg p-3 text-sm text-green-700">
+              {/* <p className="font-medium mb-1">Payment Status:</p> */}
+              <p>The raffle will select the winner soon!</p>
+            </div>
           )}
         </div>
 
@@ -110,6 +257,16 @@ export const DepositForm: React.FC<DepositFormProps> = ({
           </div>
         )}
       </div>
+
+      {/* Insufficient Balance Modal */}
+      <InsufficientBalanceModal
+        isOpen={showInsufficientBalanceModal}
+        onClose={() => setShowInsufficientBalanceModal(false)}
+        userBalance={userBalance}
+        requiredAmount={marketData.kuriAmount}
+        onRefreshBalance={handleRefreshBalance}
+        isRefreshing={isRefreshingBalance}
+      />
     </div>
   );
 };

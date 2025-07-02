@@ -6,9 +6,12 @@ import {
   getAccount,
 } from "@wagmi/core";
 import { KuriCoreABI } from "../../contracts/abis/KuriCore";
+import { ERC20ABI } from "../../contracts/abis/ERC20";
 import { handleContractError } from "../../utils/errors";
 import { config } from "../../config/wagmi";
 import { useTransactionStatus } from "../useTransactionStatus";
+import { parseUnits } from "viem";
+import { calculateApprovalAmount } from "../../utils/tokenUtils";
 
 export enum KuriState {
   INLAUNCH,
@@ -44,11 +47,156 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [marketData, setMarketData] = useState<KuriData | null>(null);
+  const [tokenAddress, setTokenAddress] = useState<`0x${string}` | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [userPaymentStatus, setUserPaymentStatus] = useState<boolean | null>(
+    null
+  );
+  const [userBalance, setUserBalance] = useState<bigint>(BigInt(0));
 
   const account = getAccount(config);
   const { handleTransaction } = useTransactionStatus();
 
-  // Fetch market data
+  // Fetch token address from the contract
+  const fetchTokenAddress = useCallback(async () => {
+    if (!kuriAddress) return;
+
+    try {
+      const address = await readContract(config, {
+        address: kuriAddress,
+        abi: KuriCoreABI,
+        functionName: "SUPPORTED_TOKEN",
+      });
+      setTokenAddress(address as `0x${string}`);
+    } catch (err) {
+      console.error("Failed to fetch token address:", err);
+    }
+  }, [kuriAddress]);
+
+  // Check token allowance
+  const checkAllowance = useCallback(async (): Promise<bigint> => {
+    if (!kuriAddress || !account.address || !tokenAddress) {
+      return BigInt(0);
+    }
+
+    try {
+      const allowance = await readContract(config, {
+        address: tokenAddress,
+        abi: ERC20ABI,
+        functionName: "allowance",
+        args: [account.address, kuriAddress],
+      });
+      return allowance as bigint;
+    } catch (err) {
+      console.error("Failed to check allowance:", err);
+      return BigInt(0);
+    }
+  }, [kuriAddress, account.address, tokenAddress]);
+
+  // Check user's token balance
+  const checkUserBalance = useCallback(async (): Promise<bigint> => {
+    if (!account.address || !tokenAddress) {
+      return BigInt(0);
+    }
+
+    try {
+      const balance = await readContract(config, {
+        address: tokenAddress,
+        abi: ERC20ABI,
+        functionName: "balanceOf",
+        args: [account.address],
+      });
+
+      const balanceAmount = balance as bigint;
+      setUserBalance(balanceAmount);
+      return balanceAmount;
+    } catch (err) {
+      console.error("Failed to check user balance:", err);
+      setUserBalance(BigInt(0));
+      return BigInt(0);
+    }
+  }, [account.address, tokenAddress]);
+
+  // Approve tokens
+  const approveTokens = useCallback(
+    async (amount: bigint) => {
+      if (!kuriAddress || !account.address || !tokenAddress) {
+        throw new Error("Invalid parameters for token approval");
+      }
+
+      setIsApproving(true);
+      try {
+        const { request } = await simulateContract(config, {
+          address: tokenAddress,
+          abi: ERC20ABI,
+          functionName: "approve",
+          args: [kuriAddress, amount],
+        });
+
+        const tx = await writeContract(config, request);
+
+        await handleTransaction(tx, {
+          loadingMessage: "Approving tokens...",
+          successMessage: "Token approval successful!",
+          errorMessage: "Failed to approve tokens",
+        });
+
+        return tx;
+      } catch (error) {
+        throw handleContractError(error);
+      } finally {
+        setIsApproving(false);
+      }
+    },
+    [kuriAddress, account.address, tokenAddress, handleTransaction]
+  );
+
+  // Check if user has paid for current interval
+  const checkUserPaymentStatus = useCallback(async (): Promise<boolean> => {
+    if (!kuriAddress || !account.address) {
+      return false;
+    }
+
+    try {
+      // Get current interval index (returns uint16)
+      const intervalCounter = (await readContract(config, {
+        address: kuriAddress,
+        abi: KuriCoreABI,
+        functionName: "passedIntervalsCounter",
+      })) as number;
+
+      // Convert to bigint for hasPaid function (which expects uint256)
+      const currentIntervalIndex = BigInt(intervalCounter);
+
+      // Check if user has paid for this interval
+      const hasPaid = (await readContract(config, {
+        address: kuriAddress,
+        abi: KuriCoreABI,
+        functionName: "hasPaid",
+        args: [account.address, currentIntervalIndex],
+      })) as boolean;
+
+      setUserPaymentStatus(hasPaid);
+      return hasPaid;
+    } catch (err) {
+      console.error("Failed to check payment status:", err);
+      setUserPaymentStatus(null);
+      return false;
+    }
+  }, [kuriAddress, account.address]);
+
+  // Refresh user-specific data (payment status and balance)
+  const refreshUserData = useCallback(async (): Promise<void> => {
+    if (!account.address) return;
+
+    try {
+      await Promise.all([checkUserPaymentStatus(), checkUserBalance()]);
+    } catch (err) {
+      console.error("Failed to refresh user data:", err);
+    }
+  }, [account.address, checkUserPaymentStatus, checkUserBalance]);
+
+  // Enhanced fetchMarketData to also check payment status
   const fetchMarketData = useCallback(async () => {
     if (!kuriAddress) return;
     setIsLoading(true);
@@ -75,12 +223,18 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         intervalType: data[10],
         state: data[11],
       });
+
+      // Also check payment status when fetching market data
+      if (account.address) {
+        await checkUserPaymentStatus();
+        await checkUserBalance();
+      }
     } catch (err) {
       setError(handleContractError(err).message);
     } finally {
       setIsLoading(false);
     }
-  }, [kuriAddress]);
+  }, [kuriAddress, account.address, checkUserPaymentStatus, checkUserBalance]);
 
   // Initialize market
   const initializeKuri = useCallback(async () => {
@@ -108,12 +262,32 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     }
   }, [kuriAddress, account.address, handleTransaction, fetchMarketData]);
 
-  // Make deposit
+  // Enhanced deposit function to refresh payment status after deposit
   const deposit = useCallback(async () => {
-    if (!kuriAddress || !account.address || !marketData)
+    if (!kuriAddress || !account.address || !marketData || !tokenAddress)
       throw new Error("Invalid parameters");
 
     try {
+      const kuriAmount = marketData.kuriAmount;
+      const requiredApproval = calculateApprovalAmount(kuriAmount);
+
+      const currentAllowance = await checkAllowance();
+
+      if (currentAllowance < kuriAmount) {
+        console.log(
+          `Insufficient allowance. Current: ${currentAllowance}, Required: ${kuriAmount}`
+        );
+
+        await approveTokens(requiredApproval);
+
+        const newAllowance = await checkAllowance();
+        if (newAllowance < kuriAmount) {
+          throw new Error(
+            "Token approval failed - insufficient allowance after approval"
+          );
+        }
+      }
+
       const { request } = await simulateContract(config, {
         address: kuriAddress,
         abi: KuriCoreABI,
@@ -123,12 +297,35 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       const tx = await writeContract(config, request);
 
       await handleTransaction(tx, {
-        loadingMessage: "Making deposit...",
+        loadingMessage: "Processing deposit...",
         successMessage: "Deposit successful!",
         errorMessage: "Failed to make deposit",
       });
 
+      // Refresh market data first
       await fetchMarketData();
+
+      // Explicitly refresh user data with retry mechanism
+      // Sometimes there's a slight delay before blockchain state is queryable
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await refreshUserData();
+          break; // Success, exit retry loop
+        } catch (err) {
+          retries--;
+          if (retries > 0) {
+            // Wait a bit before retrying
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          } else {
+            console.error(
+              "Failed to refresh user data after all retries:",
+              err
+            );
+          }
+        }
+      }
+
       return tx;
     } catch (error) {
       throw handleContractError(error);
@@ -137,8 +334,12 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     kuriAddress,
     account.address,
     marketData,
+    tokenAddress,
+    checkAllowance,
+    approveTokens,
     handleTransaction,
     fetchMarketData,
+    refreshUserData,
   ]);
 
   // Claim amount
@@ -285,16 +486,24 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     [kuriAddress]
   );
 
-  // Fetch market data on mount and address change
+  // Fetch market data and token address on mount and address change
   useEffect(() => {
     fetchMarketData();
-  }, [fetchMarketData]);
+    fetchTokenAddress();
+  }, [fetchMarketData, fetchTokenAddress]);
 
   return {
     // Market data
     marketData,
     isLoading,
     error,
+
+    // Token data
+    tokenAddress,
+
+    // State
+    userPaymentStatus,
+    userBalance,
 
     // Actions
     requestMembership,
@@ -305,10 +514,16 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     deposit,
     claimKuriAmount,
     fetchMarketData,
+    checkAllowance,
+    approveTokens,
+    checkUserPaymentStatus,
+    checkUserBalance,
+    refreshUserData,
 
     // Loading states
     isRequesting,
     isAccepting,
     isRejecting,
+    isApproving,
   };
 };
