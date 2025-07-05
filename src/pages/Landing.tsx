@@ -17,6 +17,7 @@ import {
 import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
 import { MarketCard } from "../components/markets/MarketCard";
 import { KuriMarket } from "../hooks/useKuriMarkets";
+import { useGeolocation } from "../hooks/useGeolocation";
 
 // Hero section background images
 const heroBackgrounds = [
@@ -236,6 +237,12 @@ function App() {
     fetchMarkets();
   }, [getAllMarkets]);
 
+  const {
+    localizedContent,
+    isLoading: locationLoading,
+    location,
+  } = useGeolocation();
+
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
       {/* Navigation */}
@@ -383,6 +390,20 @@ function App() {
               transition={{ duration: 0.6 }}
               className="space-y-8 relative z-10"
             >
+              {/* Local term badge */}
+              {location &&
+                localizedContent.localTerm !== "Community Savings" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="inline-flex items-center gap-2 bg-[#C84E31]/10 text-[#C84E31] px-3 py-1.5 rounded-full text-sm font-medium"
+                  >
+                    <span className="w-2 h-2 bg-[#C84E31] rounded-full"></span>
+                    {localizedContent.localTerm} • {location.country_name}
+                  </motion.div>
+                )}
+
               <div className="space-y-2">
                 <motion.h1
                   className="text-[42px] sm:text-[52px] lg:text-6xl font-semibold tracking-tight text-[#402e32] leading-[1.1]"
@@ -424,9 +445,13 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.7 }}
               >
-                Join the future of collaborative finance. Zero interest, zero
-                hidden fees. Just the power of community saving to help you
-                reach your goals.
+                {locationLoading ? (
+                  <span className="animate-pulse">
+                    Loading personalized content...
+                  </span>
+                ) : (
+                  localizedContent.description
+                )}
               </motion.p>
 
               <motion.div
@@ -608,9 +633,15 @@ function App() {
                 The Heart of Kuri
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Kuri revives ancient community saving traditions for today's
-                world. A circle of trust where friends, family, and communities
-                pool resources to help each member flourish, one by one.
+                Kuri revives ancient community saving traditions{" "}
+                {location && (
+                  <span className="text-[hsl(var(--terracotta))] font-medium">
+                    like {localizedContent.localTerm}
+                  </span>
+                )}{" "}
+                for today's world. A circle of trust where friends, family, and
+                communities pool resources to help each member flourish, one by
+                one.
               </p>
               <p className="text-lg text-muted-foreground mb-6">
                 No banks, no interest, no debt—just people supporting people.
@@ -1256,7 +1287,7 @@ function App() {
 
       {/* Footer */}
       <footer className="border-t border-[hsl(var(--ochre))/20] py-8 bg-[hsl(var(--terracotta))] relative text-white">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-center bg-no-repeat bg-cover opacity-10" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
         <div className="container mx-auto px-4 py-4 relative">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
@@ -1272,9 +1303,8 @@ function App() {
                 </div>
               </div>
               <p className="text-white/80 max-w-md mb-6">
-                Built with care for circles that matter. Bringing ancestral
-                saving traditions into the digital age with trust, transparency,
-                and community at its core.
+                Empowering communities through collaborative finance. Join the
+                revolution of interest-free savings circles.
               </p>
               <div className="flex space-x-4">
                 <a
@@ -1384,14 +1414,15 @@ function App() {
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-8 right-8 p-3 rounded-full bg-[hsl(var(--terracotta))] text-white shadow-lg hover:bg-[hsl(var(--terracotta))/90] transition-all z-50"
-            aria-label="Scroll to top"
+            className="fixed bottom-8 right-8 bg-[hsl(var(--terracotta))] text-white p-3 rounded-full shadow-lg hover:bg-[hsl(var(--ochre))] transition-colors z-40"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
-            <ChevronUp size={24} />
+            <ChevronUp className="h-5 w-5" />
           </motion.button>
         )}
       </AnimatePresence>
