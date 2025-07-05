@@ -11,7 +11,7 @@ import {
 } from "../ui/table";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { Badge } from "../ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar, User } from "lucide-react";
 import { MEMBERSHIP_REQUESTS_QUERY } from "../../graphql/queries";
 import { useAccount } from "wagmi";
 import { useBulkUserProfiles } from "../../hooks/useBulkUserProfiles";
@@ -71,10 +71,8 @@ export const ManageMembers = ({
     variables: {
       marketAddress: marketAddress.toLowerCase(),
     },
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
   });
-  console.log("marketAddress:", marketAddress);
-  console.log("daata:", data);
 
   // Fetch member states from contract
   useEffect(() => {
@@ -181,24 +179,89 @@ export const ManageMembers = ({
       (totalActiveParticipantsCount / totalParticipantsCount) * 100;
 
     return (
-      <div className="mb-6 space-y-2">
+      <div className="mb-4 sm:mb-6 space-y-2 sm:space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground">
             Members: {totalActiveParticipantsCount}/{totalParticipantsCount}
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground">
             {progress.toFixed(0)}% Full
           </span>
         </div>
-        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+        <div className="w-full h-2 sm:h-2.5 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-[hsl(var(--forest))]"
+            className="h-full bg-[hsl(var(--forest))] transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
     );
   };
+
+  // Mobile card component for each member request
+  const MemberRequestCard = ({ request }: { request: MembershipRequest }) => (
+    <div className="bg-white border border-[hsl(var(--border))] rounded-xl p-4 space-y-3 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          <UserProfileCell
+            profile={getProfile(request.user)}
+            address={request.user}
+            isLoading={isProfileLoading(request.user)}
+            className="mb-2"
+          />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Calendar className="w-3 h-3" />
+            <span>
+              {new Date(Number(request.timestamp) * 1000).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          {getMembershipStatusBadge(request.state)}
+        </div>
+      </div>
+      {request.state === 4 && (
+        <div className="flex gap-2 pt-2 border-t border-[hsl(var(--border))]">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleAccept(request.user as `0x${string}`)}
+            disabled={
+              isAccepting || isRejecting || processingUser === request.user
+            }
+            className="flex-1"
+          >
+            {processingUser === request.user && isAccepting ? (
+              <>
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                Accepting...
+              </>
+            ) : (
+              "Accept"
+            )}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleReject(request.user as `0x${string}`)}
+            disabled={
+              isAccepting || isRejecting || processingUser === request.user
+            }
+            className="flex-1"
+          >
+            {processingUser === request.user && isRejecting ? (
+              <>
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                Rejecting...
+              </>
+            ) : (
+              "Reject"
+            )}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
   if (queryLoading || isLoading) {
     return (
@@ -217,88 +280,106 @@ export const ManageMembers = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-3 sm:p-4 md:p-6">
       {renderStatus()}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User</TableHead>
-            <TableHead>Requested</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {memberRequests.map((request) => (
-            <TableRow key={request.id}>
-              <TableCell>
-                <UserProfileCell
-                  profile={getProfile(request.user)}
-                  address={request.user}
-                  isLoading={isProfileLoading(request.user)}
-                />
-              </TableCell>
-              <TableCell>
-                {new Date(
-                  Number(request.timestamp) * 1000
-                ).toLocaleDateString()}
-              </TableCell>
-              <TableCell>{getMembershipStatusBadge(request.state)}</TableCell>
-              <TableCell className="text-right">
-                {request.state === 4 && (
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleAccept(request.user as `0x${string}`)
-                      }
-                      disabled={
-                        isAccepting ||
-                        isRejecting ||
-                        processingUser === request.user
-                      }
-                    >
-                      {processingUser === request.user && isAccepting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Accepting...
-                        </>
-                      ) : (
-                        "Accept"
-                      )}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        handleReject(request.user as `0x${string}`)
-                      }
-                      disabled={
-                        isAccepting ||
-                        isRejecting ||
-                        processingUser === request.user
-                      }
-                    >
-                      {processingUser === request.user && isRejecting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Rejecting...
-                        </>
-                      ) : (
-                        "Reject"
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </TableCell>
+
+      {/* Mobile Layout - Cards */}
+      <div className="block md:hidden space-y-3">
+        {memberRequests.map((request) => (
+          <MemberRequestCard key={request.id} request={request} />
+        ))}
+      </div>
+
+      {/* Desktop Layout - Table */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[35%]">User</TableHead>
+              <TableHead className="w-[20%]">Requested</TableHead>
+              <TableHead className="w-[20%]">Status</TableHead>
+              <TableHead className="w-[25%] text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {memberRequests.map((request) => (
+              <TableRow key={request.id}>
+                <TableCell className="py-3">
+                  <UserProfileCell
+                    profile={getProfile(request.user)}
+                    address={request.user}
+                    isLoading={isProfileLoading(request.user)}
+                  />
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    {new Date(
+                      Number(request.timestamp) * 1000
+                    ).toLocaleDateString()}
+                  </div>
+                </TableCell>
+                <TableCell className="py-3">
+                  {getMembershipStatusBadge(request.state)}
+                </TableCell>
+                <TableCell className="text-right py-3">
+                  {request.state === 4 && (
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleAccept(request.user as `0x${string}`)
+                        }
+                        disabled={
+                          isAccepting ||
+                          isRejecting ||
+                          processingUser === request.user
+                        }
+                      >
+                        {processingUser === request.user && isAccepting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Accepting...
+                          </>
+                        ) : (
+                          "Accept"
+                        )}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() =>
+                          handleReject(request.user as `0x${string}`)
+                        }
+                        disabled={
+                          isAccepting ||
+                          isRejecting ||
+                          processingUser === request.user
+                        }
+                      >
+                        {processingUser === request.user && isRejecting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Rejecting...
+                          </>
+                        ) : (
+                          "Reject"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
       {memberRequests.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          No membership requests found
+          <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+          <p className="text-sm sm:text-base">No membership requests found</p>
         </div>
       )}
     </div>

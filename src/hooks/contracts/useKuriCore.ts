@@ -153,7 +153,23 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
   // Check if user has paid for current interval
   const checkUserPaymentStatus = useCallback(async (): Promise<boolean> => {
-    if (!kuriAddress || !account.address) {
+    if (!kuriAddress || !account.address || !marketData) {
+      return false;
+    }
+
+    // Only check payment status for ACTIVE markets
+    if (marketData.state !== 2) {
+      // Not ACTIVE
+      setUserPaymentStatus(null);
+      return false;
+    }
+
+    // Only check if we're past the next deposit time
+    const currentTime = Math.floor(Date.now() / 1000);
+    const nextDepositTime = Number(marketData.nextIntervalDepositTime);
+
+    if (currentTime < nextDepositTime) {
+      setUserPaymentStatus(null);
       return false;
     }
 
@@ -165,6 +181,17 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         functionName: "passedIntervalsCounter",
       })) as number;
 
+      // Validate interval index - if it's unreasonably high, skip payment check
+      // This happens due to a contract bug where passedIntervalsCounter() calculates
+      // (block.timestamp - 0) for INLAUNCH markets where startTime is uninitialized
+      if (intervalCounter < 0 || intervalCounter > 1000) {
+        console.warn(
+          `Invalid interval counter for market ${kuriAddress}: ${intervalCounter}. This is likely an INLAUNCH market with uninitialized startTime.`
+        );
+        setUserPaymentStatus(null);
+        return false;
+      }
+
       // Convert to bigint for hasPaid function (which expects uint256)
       const currentIntervalIndex = BigInt(intervalCounter);
 
@@ -175,6 +202,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         functionName: "hasPaid",
         args: [account.address, currentIntervalIndex],
       })) as boolean;
+      console.log("currentintervalIndex:", currentIntervalIndex);
 
       setUserPaymentStatus(hasPaid);
       return hasPaid;
@@ -183,7 +211,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       setUserPaymentStatus(null);
       return false;
     }
-  }, [kuriAddress, account.address]);
+  }, [kuriAddress, account.address, marketData]);
 
   // Refresh user-specific data (payment status and balance)
   const refreshUserData = useCallback(async (): Promise<void> => {
@@ -194,7 +222,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } catch (err) {
       console.error("Failed to refresh user data:", err);
     }
-  }, [account.address, checkUserPaymentStatus, checkUserBalance]);
+  }, [account.address]);
 
   // Enhanced fetchMarketData to also check payment status
   const fetchMarketData = useCallback(async () => {
@@ -224,8 +252,10 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         state: data[11],
       });
 
-      // Also check payment status when fetching market data
-      if (account.address) {
+      // Only check payment status and balance if user is connected and market is active
+      // This reduces unnecessary blockchain calls for markets the user isn't involved in
+      if (account.address && data[11] === 2) {
+        // Only for ACTIVE markets
         await checkUserPaymentStatus();
         await checkUserBalance();
       }
@@ -234,7 +264,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } finally {
       setIsLoading(false);
     }
-  }, [kuriAddress, account.address, checkUserPaymentStatus, checkUserBalance]);
+  }, [kuriAddress, account.address]);
 
   // Initialize market
   const initializeKuri = useCallback(async () => {

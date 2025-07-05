@@ -77,39 +77,6 @@ const testimonials = [
   },
 ];
 
-// Circle preview data
-const activeCircles = [
-  {
-    id: 1,
-    name: "Home Renovators",
-    members: 12,
-    contribution: "$250 monthly",
-    totalPool: "$3,000",
-    nextDraw: "April 15, 2025",
-    imageUrl: "/images/homerenovators.jpg",
-  },
-  {
-    id: 2,
-    name: "Entrepreneurs Fund",
-    members: 8,
-    contribution: "$500 monthly",
-    totalPool: "$4,000",
-    nextDraw: "April 20, 2025",
-    imageUrl:
-      "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=500&q=80",
-  },
-  {
-    id: 3,
-    name: "Education Savers",
-    members: 15,
-    contribution: "$200 monthly",
-    totalPool: "$3,000",
-    nextDraw: "April 25, 2025",
-    imageUrl:
-      "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=500&q=80",
-  },
-];
-
 function App() {
   const navigate = useNavigate();
   const { getAllMarkets, isLoading, error } = useKuriFactory();
@@ -390,20 +357,6 @@ function App() {
               transition={{ duration: 0.6 }}
               className="space-y-8 relative z-10"
             >
-              {/* Local term badge */}
-              {location &&
-                localizedContent.localTerm !== "Community Savings" && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="inline-flex items-center gap-2 bg-[#C84E31]/10 text-[#C84E31] px-3 py-1.5 rounded-full text-sm font-medium"
-                  >
-                    <span className="w-2 h-2 bg-[#C84E31] rounded-full"></span>
-                    {localizedContent.localTerm} • {location.country_name}
-                  </motion.div>
-                )}
-
               <div className="space-y-2">
                 <motion.h1
                   className="text-[42px] sm:text-[52px] lg:text-6xl font-semibold tracking-tight text-[#402e32] leading-[1.1]"
@@ -438,7 +391,6 @@ function App() {
                   </motion.span>
                 </motion.h1>
               </div>
-
               <motion.p
                 className="text-lg text-[#5f5b56] max-w-lg leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
@@ -453,7 +405,6 @@ function App() {
                   localizedContent.description
                 )}
               </motion.p>
-
               <motion.div
                 className="flex flex-col sm:flex-row gap-4 pt-4"
                 initial={{ opacity: 0, y: 20 }}

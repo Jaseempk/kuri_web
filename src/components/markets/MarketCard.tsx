@@ -1,23 +1,43 @@
-import { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
+import { useAccount } from "wagmi";
 import { config } from "../../config/wagmi";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
-import { Clock, Loader2 } from "lucide-react";
+import {
+  Clock,
+  Loader2,
+  Share2,
+  Users,
+  Target,
+  ExternalLink,
+  Calendar,
+} from "lucide-react";
 import { IntervalType } from "../../graphql/types";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { formatEther } from "viem";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { MarketParticipation } from "../../types/market";
 import { supabase } from "../../lib/supabase";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "../../lib/utils";
+import { ShareModal } from "../modals/ShareModal";
+import { useQuery } from "@tanstack/react-query";
 import { useProfileRequired } from "../../hooks/useProfileRequired";
 import { ShareButton } from "../ui/ShareButton";
 import { useShare } from "../../hooks/useShare";
-import { cn } from "../../lib/utils";
-import { ShareModal } from "../modals/ShareModal";
+import { shouldUseKuriCore } from "../../utils/marketUtils";
 
 interface MarketCardProps {
   market: KuriMarket;
@@ -101,22 +121,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   className,
 }) => {
   const navigate = useNavigate();
-  const [membershipStatus, setMembershipStatus] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>("");
-  const [timeLeft, setTimeLeft] = useState<string>("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const { address } = useAccount();
 
-  const { requireProfile } = useProfileRequired({
-    strict: false,
-    action: "join_circle",
-  });
+  // Only use KuriCore for active markets or if user is the creator
+  const shouldUseCore = shouldUseKuriCore(market, address);
 
-  const { quickShare } = useShare();
-
-  const account = getAccount(config);
   const {
     requestMembership,
     getMemberStatus,
@@ -124,7 +133,22 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     initializeKuri,
     marketData,
     fetchMarketData,
-  } = useKuriCore(market.address as `0x${string}`);
+    userPaymentStatus,
+    checkUserPaymentStatus,
+    isLoading: isLoadingCore,
+    error: coreError,
+  } = useKuriCore(
+    shouldUseCore ? (market.address as `0x${string}`) : undefined
+  );
+
+  const [membershipStatus, setMembershipStatus] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [timeLeft, setTimeLeft] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  const account = getAccount(config);
 
   const { data: metadata } = useQuery({
     queryKey: ["market-metadata", market.address],
@@ -227,23 +251,20 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   // Handle Kuri initialization
   const handleInitialize = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Stop event from bubbling up to parent
-
-    if (!account.address) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
+    e.stopPropagation();
+    if (!account.address) return;
 
     setIsLoading(true);
     try {
       await initializeKuri();
       toast.success("Kuri cycle initialized successfully!");
     } catch (err) {
-      if (!isUserRejection(err)) {
-        const errorMsg =
-          err instanceof Error ? err.message : "Failed to initialize Kuri";
-        toast.error(errorMsg);
-      }
+      console.error("Failed to initialize Kuri:", err);
+      const errorMessage = isUserRejection(err)
+        ? "Transaction was cancelled"
+        : "Failed to initialize Kuri cycle";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -258,11 +279,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
       return;
     }
 
-    // Add profile check before proceeding
-    if (!requireProfile()) {
-      return;
-    }
-
     if (isMarketFull) {
       setError("This circle is already full");
       return;
@@ -272,7 +288,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     setIsLoading(true);
 
     try {
-      await requestMembership();
+      await getMemberStatus(account.address);
 
       // Refresh membership status from contract to get the actual state
       const status = await getMemberStatus(account.address);
@@ -373,7 +389,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     // Don't navigate if dialog is open, clicking on a button, or if the click is from the share button
     if (
       isDialogOpen ||
-      isShareModalOpen ||
+      showShareModal ||
       e.target instanceof HTMLButtonElement ||
       (e.target as HTMLElement).closest('[data-share-button="true"]') ||
       (e.target as HTMLElement).closest("button")
@@ -387,14 +403,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   const handleShareClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsSharing(true);
-    try {
-      // Share functionality is now handled by the ShareModal
-    } catch (error) {
-      console.error("Error sharing market:", error);
-    } finally {
-      setIsSharing(false);
-    }
+    setShowShareModal(true);
   };
 
   // Render action button based on user role and market state
@@ -441,11 +450,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         return (
           <Button
             onClick={handleJoinRequest}
-            disabled={isLoading || isMarketFull || isRequesting}
+            disabled={isLoading || isMarketFull}
             className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
             title={isMarketFull ? "This circle is already full" : undefined}
           >
-            {isLoading || isRequesting ? (
+            {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : isMarketFull ? (
               "Circle Full"
@@ -469,10 +478,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         return (
           <Button
             onClick={handleJoinRequest}
-            disabled={isLoading || isMarketFull || isRequesting}
+            disabled={isLoading || isMarketFull}
             className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
           >
-            {isLoading || isRequesting ? (
+            {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               "Request Again"
@@ -533,10 +542,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             >
               <ShareButton
                 market={market}
-                isLoading={isSharing}
-                onClick={() => {
-                  setIsShareModalOpen(true);
-                }}
+                isLoading={showShareModal}
+                onClick={handleShareClick}
               />
             </div>
 
@@ -608,11 +615,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           </div>
         </div>
       </div>
-      {isShareModalOpen && (
+      {showShareModal && (
         <ShareModal
           market={market}
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
         />
       )}
     </>

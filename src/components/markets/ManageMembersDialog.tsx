@@ -9,7 +9,7 @@ import {
 import { ManageMembers } from "./ManageMembers";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { useAccount } from "wagmi";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
 import { Button } from "../ui/button";
@@ -36,12 +36,6 @@ export const ManageMembersDialog = ({
   const [refreshKey, setRefreshKey] = useState(0);
 
   const isCreator = address?.toLowerCase() === market.creator.toLowerCase();
-
-  useEffect(() => {
-    if (open && isCreator) {
-      setRefreshKey((prev) => prev + 1);
-    }
-  }, [open, isCreator]);
 
   const handleRequestMembership = async () => {
     try {
@@ -113,7 +107,7 @@ export const ManageMembersDialog = ({
                   </div>
                 </div>
               )}
-              <div className="bg-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] overflow-hidden">
+              <div className="bg-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))]">
                 <ManageMembers
                   key={refreshKey}
                   marketAddress={market.address}
