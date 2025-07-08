@@ -1259,7 +1259,7 @@ function App() {
               </p>
               <div className="flex space-x-4">
                 <a
-                  href="#"
+                  href="https://x.com/Kuriorg"
                   className="text-white/70 hover:text-white transition-colors"
                 >
                   <Twitter className="h-5 w-5" />
