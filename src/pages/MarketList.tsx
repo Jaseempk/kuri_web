@@ -25,14 +25,14 @@ const INTERVAL_TYPE = {
 // Market categories with emojis matching the mockup
 const marketSections = [
   {
-    title: "Active Markets",
-    description: "Currently active markets accepting deposits",
-    filter: (market: KuriMarket) => market.state === 2, // KuriState.ACTIVE
-  },
-  {
     title: "Created Markets",
     description: "Recently created markets pending activation",
     filter: (market: KuriMarket) => market.state === 0, // KuriState.INLAUNCH
+  },
+  {
+    title: "Active Markets",
+    description: "Currently active markets accepting deposits",
+    filter: (market: KuriMarket) => market.state === 2, // KuriState.ACTIVE
   },
   {
     title: "Paused Markets",

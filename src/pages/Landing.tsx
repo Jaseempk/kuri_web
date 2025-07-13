@@ -669,15 +669,7 @@ function App() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
             viewport={{ once: true }}
-          >
-            <Button
-              size="lg"
-              className="bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))] group"
-            >
-              Learn More About Our Approach
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </motion.div>
+          ></motion.div>
         </div>
       </section>
 
@@ -859,9 +851,8 @@ function App() {
                 Trust-based with optional privacy
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Start your own circle or join an existing one. Invite friends,
-                family, or colleagues to participate in this collaborative
-                saving journey.
+                Create or join a circle with trusted people. Set your
+                contribution amount and invite members to start saving together.
               </p>
 
               <div className="grid grid-cols-1 gap-4 mb-6">
@@ -886,16 +877,7 @@ function App() {
                   <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--terracotta))/10] flex items-center justify-center">
                     <Check className="h-4 w-4 text-[hsl(var(--terracotta))]" />
                   </div>
-                  <p>Set your circle size (number of participants)</p>
-                </li>
-                <li className="flex items-start">
-                  <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--terracotta))/10] flex items-center justify-center">
-                    <Check className="h-4 w-4 text-[hsl(var(--terracotta))]" />
-                  </div>
-                  <p>
-                    Determine contribution amount and frequency is set
-                    automatically based on the number participants
-                  </p>
+                  <p>Set circle size and contribution amount</p>
                 </li>
                 <li className="flex items-start">
                   <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--terracotta))/10] flex items-center justify-center">
@@ -933,8 +915,8 @@ function App() {
                 Regular Contributions
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Each member contributes an equal amount at regular intervals,
-                building a communal fund that grows with each cycle.
+                Make regular contributions to build your community fund with
+                automated reminders and real-time tracking.
               </p>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
@@ -963,15 +945,21 @@ function App() {
                   <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--gold))/10] flex items-center justify-center">
                     <Check className="h-4 w-4 text-[hsl(var(--gold))]" />
                   </div>
-                  <p>Multiple payment methods supported</p>
-                </li>
-                <li className="flex items-start">
-                  <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--gold))/10] flex items-center justify-center">
-                    <Check className="h-4 w-4 text-[hsl(var(--gold))]" />
-                  </div>
                   <p>Real-time fund tracking and transparency</p>
                 </li>
               </ul>
+
+              <div className="mt-8 inline-block">
+                <Button
+                  variant="default"
+                  size="lg"
+                  className="group bg-[hsl(var(--gold))] hover:bg-white hover:text-[hsl(var(--gold))] text-white border border-[hsl(var(--gold))]"
+                  onClick={() => navigate("/markets")}
+                >
+                  Start Your Circle
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </div>
             </motion.div>
 
             {/* Step 2: Image on RIGHT */}
@@ -1073,10 +1061,8 @@ function App() {
                 Fair Distribution
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Each cycle, one member receives the entire pool through a
-                transparent selection process, until everyone has had their
-                turn. Last three payouts are always gonna get an extra yield,
-                for their patience.
+                Get the full amount when it's your turn. Everyone gets selected
+                fairly and receives their payout once at any point in the cycle.
               </p>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1084,11 +1070,11 @@ function App() {
                   <p className="text-xs text-muted-foreground">
                     Selection Method
                   </p>
-                  <p className="font-medium">Random Verifiable Raffle</p>
+                  <p className="font-medium">Fair Random Selection</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Payout Speed</p>
-                  <p className="font-medium">Same-day Transfer</p>
+                  <p className="font-medium">Instant Transfer</p>
                 </div>
               </div>
 
@@ -1097,19 +1083,13 @@ function App() {
                   <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--forest))/10] flex items-center justify-center">
                     <Check className="h-4 w-4 text-[hsl(var(--forest))]" />
                   </div>
-                  <p>Blockchain-verified random selection</p>
+                  <p>Completely transparent and fair selection</p>
                 </li>
                 <li className="flex items-start">
                   <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--forest))/10] flex items-center justify-center">
                     <Check className="h-4 w-4 text-[hsl(var(--forest))]" />
                   </div>
-                  <p>Immediate fund transfer to your account</p>
-                </li>
-                <li className="flex items-start">
-                  <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--forest))/10] flex items-center justify-center">
-                    <Check className="h-4 w-4 text-[hsl(var(--forest))]" />
-                  </div>
-                  <p>Complete history of all transactions</p>
+                  <p>Money sent directly to your account</p>
                 </li>
               </ul>
 
