@@ -12,6 +12,7 @@ import { setCsrfToken, validateCsrfToken } from "../../utils/csrf";
 import { Confetti } from "../ui/Confetti";
 import { PostCreationShare } from "./PostCreationShare";
 import { useNavigate } from "react-router-dom";
+import { trackMarketCreation, trackError } from "../../utils/analytics";
 
 interface FormData {
   totalAmount: string;
@@ -165,6 +166,14 @@ export const CreateMarketForm = ({
         .select()
         .single();
 
+      // Track successful market creation
+      trackMarketCreation(
+        marketAddress,
+        formData.intervalType === "0" ? "weekly" : "monthly",
+        Number(formData.participantCount),
+        monthlyContribution
+      );
+
       // Generate new CSRF token after successful submission
       const newToken = setCsrfToken();
       setCsrfTokenState(newToken);
@@ -190,6 +199,13 @@ export const CreateMarketForm = ({
       // Close the form
       onClose?.();
     } catch (err) {
+      // Track market creation failure
+      trackError(
+        "market_creation_failed",
+        "CreateMarketForm",
+        err instanceof Error ? err.message : "Unknown error"
+      );
+
       if (!isUserRejection(err)) {
         const errorMessage =
           err instanceof Error

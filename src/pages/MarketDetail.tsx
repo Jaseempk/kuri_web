@@ -53,6 +53,7 @@ import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useUserProfileByAddress } from "../hooks/useUserProfile";
 import { isUserRejection } from "../utils/errors";
 import { DualCountdown } from "../components/ui/DotMatrixCountdown";
+import { trackEvent, trackError } from "../utils/analytics";
 
 // Available circle images
 const CIRCLE_IMAGES = [
@@ -392,10 +393,27 @@ export default function MarketDetail() {
     try {
       await requestMembership();
       toast.success("Membership request sent!");
+
+      // Track successful market join
+      if (marketData) {
+        trackEvent("market_joined", {
+          market_address: address || "",
+          interval_type: marketData.intervalType === 0 ? "weekly" : "monthly",
+          participants: marketData.totalParticipantsCount,
+        });
+      }
+
       // Refresh membership status
       const status = await getMemberStatus(account.address);
       setMembershipStatus(status ?? 0);
     } catch (err) {
+      // Track join failure
+      trackError(
+        "market_join_failed",
+        "MarketDetail",
+        err instanceof Error ? err.message : "Unknown error"
+      );
+
       if (!isUserRejection(err)) {
         const errorMsg =
           err instanceof Error ? err.message : "Failed to request membership";
@@ -417,7 +435,23 @@ export default function MarketDetail() {
     try {
       await initializeKuri();
       toast.success("Kuri cycle initialized successfully!");
+
+      // Track successful market initialization
+      if (marketData) {
+        trackEvent("market_initialized", {
+          market_address: address || "",
+          participants: marketData.totalParticipantsCount,
+          amount: formatUnits(marketData.kuriAmount, 6),
+        });
+      }
     } catch (err) {
+      // Track initialization failure
+      trackError(
+        "market_initialization_failed",
+        "MarketDetail",
+        err instanceof Error ? err.message : "Unknown error"
+      );
+
       if (!isUserRejection(err)) {
         const errorMsg =
           err instanceof Error ? err.message : "Failed to initialize Kuri";

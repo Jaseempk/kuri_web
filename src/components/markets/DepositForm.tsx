@@ -6,7 +6,7 @@ import {
 } from "../../hooks/contracts/useKuriCore";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { formatEther } from "viem";
+import { formatEther, formatUnits } from "viem";
 import { TransactionLoading, ErrorMessage } from "../ui/loading-states";
 import { handleContractError } from "../../utils/errors";
 import { hasSufficientBalance } from "../../utils/tokenUtils";
@@ -19,6 +19,7 @@ import {
   CheckCircle,
   Loader2,
 } from "lucide-react";
+import { trackDeposit, trackError } from "../../utils/analytics";
 
 interface KuriData {
   creator: `0x${string}`;
@@ -85,6 +86,13 @@ export const DepositForm: React.FC<DepositFormProps> = ({
       // If balance is sufficient, proceed with deposit
       await deposit();
 
+      // Track successful deposit
+      trackDeposit(
+        kuriAddress,
+        formatUnits(marketData.kuriAmount, 6),
+        0 // TODO: Add proper interval index when available
+      );
+
       // Additional refresh to ensure UI updates immediately
       // Wait a brief moment for blockchain state to be consistent
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -94,6 +102,20 @@ export const DepositForm: React.FC<DepositFormProps> = ({
         console.error("Failed to refresh user data in component:", err);
       }
     } catch (err) {
+      // Track deposit failure
+      const errorType =
+        err instanceof Error && err.message.includes("insufficient")
+          ? "insufficient_balance"
+          : err instanceof Error && err.message.includes("approval")
+          ? "approval_failed"
+          : "transaction_failed";
+
+      trackError(
+        "deposit_failed",
+        "DepositForm",
+        err instanceof Error ? err.message : "Unknown error"
+      );
+
       console.error("Deposit failed:", err);
     }
   };

@@ -231,6 +231,14 @@ function App() {
             </a>
             <div className="hidden md:flex items-center space-x-6">
               <button
+                onClick={() => scrollToSection("circles")}
+                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
+                aria-label="Navigate to Live Circles section"
+              >
+                Live Circles
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
+              </button>
+              <button
                 onClick={() => scrollToSection("about")}
                 className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to About section"
@@ -260,14 +268,6 @@ function App() {
                 aria-label="Navigate to Testimonials section"
               >
                 Testimonials
-                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
-              </button>
-              <button
-                onClick={() => scrollToSection("circles")}
-                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
-                aria-label="Navigate to Live Circles section"
-              >
-                Live Circles
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
               </button>
             </div>
@@ -523,94 +523,6 @@ function App() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section
-        ref={aboutRef}
-        className="py-16 relative overflow-hidden bg-[hsl(var(--sand))]"
-        id="about"
-      >
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
-        <div className="container mx-auto px-4 py-8 relative">
-          <div className="text-center mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl font-sans font-semibold mb-4 relative inline-block">
-                <span className="relative z-10">About Kuri</span>
-                <motion.div
-                  className="absolute -bottom-3 left-0 h-3 bg-[hsl(var(--terracotta))/30] w-full"
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "100%" }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  viewport={{ once: true }}
-                />
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-6">
-                A modern revival of time-honored community saving traditions
-                from around the world.
-              </p>
-            </motion.div>
-          </div>
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="relative aspect-square"
-            >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-4/5 h-4/5 rounded-full border-2 border-terracotta/30 animate-rotate-slow flex items-center justify-center">
-                  <div className="w-3/5 h-3/5 rounded-full border-2 border-ochre/20 animate-rotate-reverse" />
-                </div>
-              </div>
-              <img
-                src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?auto=format&fit=crop&w=800&q=80"
-                alt="Traditional savings group"
-                className="absolute inset-0 w-3/4 h-3/4 object-cover rounded-full m-auto shadow-xl"
-                loading="lazy"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-3xl font-sans font-semibold mb-6">
-                The Heart of Kuri
-              </h3>
-              <p className="text-lg text-muted-foreground mb-6">
-                Kuri revives ancient community saving traditions{" "}
-                {location && (
-                  <span className="text-[hsl(var(--terracotta))] font-medium">
-                    like {localizedContent.localTerm}
-                  </span>
-                )}{" "}
-                for today's world. A circle of trust where friends, family, and
-                communities pool resources to help each member flourish, one by
-                one.
-              </p>
-              <p className="text-lg text-muted-foreground mb-6">
-                No banks, no interest, no debt—just people supporting people.
-                Your circle becomes your safety net, turning individual
-                contributions into collective empowerment.
-              </p>
-              <p className="text-lg text-muted-foreground mb-6">
-                <span className="font-semibold">How it works:</span> Join or
-                create a circle with people you trust. Everyone contributes an
-                equal amount regularly, and each cycle, one member receives the
-                entire pool through a fair, transparent raffle. This continues
-                until everyone has had their turn.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* Why It's Special Section */}
       <section
         id="why-its-special"
@@ -766,6 +678,94 @@ function App() {
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Button>
           </motion.div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section
+        ref={aboutRef}
+        className="py-16 relative overflow-hidden bg-[hsl(var(--sand))]"
+        id="about"
+      >
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
+        <div className="container mx-auto px-4 py-8 relative">
+          <div className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl font-sans font-semibold mb-4 relative inline-block">
+                <span className="relative z-10">About Kuri</span>
+                <motion.div
+                  className="absolute -bottom-3 left-0 h-3 bg-[hsl(var(--terracotta))/30] w-full"
+                  initial={{ width: 0 }}
+                  whileInView={{ width: "100%" }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  viewport={{ once: true }}
+                />
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-6">
+                A modern revival of time-honored community saving traditions
+                from around the world.
+              </p>
+            </motion.div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="relative aspect-square"
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4/5 h-4/5 rounded-full border-2 border-terracotta/30 animate-rotate-slow flex items-center justify-center">
+                  <div className="w-3/5 h-3/5 rounded-full border-2 border-ochre/20 animate-rotate-reverse" />
+                </div>
+              </div>
+              <img
+                src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?auto=format&fit=crop&w=800&q=80"
+                alt="Traditional savings group"
+                className="absolute inset-0 w-3/4 h-3/4 object-cover rounded-full m-auto shadow-xl"
+                loading="lazy"
+              />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-3xl font-sans font-semibold mb-6">
+                The Heart of Kuri
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6">
+                Kuri revives ancient community saving traditions{" "}
+                {location && (
+                  <span className="text-[hsl(var(--terracotta))] font-medium">
+                    like {localizedContent.localTerm}
+                  </span>
+                )}{" "}
+                for today's world. A circle of trust where friends, family, and
+                communities pool resources to help each member flourish, one by
+                one.
+              </p>
+              <p className="text-lg text-muted-foreground mb-6">
+                No banks, no interest, no debt—just people supporting people.
+                Your circle becomes your safety net, turning individual
+                contributions into collective empowerment.
+              </p>
+              <p className="text-lg text-muted-foreground mb-6">
+                <span className="font-semibold">How it works:</span> Join or
+                create a circle with people you trust. Everyone contributes an
+                equal amount regularly, and each cycle, one member receives the
+                entire pool through a fair, transparent raffle. This continues
+                until everyone has had their turn.
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 

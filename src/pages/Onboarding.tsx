@@ -8,6 +8,7 @@ import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 import { sanitizeInput } from "../utils/sanitize";
 import { setCsrfToken, validateCsrfToken } from "../utils/csrf";
+import { trackEvent, trackError } from "../utils/analytics";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [csrfToken, setCsrfTokenState] = useState<string>("");
+  const [onboardingStartTime] = useState<number>(Date.now());
   const returnUrl = location.state?.returnUrl || "/markets";
 
   const [formData, setFormData] = useState({
@@ -38,6 +40,14 @@ export default function Onboarding() {
       navigate(returnUrl);
     }
   }, [profile, navigate, returnUrl]);
+
+  // Track onboarding start
+  useEffect(() => {
+    const source = location.state?.source || "direct";
+    trackEvent("onboarding_started", {
+      source: source as "landing" | "direct" | "share_link",
+    });
+  }, [location.state?.source]);
 
   const validateForm = (): boolean => {
     if (!validateCsrfToken(csrfToken)) {
@@ -126,6 +136,19 @@ export default function Onboarding() {
         reputation_score: 0,
       });
 
+      // Track successful profile creation
+      trackEvent("profile_created", {
+        has_display_name: Boolean(formData.display_name.trim()),
+        has_bio: false, // No bio field in current form
+      });
+
+      // Track onboarding completion
+      const duration = Math.floor((Date.now() - onboardingStartTime) / 1000);
+      trackEvent("onboarding_completed", {
+        duration,
+        steps_completed: 1, // Single step onboarding
+      });
+
       // Generate new CSRF token after successful submission
       const newToken = setCsrfToken();
       setCsrfTokenState(newToken);
@@ -133,6 +156,13 @@ export default function Onboarding() {
       toast.success("Profile created successfully!");
       navigate(returnUrl, { replace: true });
     } catch (error) {
+      // Track onboarding failure
+      trackError(
+        "profile_creation_failed",
+        "Onboarding",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+
       console.error("Error creating profile:", error);
       const errorMessage =
         error instanceof Error
@@ -146,6 +176,13 @@ export default function Onboarding() {
   };
 
   const handleSkip = () => {
+    // Track onboarding abandonment
+    const duration = Math.floor((Date.now() - onboardingStartTime) / 1000);
+    trackEvent("onboarding_abandoned", {
+      step: "profile_creation",
+      duration,
+    });
+
     navigate("/markets", { replace: true });
   };
 
