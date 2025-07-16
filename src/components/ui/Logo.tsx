@@ -36,7 +36,7 @@ export const Logo: React.FC<LogoProps> = ({
       <img
         src="/images/KuriLogo.png"
         alt="Kuri Logo"
-        className="h-32 w-32 object-contain translate-y-3"
+        className="h-24 w-24 object-contain translate-y-1"
       />
     </Link>
   );
