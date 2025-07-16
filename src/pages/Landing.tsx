@@ -14,9 +14,8 @@ import {
   Github,
   ChevronUp,
 } from "lucide-react";
-import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
 import { MarketCard } from "../components/markets/MarketCard";
-import { KuriMarket } from "../hooks/useKuriMarkets";
+import { KuriMarket, useKuriMarkets } from "../hooks/useKuriMarkets";
 import { useGeolocation } from "../hooks/useGeolocation";
 
 // Hero section background images
@@ -79,7 +78,7 @@ const testimonials = [
 
 function App() {
   const navigate = useNavigate();
-  const { getAllMarkets, isLoading, error } = useKuriFactory();
+  const { markets, loading: isLoading, error } = useKuriMarkets();
   const [inLaunchMarkets, setInLaunchMarkets] = useState<KuriMarket[]>([]);
   // State for navigation
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -189,20 +188,22 @@ function App() {
   };
 
   useEffect(() => {
-    const fetchMarkets = async () => {
+    const initializeInLaunchMarkets = () => {
+      if (!markets.length) return;
+
       try {
-        const allMarkets = await getAllMarkets();
-        const latestInLaunch = allMarkets
+        const latestInLaunch = markets
           .filter((m) => m.state === 0)
           .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
           .slice(0, 3);
         setInLaunchMarkets(latestInLaunch);
       } catch (err) {
-        console.error("Error fetching markets:", err);
+        console.error("Error processing markets:", err);
       }
     };
-    fetchMarkets();
-  }, [getAllMarkets]);
+
+    initializeInLaunchMarkets();
+  }, [markets]);
 
   const {
     localizedContent,

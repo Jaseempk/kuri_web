@@ -110,13 +110,11 @@ export const useKuriFactory = () => {
   );
 
   // Get all deployed Kuri markets using subgraph
-  const getAllMarkets = useCallback(async () => {
-    return markets;
-  }, [markets]);
+  // Note: This function has been removed to prevent double refresh issues.
+  // Use useKuriMarkets() hook directly instead.
 
   return {
     initialiseKuriMarket,
-    getAllMarkets,
     isCreating,
     isCreationSuccess,
     isLoading: marketsLoading,

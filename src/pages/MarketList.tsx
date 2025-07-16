@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card } from "../components/ui/card";
+import { useKuriMarkets } from "../hooks/useKuriMarkets";
 import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
 import { MarketStatus, IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
@@ -9,35 +10,33 @@ import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
 import { MarketCard } from "../components/markets/MarketCard";
 import { KuriMarket } from "../hooks/useKuriMarkets";
-import { Search, SlidersHorizontal } from "lucide-react";
-import { formatEther } from "viem";
+import { Search, SlidersHorizontal, Check, ChevronDown } from "lucide-react";
+import { formatUnits } from "viem";
 import { supabase } from "../lib/supabase";
 import { MarketMetadata } from "../components/markets/MarketCard";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useNavigate } from "react-router-dom";
 import { PostCreationShare } from "../components/markets/PostCreationShare";
+import { useUSDCBalances } from "../hooks/useUSDCBalances";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
   MONTHLY: 1 as IntervalType,
 } as const;
 
-// Market categories with emojis matching the mockup
+// Market categories with tab values
 const marketSections = [
   {
-    title: "Created Markets",
+    title: "Launching Markets",
     description: "Recently created markets pending activation",
     filter: (market: KuriMarket) => market.state === 0, // KuriState.INLAUNCH
+    value: "created",
   },
   {
     title: "Active Markets",
     description: "Currently active markets accepting deposits",
     filter: (market: KuriMarket) => market.state === 2, // KuriState.ACTIVE
-  },
-  {
-    title: "Paused Markets",
-    description: "Markets that are temporarily paused",
-    filter: (market: KuriMarket) => market.state === 1, // KuriState.LAUNCHFAILED
+    value: "active",
   },
 ];
 
@@ -71,32 +70,115 @@ const StatsCard = ({
   </div>
 );
 
-const FilterButton = ({
-  children,
-  active = false,
-  onClick,
+const FilterDropdown = ({
+  activeFilter,
+  setActiveFilter,
+  intervalFilteredMarkets,
 }: {
-  children: React.ReactNode;
-  active?: boolean;
-  onClick?: () => void;
-}) => (
-  <button
-    onClick={onClick}
-    className={`px-3 xs:px-4 py-1.5 xs:py-2 rounded-full text-xs xs:text-sm font-medium transition-colors border whitespace-nowrap ${
-      active
-        ? "bg-[#8B6F47] text-white border-[#8B6F47] hover:bg-[#725A3A]"
-        : "border-[#E8DED1] hover:bg-[#F9F5F1]"
-    }`}
-  >
-    {children}
-  </button>
-);
+  activeFilter: string;
+  setActiveFilter: (filter: string) => void;
+  intervalFilteredMarkets: KuriMarket[];
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const filterOptions = [
+    {
+      value: "all",
+      label: "All",
+      count: intervalFilteredMarkets.length,
+    },
+    {
+      value: "weekly",
+      label: "Weekly",
+      count: intervalFilteredMarkets.filter(
+        (m) => m.intervalType === INTERVAL_TYPE.WEEKLY
+      ).length,
+    },
+    {
+      value: "monthly",
+      label: "Monthly",
+      count: intervalFilteredMarkets.filter(
+        (m) => m.intervalType === INTERVAL_TYPE.MONTHLY
+      ).length,
+    },
+  ];
+
+  const activeOption = filterOptions.find(
+    (option) => option.value === activeFilter
+  );
+
+  const handleOptionClick = (value: string) => {
+    setActiveFilter(value);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 xs:px-4 py-2 rounded-full border border-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] hover:text-white transition-colors text-sm font-medium bg-white text-[hsl(var(--terracotta))]"
+      >
+        <SlidersHorizontal size={16} />
+        <span className="hidden sm:inline">
+          {activeOption?.label} ({activeOption?.count})
+        </span>
+        <span className="sm:hidden">Filter</span>
+        <ChevronDown
+          size={14}
+          className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown Menu */}
+          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-[hsl(var(--terracotta))] shadow-lg z-50 py-2">
+            <div className="px-3 py-2 text-xs font-medium text-[hsl(var(--terracotta))] border-b border-[hsl(var(--terracotta))]/20">
+              Filter by Type
+            </div>
+            {filterOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleOptionClick(option.value)}
+                className={`w-full px-3 py-2 text-left text-sm hover:bg-[hsl(var(--terracotta))]/10 transition-colors flex items-center justify-between ${
+                  activeFilter === option.value
+                    ? "bg-[hsl(var(--terracotta))]/10 text-[hsl(var(--terracotta))]"
+                    : "text-gray-700"
+                }`}
+              >
+                <span>{option.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">
+                    ({option.count})
+                  </span>
+                  {activeFilter === option.value && (
+                    <Check
+                      size={14}
+                      className="text-[hsl(var(--terracotta))]"
+                    />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function MarketList() {
-  const { getAllMarkets, isCreating, isLoading, error } = useKuriFactory();
-  const [markets, setMarkets] = useState<KuriMarket[]>([]);
+  const { markets, loading: isLoading, error } = useKuriMarkets();
+
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("created");
   const [marketMetadata, setMarketMetadata] = useState<
     Record<string, MarketMetadata | null>
   >({});
@@ -114,11 +196,47 @@ export default function MarketList() {
     action: "market_action",
   });
 
+  // Get market addresses for USDC balance fetching
+  const marketAddresses = useMemo(
+    () => markets.map((market) => market.address as `0x${string}`),
+    [markets]
+  );
+  const marketStates = useMemo(
+    () => markets.map((market) => market.state),
+    [markets]
+  );
+
+  // Fetch USDC balances for all markets
+  const {
+    totalTVL,
+    isLoading: isLoadingBalances,
+    error: balancesError,
+  } = useUSDCBalances(marketAddresses, marketStates);
+
   useEffect(() => {
-    const fetchMarkets = async () => {
+    console.log("MarketList useEffect triggered - initializing markets data");
+
+    const initializeMarketsData = async () => {
+      if (!markets.length) {
+        console.log("No markets available, skipping initialization");
+        return;
+      }
+
+      console.log("Initializing markets data with", markets.length, "markets");
+
       try {
-        const fetchedMarkets = await getAllMarkets();
-        setMarkets(fetchedMarkets);
+        // Set default active tab based on available markets
+        const createdMarkets = markets.filter((m) => m.state === 0);
+        const activeMarkets = markets.filter((m) => m.state === 2);
+
+        // Show Created Markets first if available, otherwise Active Markets
+        if (createdMarkets.length > 0) {
+          setActiveTab("created");
+        } else if (activeMarkets.length > 0) {
+          setActiveTab("active");
+        } else {
+          setActiveTab("paused");
+        }
 
         // Fetch metadata for all markets from Supabase
         const { data } = await supabase.from("kuri_web").select("*");
@@ -134,35 +252,49 @@ export default function MarketList() {
           setMarketMetadata(metadataMap);
         }
 
-        // Store current stats for comparison
+        // Store current stats for comparison (now using USDC balances)
         const currentStats = {
-          tvl: fetchedMarkets.reduce(
-            (acc, market) => acc + BigInt(market.kuriAmount),
-            BigInt(0)
-          ),
-          activeCircles: fetchedMarkets.filter((m) => m.state === 2).length,
-          totalParticipants: fetchedMarkets.reduce(
-            (acc, market) => acc + market.totalParticipants,
+          tvl: BigInt(0), // Will be updated when USDC balances are loaded
+          activeCircles: markets.filter((m) => m.state === 2).length,
+          totalParticipants: markets.reduce(
+            (acc, market) => acc + market.activeParticipants,
             0
           ),
         };
 
         // Calculate differences for next render
         setPreviousStats(currentStats);
+        console.log("Markets data initialization completed");
       } catch (err) {
-        console.error("Error fetching markets:", err);
+        console.error("Error initializing markets data:", err);
       }
     };
 
-    fetchMarkets();
-  }, [getAllMarkets]);
+    initializeMarketsData();
+  }, [markets]);
 
-  if (isLoading) {
+  // Update TVL stats when USDC balances are loaded
+  useEffect(() => {
+    console.log("TVL useEffect triggered, totalTVL:", totalTVL.toString());
+
+    if (totalTVL > 0) {
+      setPreviousStats((prev) => ({
+        ...prev,
+        tvl: totalTVL,
+      }));
+    }
+  }, [totalTVL]);
+
+  if (isLoading || isLoadingBalances) {
     return <LoadingSkeleton />;
   }
 
   if (error) {
     return <div>Error loading markets: {error.message}</div>;
+  }
+
+  if (balancesError) {
+    return <div>Error loading USDC balances: {balancesError.message}</div>;
   }
 
   // First apply interval type filter if selected
@@ -212,15 +344,13 @@ export default function MarketList() {
   const marketsForStats =
     activeFilter === "all" ? markets : intervalFilteredMarkets;
 
-  const totalValueLocked = marketsForStats.reduce(
-    (acc, market) => acc + BigInt(market.kuriAmount),
-    BigInt(0)
-  );
+  // Use actual USDC balances for TVL - this represents real locked value
+  const totalValueLocked = totalTVL;
 
   const activeCircles = marketsForStats.filter((m) => m.state === 2).length;
 
   const totalParticipants = marketsForStats.reduce(
-    (acc, market) => acc + market.totalParticipants,
+    (acc, market) => acc + market.activeParticipants,
     0
   );
 
@@ -279,7 +409,7 @@ export default function MarketList() {
             <StatsCard
               title="Total Value Locked"
               value={`$${Number(
-                formatEther(totalValueLocked)
+                formatUnits(totalValueLocked, 6)
               ).toLocaleString()}`}
               change={tvlChange}
             />
@@ -317,7 +447,7 @@ export default function MarketList() {
                     e.preventDefault();
                   }
                 }}
-                className="w-full xs:w-auto bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent rounded-full px-4 xs:px-6 transition-all duration-200"
+                className="w-full xs:w-auto bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-4 xs:px-6 transition-all duration-200"
               >
                 Start a Circle
               </Button>
@@ -358,85 +488,109 @@ export default function MarketList() {
                 className="w-full pl-10 pr-4 py-2 rounded-full border border-[#E8DED1] focus:outline-none focus:ring-2 focus:ring-[#8B6F47] text-sm"
               />
             </div>
-            <div
-              className="flex gap-2 xs:gap-3 overflow-x-auto pb-2 xs:pb-0 
-              scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent"
-            >
-              <FilterButton
-                active={activeFilter === "all"}
-                onClick={() => setActiveFilter("all")}
-              >
-                All ({intervalFilteredMarkets.length})
-              </FilterButton>
-              <FilterButton
-                active={activeFilter === "weekly"}
-                onClick={() => setActiveFilter("weekly")}
-              >
-                Weekly (
-                {
-                  intervalFilteredMarkets.filter(
-                    (m) => m.intervalType === INTERVAL_TYPE.WEEKLY
-                  ).length
-                }
-                )
-              </FilterButton>
-              <FilterButton
-                active={activeFilter === "monthly"}
-                onClick={() => setActiveFilter("monthly")}
-              >
-                Monthly (
-                {
-                  intervalFilteredMarkets.filter(
-                    (m) => m.intervalType === INTERVAL_TYPE.MONTHLY
-                  ).length
-                }
-                )
-              </FilterButton>
-            </div>
-            <button className="hidden xs:flex p-2 rounded-full hover:bg-[#F9F5F1] transition-colors">
-              <SlidersHorizontal size={20} className="text-[#8B6F47]" />
-            </button>
+            <FilterDropdown
+              activeFilter={activeFilter}
+              setActiveFilter={setActiveFilter}
+              intervalFilteredMarkets={intervalFilteredMarkets}
+            />
           </div>
         </div>
 
-        {/* Market Sections */}
-        {marketSections.map(({ title, description, filter }) => {
-          const sectionMarkets = filteredMarkets.filter(filter);
-          if (sectionMarkets.length === 0) return null;
+        {/* Market Sections with Tabs */}
+        <div className="w-full">
+          <div className="mb-6 xs:mb-8 bg-white/80 backdrop-blur-sm border border-[#E8DED1]/50 p-1.5 rounded-xl w-fit mx-auto overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent gap-1 shadow-sm flex">
+            {marketSections.map(({ title, value, filter }) => {
+              const sectionMarkets = filteredMarkets.filter(filter);
+              const isActive = activeTab === value;
+              return (
+                <button
+                  key={value}
+                  onClick={() => setActiveTab(value)}
+                  className={`${
+                    isActive
+                      ? "bg-[hsl(var(--terracotta))] text-white shadow-md"
+                      : "text-gray-700 hover:bg-[hsl(var(--terracotta))]/10 hover:shadow-sm bg-transparent"
+                  } rounded-lg transition-all duration-300 text-xs xs:text-sm px-3 py-2 xs:px-4 xs:py-2.5 flex-shrink-0 border-0 font-medium relative group`}
+                >
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {title}
+                    <span
+                      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 py-0.5 text-xs font-bold rounded-full transition-all duration-300 ${
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {sectionMarkets.length}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-          return (
-            <section key={title} className="mb-8 xs:mb-12">
-              <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-4 xs:mb-6">
-                <div>
-                  <h2 className="text-xl xs:text-2xl font-semibold text-[#8B6F47]">
-                    {title} ({sectionMarkets.length})
-                  </h2>
-                  <p className="text-sm xs:text-base text-muted-foreground mt-0.5 xs:mt-1">
-                    {description}
-                  </p>
-                </div>
-                {sectionMarkets.length > 3 && (
-                  <Button
-                    variant="outline"
-                    className="hidden xs:inline-flex text-[#8B6F47] border-[#E8DED1]"
-                  >
-                    View All
-                  </Button>
-                )}
-              </div>
+          {marketSections.map(({ title, description, filter, value }) => {
+            const sectionMarkets = filteredMarkets.filter(filter);
+            const isActive = activeTab === value;
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
-                {sectionMarkets.map((market, index) => (
-                  <MarketCard
-                    key={market.address}
-                    market={market}
-                    index={index}
-                  />
-                ))}
+            return (
+              <div key={value} className={isActive ? "block" : "hidden"}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Section Header */}
+                  <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-4 xs:mb-6">
+                    {/* <div>
+                      <h2 className="text-xl xs:text-2xl font-semibold text-[#8B6F47]">
+                        {title}
+                      </h2>
+                      <p className="text-sm xs:text-base text-muted-foreground mt-0.5 xs:mt-1">
+                        {description}
+                      </p>
+                    </div> */}
+                    {sectionMarkets.length > 6 && (
+                      <Button
+                        variant="outline"
+                        className="hidden xs:inline-flex text-[#8B6F47] border-[#E8DED1] hover:bg-[#F9F5F1]"
+                      >
+                        View All
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Markets Grid */}
+                  {sectionMarkets.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-muted-foreground text-lg mb-2">
+                        No {title.toLowerCase()} found
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {value === "created" &&
+                          "No markets are currently in launch"}
+                        {value === "active" &&
+                          "No markets are currently active"}
+                        {value === "paused" &&
+                          "No markets are currently paused"}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
+                      {sectionMarkets.map((market, index) => (
+                        <MarketCard
+                          key={market.address}
+                          market={market}
+                          index={index}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
               </div>
-            </section>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -26,7 +26,6 @@ export const useMarkets = (initialStatus?: MarketStatus) => {
     },
     notifyOnNetworkStatusChange: true,
   });
-  console.log("Markets data:", data);
 
   const loadMore = async () => {
     if (!data || loading) return;
