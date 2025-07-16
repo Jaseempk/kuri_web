@@ -214,15 +214,11 @@ export default function MarketList() {
   } = useUSDCBalances(marketAddresses, marketStates);
 
   useEffect(() => {
-    console.log("MarketList useEffect triggered - initializing markets data");
-
     const initializeMarketsData = async () => {
       if (!markets.length) {
         console.log("No markets available, skipping initialization");
         return;
       }
-
-      console.log("Initializing markets data with", markets.length, "markets");
 
       try {
         // Set default active tab based on available markets
@@ -264,7 +260,6 @@ export default function MarketList() {
 
         // Calculate differences for next render
         setPreviousStats(currentStats);
-        console.log("Markets data initialization completed");
       } catch (err) {
         console.error("Error initializing markets data:", err);
       }
@@ -275,8 +270,6 @@ export default function MarketList() {
 
   // Update TVL stats when USDC balances are loaded
   useEffect(() => {
-    console.log("TVL useEffect triggered, totalTVL:", totalTVL.toString());
-
     if (totalTVL > 0) {
       setPreviousStats((prev) => ({
         ...prev,

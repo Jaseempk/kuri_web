@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
 import { ConnectButton } from "../components/ui/ConnectButton";
+import { Logo } from "../components/ui/Logo";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -214,22 +215,10 @@ function App() {
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed w-full backdrop-blur-md bg-black/20 border-b border-white/10 z-50 transition-all duration-300">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <nav className="fixed w-full backdrop-blur-md bg-black/20 border-b border-white/10 z-50 transition-all duration-300 max-h-24 overflow-hidden">
+        <div className="container mx-auto px-4 flex items-center justify-between h-24">
           <div className="flex items-center gap-8">
-            <a href="#" className="text-2xl font-bold flex items-center">
-              <div className="relative">
-                <div className="flex items-center">
-                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">
-                    K
-                  </span>
-                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">
-                    URI
-                  </span>
-                  <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
-                </div>
-              </div>
-            </a>
+            <Logo variant="landing" />
             <div className="hidden md:flex items-center space-x-6">
               <button
                 onClick={() => scrollToSection("circles")}
@@ -1224,15 +1213,7 @@ function App() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center mb-6">
-                <div className="relative flex items-center">
-                  <span className="font-sans font-extrabold text-[hsl(var(--gold))] text-2xl tracking-wide">
-                    K
-                  </span>
-                  <span className="font-sans font-extrabold text-white text-2xl tracking-wide">
-                    URI
-                  </span>
-                  <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-gradient-to-r from-[hsl(var(--gold))] to-white"></div>
-                </div>
+                <Logo variant="landing" />
               </div>
               <p className="text-white/80 max-w-md mb-6">
                 Empowering communities through collaborative finance. Join the

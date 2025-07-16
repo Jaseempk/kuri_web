@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { ConnectButton } from "./ui/ConnectButton";
+import { Logo } from "./ui/Logo";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,18 +29,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-[hsl(var(--gold))/20] bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-3 xs:px-4 py-3 xs:py-4">
+        <div className="container mx-auto px-3 xs:px-4 py-0">
           <div className="flex justify-between items-center">
             {/* Left side: Logo and Desktop Navigation */}
             <div className="flex items-center gap-4 xs:gap-6">
               {/* Logo */}
-              <Link
-                to="/"
-                className="text-xl xs:text-2xl font-bold text-[hsl(var(--gold))] hover:text-[hsl(var(--gold))/80] transition-colors"
+              <Logo
+                className="text-xl xs:text-2xl font-bold"
                 onClick={closeMobileMenu}
-              >
-                KURI
-              </Link>
+                showText={true}
+                variant="layout"
+              />
 
               {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center gap-4 lg:gap-6">
