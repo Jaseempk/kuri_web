@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navigationItems = [
     { path: "/markets", label: "Markets" },
-    { path: "/dashboard", label: "Dashboard" },
+    // { path: "/dashboard", label: "Dashboard" },
   ];
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
