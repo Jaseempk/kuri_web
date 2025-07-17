@@ -29,7 +29,8 @@ export const useKuriMarkets = () => {
     error: subgraphError,
     refetch,
   } = useQuery<KuriMarketsQueryResult>(KURI_MARKETS_QUERY, {
-    notifyOnNetworkStatusChange: true,
+    errorPolicy: "all",
+    fetchPolicy: "cache-and-network",
   });
 
   // Get market addresses

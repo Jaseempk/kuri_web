@@ -178,7 +178,7 @@ export default function MarketList() {
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("created");
+  const [userSelectedTab, setUserSelectedTab] = useState<string | null>(null);
   const [marketMetadata, setMarketMetadata] = useState<
     Record<string, MarketMetadata | null>
   >({});
@@ -190,11 +190,27 @@ export default function MarketList() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [createdMarket, setCreatedMarket] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { requireProfile } = useProfileRequired({
     strict: false, // Don't enforce on page load
     action: "market_action",
   });
+
+  // Compute the default tab based on available markets
+  const defaultTab = useMemo(() => {
+    if (!markets.length) return "created";
+
+    const createdMarkets = markets.filter((m) => m.state === 0);
+    const activeMarkets = markets.filter((m) => m.state === 2);
+
+    if (createdMarkets.length > 0) return "created";
+    if (activeMarkets.length > 0) return "active";
+    return "paused";
+  }, [markets]);
+
+  // Use user selection if available, otherwise use computed default
+  const activeTab = userSelectedTab || defaultTab;
 
   // Get market addresses for USDC balance fetching
   const marketAddresses = useMemo(
@@ -217,23 +233,21 @@ export default function MarketList() {
     const initializeMarketsData = async () => {
       if (!markets.length) {
         console.log("No markets available, skipping initialization");
+        setIsInitialized(false);
+        return;
+      }
+
+      // Skip if already initialized and data hasn't changed significantly
+      if (
+        isInitialized &&
+        markets.length > 0 &&
+        marketMetadata &&
+        Object.keys(marketMetadata).length > 0
+      ) {
         return;
       }
 
       try {
-        // Set default active tab based on available markets
-        const createdMarkets = markets.filter((m) => m.state === 0);
-        const activeMarkets = markets.filter((m) => m.state === 2);
-
-        // Show Created Markets first if available, otherwise Active Markets
-        if (createdMarkets.length > 0) {
-          setActiveTab("created");
-        } else if (activeMarkets.length > 0) {
-          setActiveTab("active");
-        } else {
-          setActiveTab("paused");
-        }
-
         // Fetch metadata for all markets from Supabase
         const { data } = await supabase.from("kuri_web").select("*");
 
@@ -248,9 +262,9 @@ export default function MarketList() {
           setMarketMetadata(metadataMap);
         }
 
-        // Store current stats for comparison (now using USDC balances)
+        // Store current stats for comparison (including USDC balances if available)
         const currentStats = {
-          tvl: BigInt(0), // Will be updated when USDC balances are loaded
+          tvl: totalTVL > 0 ? totalTVL : BigInt(0),
           activeCircles: markets.filter((m) => m.state === 2).length,
           totalParticipants: markets.reduce(
             (acc, market) => acc + market.activeParticipants,
@@ -260,23 +274,14 @@ export default function MarketList() {
 
         // Calculate differences for next render
         setPreviousStats(currentStats);
+        setIsInitialized(true); // Mark initialization as complete
       } catch (err) {
         console.error("Error initializing markets data:", err);
       }
     };
 
     initializeMarketsData();
-  }, [markets]);
-
-  // Update TVL stats when USDC balances are loaded
-  useEffect(() => {
-    if (totalTVL > 0) {
-      setPreviousStats((prev) => ({
-        ...prev,
-        tvl: totalTVL,
-      }));
-    }
-  }, [totalTVL]);
+  }, [markets, totalTVL]); // Combined dependencies to prevent multiple updates
 
   if (isLoading || isLoadingBalances) {
     return <LoadingSkeleton />;
@@ -491,14 +496,19 @@ export default function MarketList() {
 
         {/* Market Sections with Tabs */}
         <div className="w-full">
-          <div className="mb-6 xs:mb-8 bg-white/80 backdrop-blur-sm border border-[#E8DED1]/50 p-1.5 rounded-xl w-fit mx-auto overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent gap-1 shadow-sm flex">
+          <div className="mb-6 xs:mb-8 bg-white/80 backdrop-blur-sm border border-[#E8DED1]/50 p-1.5 rounded-xl w-fit mr-auto overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent gap-1 shadow-sm flex">
             {marketSections.map(({ title, value, filter }) => {
               const sectionMarkets = filteredMarkets.filter(filter);
               const isActive = activeTab === value;
               return (
                 <button
                   key={value}
-                  onClick={() => setActiveTab(value)}
+                  onClick={() => {
+                    // Only update if different to prevent unnecessary re-renders
+                    if (activeTab !== value) {
+                      setUserSelectedTab(value);
+                    }
+                  }}
                   className={`${
                     isActive
                       ? "bg-[hsl(var(--terracotta))] text-white shadow-md"
