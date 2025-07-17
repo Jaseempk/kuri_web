@@ -1,0 +1,204 @@
+import { readContract } from "@wagmi/core";
+import { KuriCoreABI } from "../contracts/abis/KuriCore";
+import { config } from "../config/wagmi";
+
+export interface UserMarketData {
+  address: string;
+  membershipStatus: number;
+  userPaymentStatus: boolean | null;
+  isCreator: boolean;
+  error?: string;
+}
+
+export interface BatchUserDataResult {
+  data: Record<string, UserMarketData>;
+  errors: string[];
+}
+
+/**
+ * Check if user is a member of a market before checking payment status
+ */
+export const checkMembershipStatus = async (
+  marketAddress: string,
+  userAddress: string
+): Promise<number> => {
+  try {
+    const userData = await readContract(config, {
+      address: marketAddress as `0x${string}`,
+      abi: KuriCoreABI,
+      functionName: "userToData",
+      args: [userAddress as `0x${string}`],
+    });
+
+    return userData[0] as number;
+  } catch (err) {
+    console.error(`Error checking membership for ${marketAddress}:`, err);
+    return 0; // Default to NONE
+  }
+};
+
+/**
+ * Check payment status only if user is an accepted member
+ */
+export const checkPaymentStatusForMember = async (
+  marketAddress: string,
+  userAddress: string,
+  membershipStatus: number,
+  marketState: number
+): Promise<boolean | null> => {
+  // Only check payment status for ACTIVE markets and ACCEPTED members
+  if (marketState !== 2 || membershipStatus !== 1) {
+    return null;
+  }
+
+  try {
+    // Get current interval index
+    const intervalCounter = (await readContract(config, {
+      address: marketAddress as `0x${string}`,
+      abi: KuriCoreABI,
+      functionName: "passedIntervalsCounter",
+    })) as number;
+
+    // Validate interval index
+    if (intervalCounter < 0 || intervalCounter > 1000) {
+      console.warn(
+        `Invalid interval counter for market ${marketAddress}: ${intervalCounter}`
+      );
+      return null;
+    }
+
+    // Check if user has paid for this interval
+    const hasPaid = (await readContract(config, {
+      address: marketAddress as `0x${string}`,
+      abi: KuriCoreABI,
+      functionName: "hasPaid",
+      args: [userAddress as `0x${string}`, BigInt(intervalCounter)],
+    })) as boolean;
+
+    return hasPaid;
+  } catch (err) {
+    console.error(`Error checking payment status for ${marketAddress}:`, err);
+    return null;
+  }
+};
+
+/**
+ * Batch fetch user data for multiple markets
+ */
+export const batchUserMarketData = async (
+  marketAddresses: string[],
+  userAddress: string,
+  marketStates: number[],
+  marketCreators?: string[]
+): Promise<BatchUserDataResult> => {
+  if (!userAddress || marketAddresses.length === 0) {
+    return { data: {}, errors: [] };
+  }
+
+  const results: UserMarketData[] = [];
+  const errors: string[] = [];
+
+  // Process markets in parallel
+  const promises = marketAddresses.map(async (address, index) => {
+    try {
+      const marketState = marketStates[index] || 0;
+      const marketCreator = marketCreators?.[index];
+
+      // Determine if user is creator
+      const isCreator = marketCreator
+        ? marketCreator.toLowerCase() === userAddress.toLowerCase()
+        : false;
+
+      // First check membership status
+      const membershipStatus = await checkMembershipStatus(
+        address,
+        userAddress
+      );
+
+      // Then check payment status if needed
+      const userPaymentStatus = await checkPaymentStatusForMember(
+        address,
+        userAddress,
+        membershipStatus,
+        marketState
+      );
+
+      return {
+        address,
+        membershipStatus,
+        userPaymentStatus,
+        isCreator,
+      };
+    } catch (err) {
+      const errorMsg = `Failed to fetch user data for market ${address}`;
+      console.error(errorMsg, err);
+      errors.push(errorMsg);
+
+      // Return default data for failed markets
+      return {
+        address,
+        membershipStatus: 0,
+        userPaymentStatus: null,
+        isCreator: false,
+        error: errorMsg,
+      };
+    }
+  });
+
+  const resolvedResults = await Promise.all(promises);
+
+  // Convert to record format
+  const data: Record<string, UserMarketData> = {};
+  resolvedResults.forEach((result) => {
+    data[result.address] = result;
+  });
+
+  return { data, errors };
+};
+
+/**
+ * Filter markets where user data is relevant (creator or member)
+ */
+export const filterRelevantMarkets = (
+  markets: Array<{ address: string; creator: string; state: number }>,
+  userAddress: string
+): Array<{ address: string; creator: string; state: number }> => {
+  if (!userAddress) return [];
+
+  return markets.filter((market) => {
+    const isCreator =
+      market.creator.toLowerCase() === userAddress.toLowerCase();
+    const isActiveMarket = market.state === 2; // ACTIVE markets might have user as member
+    const isLaunchMarket = market.state === 0; // INLAUNCH markets might have user as applicant
+
+    // Include if user is creator or if market is in a state where user might be involved
+    return isCreator || isActiveMarket || isLaunchMarket;
+  });
+};
+
+/**
+ * Batch contract calls with error handling and retry logic
+ */
+export const executeBatchContractCalls = async <T>(
+  calls: Array<() => Promise<T>>,
+  maxRetries: number = 2
+): Promise<Array<T | null>> => {
+  const executeWithRetry = async (
+    call: () => Promise<T>,
+    retries: number
+  ): Promise<T | null> => {
+    try {
+      return await call();
+    } catch (err) {
+      if (retries > 0) {
+        // Wait before retry
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return executeWithRetry(call, retries - 1);
+      }
+      console.error("Contract call failed after retries:", err);
+      return null;
+    }
+  };
+
+  return Promise.all(calls.map((call) => executeWithRetry(call, maxRetries)));
+};

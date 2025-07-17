@@ -1,15 +1,15 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card } from "../components/ui/card";
-import { useKuriMarkets } from "../hooks/useKuriMarkets";
+import { useOptimizedMarkets } from "../hooks/useOptimizedMarkets";
 import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
 import { MarketStatus, IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
-import { MarketCard } from "../components/markets/MarketCard";
-import { KuriMarket } from "../hooks/useKuriMarkets";
+import { OptimizedMarketCard } from "../components/markets/OptimizedMarketCard";
+import { OptimizedKuriMarket } from "../hooks/useOptimizedMarkets";
 import { Search, SlidersHorizontal, Check, ChevronDown } from "lucide-react";
 import { formatUnits } from "viem";
 import { supabase } from "../lib/supabase";
@@ -29,17 +29,18 @@ const marketSections = [
   {
     title: "Launching Markets",
     description: "Recently created markets pending activation",
-    filter: (market: KuriMarket) => market.state === 0, // KuriState.INLAUNCH
+    filter: (market: OptimizedKuriMarket) => market.state === 0, // KuriState.INLAUNCH
     value: "created",
   },
   {
     title: "Active Markets",
     description: "Currently active markets accepting deposits",
-    filter: (market: KuriMarket) => market.state === 2, // KuriState.ACTIVE
+    filter: (market: OptimizedKuriMarket) => market.state === 2, // KuriState.ACTIVE
     value: "active",
   },
 ];
 
+// Stats card component
 const StatsCard = ({
   title,
   value,
@@ -49,132 +50,149 @@ const StatsCard = ({
   value: string;
   change: string;
 }) => (
-  <div className="bg-white rounded-xl p-4 xs:p-5 sm:p-6 shadow-sm border border-[#E8DED1]">
-    <h3 className="text-xs xs:text-sm text-muted-foreground mb-1.5 xs:mb-2">
-      {title}
-    </h3>
-    <div className="flex items-end gap-1.5 xs:gap-2">
-      <p className="text-xl xs:text-2xl font-bold">{value}</p>
-      <span
-        className={`text-xs xs:text-sm ${
-          Number(change) > 0
-            ? "text-green-600"
-            : Number(change) < 0
-            ? "text-red-600"
-            : "text-muted-foreground"
-        }`}
-      >
-        {change}%
-      </span>
+  <Card className="p-4 xs:p-5 sm:p-6 bg-white border-[#E8DED1] hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-muted-foreground mb-1">{title}</p>
+        <p className="text-xl xs:text-2xl font-bold text-[#8B6F47]">{value}</p>
+      </div>
+      <div className="text-right">
+        <p
+          className={`text-sm font-medium ${
+            parseFloat(change) >= 0 ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {parseFloat(change) >= 0 ? "+" : ""}
+          {change}%
+        </p>
+        <p className="text-xs text-muted-foreground">vs last period</p>
+      </div>
     </div>
+  </Card>
+);
+
+// Filter button component
+const FilterButton = ({
+  label,
+  count,
+  isActive,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  isActive: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`px-3 xs:px-4 py-2 xs:py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+      isActive
+        ? "bg-[#8B6F47] text-white"
+        : "bg-white text-[#8B6F47] border border-[#E8DED1] hover:bg-[#F9F5F1]"
+    }`}
+  >
+    {label}
+    <span
+      className={`px-2 py-0.5 rounded-full text-xs ${
+        isActive
+          ? "bg-white/20 text-white"
+          : "bg-[#F9F5F1] text-[#8B6F47] border border-[#E8DED1]"
+      }`}
+    >
+      {count}
+    </span>
+  </button>
+);
+
+// Market search component
+const MarketSearch = ({
+  value,
+  onChange,
+  placeholder = "Search markets...",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) => (
+  <div className="relative">
+    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full pl-10 pr-4 py-2 xs:py-2.5 border border-[#E8DED1] rounded-full focus:ring-2 focus:ring-[hsl(var(--terracotta))] focus:border-transparent transition-all duration-200"
+    />
   </div>
 );
 
-const FilterDropdown = ({
-  activeFilter,
-  setActiveFilter,
-  intervalFilteredMarkets,
+// Interval type dropdown component
+const IntervalTypeFilter = ({
+  value,
+  onChange,
 }: {
-  activeFilter: string;
-  setActiveFilter: (filter: string) => void;
-  intervalFilteredMarkets: KuriMarket[];
+  value: string;
+  onChange: (value: string) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const filterOptions = [
-    {
-      value: "all",
-      label: "All",
-      count: intervalFilteredMarkets.length,
-    },
-    {
-      value: "weekly",
-      label: "Weekly",
-      count: intervalFilteredMarkets.filter(
-        (m) => m.intervalType === INTERVAL_TYPE.WEEKLY
-      ).length,
-    },
-    {
-      value: "monthly",
-      label: "Monthly",
-      count: intervalFilteredMarkets.filter(
-        (m) => m.intervalType === INTERVAL_TYPE.MONTHLY
-      ).length,
-    },
+  const options = [
+    { value: "all", label: "All Intervals", count: 0 },
+    { value: "weekly", label: "Weekly", count: 0 },
+    { value: "monthly", label: "Monthly", count: 0 },
   ];
 
-  const activeOption = filterOptions.find(
-    (option) => option.value === activeFilter
-  );
-
-  const handleOptionClick = (value: string) => {
-    setActiveFilter(value);
-    setIsOpen(false);
-  };
+  const selectedOption = options.find((opt) => opt.value === value);
 
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 xs:px-4 py-2 rounded-full border border-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] hover:text-white transition-colors text-sm font-medium bg-white text-[hsl(var(--terracotta))]"
+        className="flex items-center gap-2 px-3 xs:px-4 py-2 xs:py-2.5 bg-white text-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] hover:text-white border border-[hsl(var(--terracotta))] rounded-full transition-all duration-200"
       >
-        <SlidersHorizontal size={16} />
-        <span className="hidden sm:inline">
-          {activeOption?.label} ({activeOption?.count})
-        </span>
-        <span className="sm:hidden">Filter</span>
+        <SlidersHorizontal className="h-4 w-4" />
+        <span className="text-sm font-medium">{selectedOption?.label}</span>
         <ChevronDown
-          size={14}
-          className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`h-4 w-4 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </button>
 
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Dropdown Menu */}
-          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-[hsl(var(--terracotta))] shadow-lg z-50 py-2">
-            <div className="px-3 py-2 text-xs font-medium text-[hsl(var(--terracotta))] border-b border-[hsl(var(--terracotta))]/20">
-              Filter by Type
-            </div>
-            {filterOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleOptionClick(option.value)}
-                className={`w-full px-3 py-2 text-left text-sm hover:bg-[hsl(var(--terracotta))]/10 transition-colors flex items-center justify-between ${
-                  activeFilter === option.value
-                    ? "bg-[hsl(var(--terracotta))]/10 text-[hsl(var(--terracotta))]"
-                    : "text-gray-700"
-                }`}
-              >
-                <span>{option.label}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">
-                    ({option.count})
-                  </span>
-                  {activeFilter === option.value && (
-                    <Check
-                      size={14}
-                      className="text-[hsl(var(--terracotta))]"
-                    />
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </>
+        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-[hsl(var(--terracotta))] rounded-2xl shadow-lg z-10 overflow-hidden">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className="w-full px-4 py-2 text-left hover:bg-[hsl(var(--terracotta))]/10 flex items-center justify-between transition-colors"
+            >
+              <span className="text-sm">{option.label}</span>
+              {value === option.value && (
+                <Check className="h-4 w-4 text-[hsl(var(--terracotta))]" />
+              )}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
 };
 
 export default function MarketList() {
-  const { markets, loading: isLoading, error } = useKuriMarkets();
+  // Replace useKuriMarkets with useOptimizedMarkets
+  const {
+    markets,
+    loading: isLoading,
+    error,
+    userDataLoading,
+    userDataError,
+    refetch,
+    refetchUserData,
+  } = useOptimizedMarkets();
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -206,7 +224,7 @@ export default function MarketList() {
 
     if (createdMarkets.length > 0) return "created";
     if (activeMarkets.length > 0) return "active";
-    return "paused";
+    return "created"; // Default to created if no markets found
   }, [markets]);
 
   // Use user selection if available, otherwise use computed default
@@ -283,12 +301,18 @@ export default function MarketList() {
     initializeMarketsData();
   }, [markets, totalTVL]); // Combined dependencies to prevent multiple updates
 
-  if (isLoading || isLoadingBalances) {
+  // Show loading state for both market data and user data
+  if (isLoading || isLoadingBalances || userDataLoading) {
     return <LoadingSkeleton />;
   }
 
   if (error) {
     return <div>Error loading markets: {error.message}</div>;
+  }
+
+  if (userDataError) {
+    console.warn("User data error:", userDataError);
+    // Don't block the UI for user data errors, just log them
   }
 
   if (balancesError) {
@@ -396,6 +420,13 @@ export default function MarketList() {
     requestAnimationFrame(() => {
       setShowShareModal(true);
     });
+    // Refresh market data after creation
+    refetch();
+  };
+
+  // Handle user actions that require data refresh
+  const handleUserAction = () => {
+    refetchUserData();
   };
 
   return (
@@ -471,30 +502,25 @@ export default function MarketList() {
         )}
 
         {/* Filter Bar - Sticky */}
-        <div className="sticky top-24 z-10 bg-background/80 backdrop-blur-sm border-b border-[#E8DED1] py-3 xs:py-4 mb-6 xs:mb-8">
-          <div className="flex flex-col xs:flex-row gap-3 xs:gap-4">
-            <div className="flex-1 min-w-0 relative">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                size={18}
-              />
-              <input
-                type="search"
-                placeholder="Search circles..."
+        <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E8DED1]/50 -mx-3 xs:-mx-4 px-3 xs:px-4 py-3 xs:py-4 mb-6 xs:mb-8 z-10 rounded-2xl">
+          <div className="flex flex-col xs:flex-row gap-3 xs:gap-4 items-start xs:items-center">
+            <div className="flex-1 w-full xs:w-auto">
+              <MarketSearch
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-full border border-[#E8DED1] focus:outline-none focus:ring-2 focus:ring-[#8B6F47] text-sm"
+                onChange={setSearchQuery}
+                placeholder="Search by market name or address..."
               />
             </div>
-            <FilterDropdown
-              activeFilter={activeFilter}
-              setActiveFilter={setActiveFilter}
-              intervalFilteredMarkets={intervalFilteredMarkets}
-            />
+            <div className="flex items-center gap-2 xs:gap-3 w-full xs:w-auto">
+              <IntervalTypeFilter
+                value={activeFilter}
+                onChange={setActiveFilter}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Market Sections with Tabs */}
+        {/* Markets Content */}
         <div className="w-full">
           <div className="mb-6 xs:mb-8 bg-white/80 backdrop-blur-sm border border-[#E8DED1]/50 p-1.5 rounded-xl w-fit mr-auto overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent gap-1 shadow-sm flex">
             {marketSections.map(({ title, value, filter }) => {
@@ -545,14 +571,6 @@ export default function MarketList() {
                 >
                   {/* Section Header */}
                   <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-4 xs:mb-6">
-                    {/* <div>
-                      <h2 className="text-xl xs:text-2xl font-semibold text-[#8B6F47]">
-                        {title}
-                      </h2>
-                      <p className="text-sm xs:text-base text-muted-foreground mt-0.5 xs:mt-1">
-                        {description}
-                      </p>
-                    </div> */}
                     {sectionMarkets.length > 6 && (
                       <Button
                         variant="outline"
@@ -574,17 +592,16 @@ export default function MarketList() {
                           "No markets are currently in launch"}
                         {value === "active" &&
                           "No markets are currently active"}
-                        {value === "paused" &&
-                          "No markets are currently paused"}
                       </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
                       {sectionMarkets.map((market, index) => (
-                        <MarketCard
+                        <OptimizedMarketCard
                           key={market.address}
                           market={market}
                           index={index}
+                          onJoinClick={handleUserAction}
                         />
                       ))}
                     </div>
