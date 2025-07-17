@@ -217,7 +217,7 @@ function App() {
       {/* Navigation */}
       <nav className="fixed w-full backdrop-blur-md bg-black/20 border-b border-white/10 z-50 transition-all duration-300 max-h-24 overflow-hidden">
         <div className="container mx-auto px-4 flex items-center justify-between h-24">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-12">
             <Logo variant="landing" />
             <div className="hidden md:flex items-center space-x-6">
               <button

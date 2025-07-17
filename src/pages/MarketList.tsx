@@ -466,7 +466,7 @@ export default function MarketList() {
         )}
 
         {/* Filter Bar - Sticky */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-[#E8DED1] py-3 xs:py-4 mb-6 xs:mb-8">
+        <div className="sticky top-24 z-10 bg-background/80 backdrop-blur-sm border-b border-[#E8DED1] py-3 xs:py-4 mb-6 xs:mb-8">
           <div className="flex flex-col xs:flex-row gap-3 xs:gap-4">
             <div className="flex-1 min-w-0 relative">
               <Search
