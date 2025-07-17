@@ -174,6 +174,22 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     }
 
     try {
+      // 🔥 NEW: Check if user is an accepted member first
+      const userData = await readContract(config, {
+        address: kuriAddress,
+        abi: KuriCoreABI,
+        functionName: "userToData",
+        args: [account.address],
+      });
+
+      const membershipStatus = userData[0];
+
+      // If user is not an accepted member (status !== 1), skip payment check
+      if (membershipStatus !== 1) {
+        setUserPaymentStatus(null);
+        return false;
+      }
+
       // Get current interval index (returns uint16)
       const intervalCounter = (await readContract(config, {
         address: kuriAddress,
@@ -194,7 +210,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
       // Convert to bigint for hasPaid function (which expects uint256)
       const currentIntervalIndex = BigInt(intervalCounter);
-      console.log("currentIntervalIndex:", currentIntervalIndex);
 
       // Check if user has paid for this interval
       const hasPaid = (await readContract(config, {
@@ -203,8 +218,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         functionName: "hasPaid",
         args: [account.address, currentIntervalIndex],
       })) as boolean;
-      console.log("currentintervalIndex:", currentIntervalIndex);
-      console.log("hasPaid:", hasPaid);
 
       setUserPaymentStatus(hasPaid);
       return hasPaid;
@@ -214,6 +227,21 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       return false;
     }
   }, [kuriAddress, account.address, marketData]);
+
+  // 🔥 NEW: Explicit method for components to call when they need payment status
+  const checkPaymentStatusIfMember = useCallback(async (): Promise<boolean> => {
+    if (!kuriAddress || !account.address || !marketData) {
+      return false;
+    }
+
+    // Only check for ACTIVE markets
+    if (marketData.state !== 2) {
+      return false;
+    }
+
+    // Call the internal payment status check
+    return checkUserPaymentStatus();
+  }, [kuriAddress, account.address, marketData, checkUserPaymentStatus]);
 
   // Refresh user-specific data (payment status and balance)
   const refreshUserData = useCallback(async (): Promise<void> => {
@@ -253,20 +281,28 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         intervalType: data[10],
         state: data[11],
       });
-
-      // Only check payment status and balance if user is connected and market is active
-      // This reduces unnecessary blockchain calls for markets the user isn't involved in
-      if (account.address && data[11] === 2) {
-        // Only for ACTIVE markets
-        await checkUserPaymentStatus();
-        await checkUserBalance();
-      }
     } catch (err) {
       setError(handleContractError(err).message);
     } finally {
       setIsLoading(false);
     }
   }, [kuriAddress, account.address]);
+
+  // Check payment status and balance when market becomes active or user changes
+  useEffect(() => {
+    // Only check balance for active markets with connected users
+    // 🔥 REMOVED: Automatic payment status check (now lazy/explicit)
+    if (marketData?.state === 2 && account.address) {
+      checkUserBalance(); // Keep this - safe for all users
+      // checkUserPaymentStatus(); ← REMOVED: Now explicit only
+    }
+  }, [marketData?.state, account.address]);
+
+  // Fetch market data and token address on mount and address change
+  useEffect(() => {
+    fetchMarketData();
+    fetchTokenAddress();
+  }, [fetchMarketData, fetchTokenAddress]);
 
   // Initialize market
   const initializeKuri = useCallback(async () => {
@@ -518,12 +554,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     [kuriAddress]
   );
 
-  // Fetch market data and token address on mount and address change
-  useEffect(() => {
-    fetchMarketData();
-    fetchTokenAddress();
-  }, [fetchMarketData, fetchTokenAddress]);
-
   return {
     // Market data
     marketData,
@@ -551,6 +581,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     checkUserPaymentStatus,
     checkUserBalance,
     refreshUserData,
+    checkPaymentStatusIfMember, // Add the new method to the return object
 
     // Loading states
     isRequesting,

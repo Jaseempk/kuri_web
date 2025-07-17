@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useKuriCore,
   KuriState,
@@ -34,8 +34,24 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
   marketData,
   kuriAddress,
 }) => {
-  const { claimKuriAmount, isLoading, error } = useKuriCore(kuriAddress);
+  const { claimKuriAmount, isLoading, error, checkPaymentStatusIfMember } =
+    useKuriCore(kuriAddress);
   const [currentInterval, setCurrentInterval] = useState(0);
+
+  // 🔥 NEW: Explicitly check payment status when component mounts (lazy loading)
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      if (!kuriAddress) return;
+
+      try {
+        await checkPaymentStatusIfMember();
+      } catch (err) {
+        console.error("Error checking payment status:", err);
+      }
+    };
+
+    checkPaymentStatus();
+  }, [kuriAddress, checkPaymentStatusIfMember]);
 
   const handleClaim = async () => {
     if (!kuriAddress) return;
@@ -64,8 +80,10 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Claim Winnings</h2>
-      <div className="relative rounded-2xl p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[200px]">
+      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+        Claim Winnings
+      </h2>
+      <div className="relative rounded-2xl p-4 sm:p-6 md:p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[160px] sm:min-h-[200px]">
         {/* Gradient overlay for subtle color hint */}
         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--forest))]/20 to-[hsl(var(--forest))]/10 rounded-2xl" />
 
@@ -78,33 +96,57 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
           }}
         />
 
-        <div className="relative z-10 flex items-end justify-between h-full">
-          <div>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 h-full">
+          <div className="flex-1">
             <h3 className="text-lg font-medium text-[hsl(var(--forest))] mb-2 font-semibold">
               Claimable Amount
             </h3>
-            <p className="text-4xl font-bold text-[hsl(var(--foreground))]">
+            <p className="text-3xl sm:text-4xl font-bold text-[hsl(var(--foreground))]">
               ${potentialWinnings.toFixed(2)}
             </p>
           </div>
 
-          {canClaim && isRaffleDue ? (
-            <button
-              onClick={handleClaim}
-              disabled={isLoading}
-              className="bg-[hsl(var(--forest))]/80 backdrop-blur-sm text-white border border-[hsl(var(--forest))]/30 hover:bg-[hsl(var(--forest))] transition-all duration-300 rounded-full px-4 py-2 font-medium text-sm shadow-lg hover:shadow-xl"
-            >
-              {isLoading ? "Checking..." : "Claim winnings"}
-            </button>
-          ) : (
-            <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-4 py-2 font-medium text-sm cursor-not-allowed">
-              {!canClaim
-                ? "Circle not active"
-                : `Next raffle in ${
-                    daysUntilRaffle > 0 ? `${daysUntilRaffle} days` : "soon"
-                  }`}
-            </button>
-          )}
+          <div className="sm:flex-shrink-0">
+            {canClaim && isRaffleDue ? (
+              <button
+                onClick={handleClaim}
+                disabled={isLoading}
+                className="bg-[hsl(var(--forest))]/80 backdrop-blur-sm text-white border border-[hsl(var(--forest))]/30 hover:bg-[hsl(var(--forest))] transition-all duration-300 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm shadow-lg hover:shadow-xl"
+              >
+                {isLoading ? (
+                  <>
+                    <span className="hidden sm:inline">Checking...</span>
+                    <span className="sm:hidden">Checking...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Claim winnings</span>
+                    <span className="sm:hidden">Claim</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm cursor-not-allowed">
+                {!canClaim ? (
+                  <>
+                    <span className="hidden sm:inline">Circle not active</span>
+                    <span className="sm:hidden">Not active</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">
+                      Next raffle in{" "}
+                      {daysUntilRaffle > 0 ? `${daysUntilRaffle} days` : "soon"}
+                    </span>
+                    <span className="sm:hidden">
+                      Raffle in{" "}
+                      {daysUntilRaffle > 0 ? `${daysUntilRaffle}d` : "soon"}
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Error Display */}

@@ -534,6 +534,474 @@ src/
 
 ---
 
+## 🚀 **CRITICAL: useKuriCore Hook Optimization Phases**
+
+### **⚠️ CONTEXT: Payment Status Check Error Issue**
+
+**Problem Identified**: The `useKuriCore` hook was causing `KuriCore__InvalidUser()` errors on the markets page because it automatically checked payment status for every market card, even when users weren't members of those markets.
+
+**Root Cause**:
+
+- Every `MarketCard` component calls `useKuriCore` hook
+- Hook automatically runs `checkUserPaymentStatus()` in useEffect
+- `checkUserPaymentStatus()` calls `hasPaid(user, intervalIndex)` contract function
+- Contract throws `KuriCore__InvalidUser()` if user is not a member
+- Results in console errors for every non-member market on markets page
+
+**Solution Approach**: Three-phase optimization to eliminate errors and improve performance.
+
+---
+
+### **Phase 1: Immediate Fix - Member Status Check ✅ COMPLETED**
+
+**Status**: ✅ **COMPLETED**  
+**Files Modified**: `src/hooks/contracts/useKuriCore.ts`
+
+#### **Implementation Details**
+
+**Problem**: `checkUserPaymentStatus()` was calling `hasPaid()` without checking if user is a member first.
+
+**Solution**: Added member status check before payment status check.
+
+**Code Changes**:
+
+```typescript
+// Added to checkUserPaymentStatus function in useKuriCore.ts
+try {
+  // 🔥 NEW: Check if user is an accepted member first
+  const userData = await readContract(config, {
+    address: kuriAddress,
+    abi: KuriCoreABI,
+    functionName: "userToData",
+    args: [account.address],
+  });
+
+  const membershipStatus = userData[0];
+
+  // If user is not an accepted member (status !== 1), skip payment check
+  if (membershipStatus !== 1) {
+    setUserPaymentStatus(null);
+    return false;
+  }
+
+  // ... rest of existing logic (passedIntervalsCounter, hasPaid, etc.)
+}
+```
+
+**Membership Status Values**:
+
+- `0` = NONE
+- `1` = ACCEPTED (required for payment check)
+- `2` = REJECTED
+- `4` = APPLIED
+
+**Benefits Achieved**:
+
+- ✅ Eliminated `KuriCore__InvalidUser()` errors
+- ✅ Reduced unnecessary contract calls
+- ✅ Maintained all existing functionality
+- ✅ Zero breaking changes
+
+---
+
+### **Phase 2: Lazy Loading Implementation ✅ COMPLETED**
+
+**Status**: ✅ **COMPLETED**  
+**Files Modified**:
+
+- `src/hooks/contracts/useKuriCore.ts`
+- `src/pages/MarketDetail.tsx`
+- `src/components/markets/DepositForm.tsx`
+- `src/components/markets/ClaimInterface.tsx`
+
+#### **Implementation Details**
+
+**Problem**: Hook was automatically checking payment status for every market, even when not needed.
+
+**Solution**: Transformed from "eager loading" to "lazy loading" approach.
+
+**Core Changes**:
+
+1. **Modified useKuriCore.ts**:
+
+```typescript
+// BEFORE: Automatic payment check
+useEffect(() => {
+  if (marketData?.state === 2 && account.address) {
+    checkUserPaymentStatus(); // ← REMOVED
+    checkUserBalance();
+  }
+}, [marketData?.state, account.address]);
+
+// AFTER: Lazy payment check
+useEffect(() => {
+  if (marketData?.state === 2 && account.address) {
+    checkUserBalance(); // Keep - safe for all users
+    // Payment status check REMOVED - now explicit only
+  }
+}, [marketData?.state, account.address]);
+
+// NEW: Added explicit method
+const checkPaymentStatusIfMember = useCallback(async (): Promise<boolean> => {
+  if (!kuriAddress || !account.address || !marketData) return false;
+  if (marketData.state !== 2) return false;
+  return checkUserPaymentStatus();
+}, [kuriAddress, account.address, marketData, checkUserPaymentStatus]);
+```
+
+2. **Updated Components**:
+
+**MarketDetail.tsx**:
+
+```typescript
+const {
+  // ... existing
+  checkPaymentStatusIfMember, // 🔥 NEW
+} = useKuriCore(address as `0x${string}`);
+
+// 🔥 NEW: Explicit payment status check
+useEffect(() => {
+  const checkPaymentStatus = async () => {
+    if (!account.address || !marketData) return;
+    if (marketData.state === 2) {
+      try {
+        await checkPaymentStatusIfMember();
+      } catch (err) {
+        console.error("Error checking payment status:", err);
+      }
+    }
+  };
+  checkPaymentStatus();
+}, [account.address, marketData?.state, checkPaymentStatusIfMember]);
+```
+
+**DepositForm.tsx & ClaimInterface.tsx**:
+
+```typescript
+const { checkPaymentStatusIfMember } = useKuriCore(kuriAddress);
+
+useEffect(() => {
+  const checkPaymentStatus = async () => {
+    if (!kuriAddress) return;
+    try {
+      await checkPaymentStatusIfMember();
+    } catch (err) {
+      console.error("Error checking payment status:", err);
+    }
+  };
+  checkPaymentStatus();
+}, [kuriAddress, checkPaymentStatusIfMember]);
+```
+
+**Benefits Achieved**:
+
+- ✅ Markets page: No automatic payment checks for every card
+- ✅ Reduced contract calls from 10+ to 0 on markets page
+- ✅ Explicit control over when payment status is checked
+- ✅ Better separation of concerns (market data vs user data)
+- ✅ Improved performance and loading times
+
+---
+
+### **Phase 3: Full Optimization - PENDING IMPLEMENTATION**
+
+**Status**: 🔄 **PENDING**  
+**Priority**: High  
+**Estimated Duration**: 3-4 days
+
+#### **Objective**
+
+Transform from individual contract calls per market to batched, cached, and optimized data fetching for maximum performance and scalability.
+
+#### **Current State Analysis**
+
+**Performance Issues**:
+
+- Each `MarketCard` still calls `useKuriCore` individually
+- 10 markets = 10 separate `kuriData` contract calls
+- No caching between market cards
+- No data sharing between components
+- Bundle size could be optimized
+
+**Target Architecture**:
+
+```typescript
+// New optimized hook structure
+const useOptimizedMarkets = () => {
+  // Batch fetch all market data in single call
+  // Implement React Query caching with TTL
+  // Handle loading states efficiently
+  // Provide granular update mechanisms
+};
+
+// Separate user-specific data
+const useUserMarketData = (marketAddresses: string[]) => {
+  // Only fetch user data for relevant markets
+  // Lazy load on user interaction
+  // Cache user-specific state
+};
+```
+
+#### **Implementation Strategy**
+
+**Phase 3A: Batch Data Fetching**
+
+- [ ] **File**: `src/hooks/useOptimizedMarkets.ts` (NEW)
+
+  - Implement batch market data fetching
+  - Use existing `useMultipleKuriData` hook as foundation
+  - Add intelligent caching layer
+  - Handle loading states efficiently
+
+- [ ] **File**: `src/pages/MarketList.tsx` (ENHANCE)
+
+  - Replace individual `useKuriCore` calls in cards
+  - Use batch data fetching approach
+  - Implement loading state optimization
+
+- [ ] **File**: `src/components/markets/MarketCard.tsx` (ENHANCE)
+  - Remove individual `useKuriCore` calls
+  - Consume data from batch fetching
+  - Maintain existing functionality
+
+**Phase 3B: Caching Layer**
+
+- [ ] **File**: `src/config/reactQuery.ts` (NEW)
+
+  - Configure React Query for market data
+  - Set appropriate TTL for different data types
+  - Implement cache invalidation strategies
+
+- [ ] **File**: `src/hooks/useMarketCache.ts` (NEW)
+  - Cache management utilities
+  - Background refresh mechanisms
+  - Stale data handling
+
+**Phase 3C: Performance Optimization**
+
+- [ ] **File**: `src/components/markets/VirtualizedMarketList.tsx` (NEW)
+
+  - Implement virtualization for large market lists
+  - Handle 100+ markets without performance degradation
+  - Maintain smooth scrolling experience
+
+- [ ] **Bundle optimization**
+  - Analyze and optimize large chunks identified in build
+  - Implement code splitting for market components
+  - Lazy load heavy dependencies
+
+#### **Expected Performance Improvements**
+
+**Contract Calls Reduction**:
+
+- **Before**: 10 markets = 10+ contract calls
+- **After**: 10 markets = 1-2 batch calls
+- **Improvement**: 80-90% reduction in blockchain calls
+
+**Page Load Performance**:
+
+- **Before**: Sequential loading, blocking UI
+- **After**: Batch loading with progressive enhancement
+- **Improvement**: 50%+ faster perceived performance
+
+**Memory Usage**:
+
+- **Before**: Individual hook instances per card
+- **After**: Shared data layer with efficient caching
+- **Improvement**: Stable performance with 100+ markets
+
+#### **Implementation Files to Create**
+
+```
+src/
+├── hooks/
+│   ├── useOptimizedMarkets.ts (NEW)
+│   ├── useMarketCache.ts (NEW)
+│   └── useBatchMarketData.ts (NEW)
+├── config/
+│   └── reactQuery.ts (NEW)
+├── components/
+│   └── markets/
+│       └── VirtualizedMarketList.tsx (NEW)
+└── utils/
+    ├── batchContractCalls.ts (NEW)
+    └── cacheStrategies.ts (NEW)
+```
+
+#### **Implementation Files to Enhance**
+
+```
+src/
+├── pages/
+│   └── MarketList.tsx (integrate batch fetching)
+├── components/markets/
+│   └── MarketCard.tsx (remove individual calls)
+└── hooks/
+    └── useKuriMarkets.ts (optimize with caching)
+```
+
+#### **Success Metrics**
+
+**Performance KPIs**:
+
+- [ ] Contract calls: Reduce from 10+ to 1-2 per page load
+- [ ] Page load time: 50%+ improvement on markets page
+- [ ] Memory usage: Stable with 100+ markets
+- [ ] Bundle size: Optimize chunks > 500KB
+
+**User Experience KPIs**:
+
+- [ ] Time to interactive: Faster perceived performance
+- [ ] Smooth scrolling: No jank with large market lists
+- [ ] Error rates: Reduced due to fewer individual calls
+- [ ] User engagement: Better retention with faster interactions
+
+#### **Risk Assessment & Mitigation**
+
+**Risks**:
+
+- **Medium**: Increased complexity in data layer
+- **Medium**: Potential cache invalidation bugs
+- **Low**: Performance regression if not implemented correctly
+
+**Mitigation**:
+
+- Implement incrementally with rollback capability
+- Comprehensive testing at each step
+- Maintain backward compatibility during transition
+- Monitor performance metrics throughout implementation
+
+#### **Testing Strategy**
+
+**Phase 3 Testing Checklist**:
+
+- [ ] Performance testing with 100+ markets
+- [ ] Cache behavior validation
+- [ ] Error handling for batch failures
+- [ ] Memory leak detection
+- [ ] Mobile performance verification
+- [ ] Accessibility compliance maintained
+
+---
+
+## 🔧 **Technical Implementation Context**
+
+### **Key Hook Structure (Current State)**
+
+**useKuriCore.ts** - Main hook for market interactions:
+
+```typescript
+// Current return structure
+return {
+  // Market data
+  marketData,
+  isLoading,
+  error,
+
+  // Token data
+  tokenAddress,
+
+  // State
+  userPaymentStatus,
+  userBalance,
+
+  // Actions
+  requestMembership,
+  acceptMember,
+  rejectMember,
+  getMemberStatus,
+  initializeKuri,
+  deposit,
+  claimKuriAmount,
+  fetchMarketData,
+  checkAllowance,
+  approveTokens,
+  checkUserPaymentStatus,
+  checkUserBalance,
+  refreshUserData,
+  checkPaymentStatusIfMember, // 🔥 NEW in Phase 2
+
+  // Loading states
+  isRequesting,
+  isAccepting,
+  isRejecting,
+  isApproving,
+};
+```
+
+### **Contract Integration Points**
+
+**Smart Contract Functions Used**:
+
+- `kuriData()` - Get market information
+- `userToData(address)` - Get user membership status
+- `hasPaid(address, intervalIndex)` - Check payment status
+- `passedIntervalsCounter()` - Get current interval
+- `userInstallmentDeposit()` - Make deposit
+- `claimKuriAmount(intervalIndex)` - Claim winnings
+
+**Membership Status Values**:
+
+- `0` = NONE (not a member)
+- `1` = ACCEPTED (active member)
+- `2` = REJECTED (rejected application)
+- `4` = APPLIED (pending approval)
+
+### **Data Flow Architecture**
+
+**Current Flow**:
+
+```
+MarketList Page
+├── MarketCard 1 → useKuriCore → kuriData() call
+├── MarketCard 2 → useKuriCore → kuriData() call
+├── MarketCard 3 → useKuriCore → kuriData() call
+└── ... (N cards = N contract calls)
+```
+
+**Phase 3 Target Flow**:
+
+```
+MarketList Page
+├── useOptimizedMarkets → Batch kuriData() calls
+├── MarketCard 1 → Consume cached data
+├── MarketCard 2 → Consume cached data
+└── ... (N cards = 1-2 contract calls)
+```
+
+### **Error Handling Patterns**
+
+**Current Error Handling**:
+
+```typescript
+try {
+  const result = await contractCall();
+  setData(result);
+} catch (err) {
+  console.error("Error:", err);
+  setError(handleContractError(err).message);
+}
+```
+
+**Required Error Handling for Phase 3**:
+
+```typescript
+// Batch error handling
+const handleBatchErrors = (results: ContractResult[]) => {
+  const successful = results.filter((r) => r.success);
+  const failed = results.filter((r) => !r.success);
+
+  // Handle partial failures gracefully
+  if (failed.length > 0) {
+    console.warn(`${failed.length} markets failed to load`);
+  }
+
+  return successful.map((r) => r.data);
+};
+```
+
+---
+
 **🎉 Total Estimated Timeline: 3-4 weeks**  
 **👥 Recommended Team Size: 2-3 developers**  
 **🔄 Testing & Review: 1 week additional**

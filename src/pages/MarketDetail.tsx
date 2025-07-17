@@ -184,6 +184,7 @@ export default function MarketDetail() {
     requestMembership,
     initializeKuri,
     getMemberStatus,
+    checkPaymentStatusIfMember, // 🔥 NEW: Explicit payment status check
   } = useKuriCore(address as `0x${string}`);
 
   // Fetch creator's profile
@@ -242,6 +243,24 @@ export default function MarketDetail() {
 
     fetchMemberStatus();
   }, [account.address, getMemberStatus, address]);
+
+  // 🔥 NEW: Explicitly check payment status when needed (lazy loading)
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      if (!account.address || !marketData) return;
+
+      // Only check for ACTIVE markets
+      if (marketData.state === 2) {
+        try {
+          await checkPaymentStatusIfMember();
+        } catch (err) {
+          console.error("Error checking payment status:", err);
+        }
+      }
+    };
+
+    checkPaymentStatus();
+  }, [account.address, marketData?.state, checkPaymentStatusIfMember]);
 
   // Calculate launch end time and countdown
   const launchEndTime = useMemo(() => {
@@ -1437,7 +1456,7 @@ export default function MarketDetail() {
                     </div>
 
                     {/* Action Cards Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                       {/* Deposit Card */}
                       <motion.div
                         initial={{ opacity: 0, x: -20 }}
@@ -1446,7 +1465,7 @@ export default function MarketDetail() {
                         className="group relative"
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--terracotta))]/10 to-[hsl(var(--ochre))]/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-                        <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
+                        <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-4 sm:p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
                           <DepositForm
                             marketData={marketData}
                             kuriAddress={address as `0x${string}`}
@@ -1462,7 +1481,7 @@ export default function MarketDetail() {
                         className="group relative"
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--forest))]/10 to-[hsl(var(--gold))]/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-                        <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
+                        <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-4 sm:p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
                           <ClaimInterface
                             marketData={marketData}
                             kuriAddress={address as `0x${string}`}
