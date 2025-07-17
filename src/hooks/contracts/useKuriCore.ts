@@ -194,6 +194,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
       // Convert to bigint for hasPaid function (which expects uint256)
       const currentIntervalIndex = BigInt(intervalCounter);
+      console.log("currentIntervalIndex:", currentIntervalIndex);
 
       // Check if user has paid for this interval
       const hasPaid = (await readContract(config, {
@@ -203,6 +204,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         args: [account.address, currentIntervalIndex],
       })) as boolean;
       console.log("currentintervalIndex:", currentIntervalIndex);
+      console.log("hasPaid:", hasPaid);
 
       setUserPaymentStatus(hasPaid);
       return hasPaid;

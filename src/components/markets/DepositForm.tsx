@@ -161,8 +161,8 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   const getStatusMessage = () => {
     if (!canDeposit) return null;
 
-    // If user has already paid and it's before raffle time, show paid status
-    if (userPaymentStatus === true && !isAfterRaffle) {
+    // If user has already paid, show paid status
+    if (userPaymentStatus === true) {
       return (
         <div className="flex items-center gap-2 text-sm text-green-600">
           <CheckCircle className="w-4 h-4" />
@@ -198,8 +198,8 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   };
 
   const renderActionButton = () => {
-    // If user has already paid and it's before raffle time, show paid status
-    if (userPaymentStatus === true && !isAfterRaffle) {
+    // If user has already paid, show paid status
+    if (userPaymentStatus === true) {
       return (
         <div className="bg-green-600/80 backdrop-blur-sm text-white border border-green-600/30 rounded-full px-4 py-2 font-medium text-xs shadow-lg flex items-center gap-2">
           <CheckCircle className="w-4 h-4" />
@@ -208,7 +208,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
       );
     }
 
-    // Show deposit button if user hasn't paid or if it's after raffle time
+    // Show deposit button if user hasn't paid
     return (
       <button
         onClick={handleDeposit}
@@ -261,7 +261,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
           </div>
 
           {/* Paid status information */}
-          {userPaymentStatus === true && !isAfterRaffle && (
+          {userPaymentStatus === true && (
             <div className="bg-green-50/10 border border-green-200/20 rounded-lg p-3 text-sm text-green-700">
               {/* <p className="font-medium mb-1">Payment Status:</p> */}
               <p>The raffle will select the winner soon!</p>

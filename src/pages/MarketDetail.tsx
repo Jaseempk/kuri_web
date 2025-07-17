@@ -480,17 +480,8 @@ export default function MarketDetail() {
     switch (membershipStatus) {
       case 0: // NONE
         return null;
-      case 1: // ACCEPTED
-        return (
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[hsl(var(--forest))] to-[hsl(var(--forest))] text-white rounded-full shadow-lg border-2 border-white/20"
-          >
-            <CheckCircle className="w-4 h-4" />
-            <span className="font-semibold">Active Member</span>
-          </motion.div>
-        );
+      case 1: // ACCEPTED - Now handled by tick icon in image
+        return null;
       case 2: // REJECTED
         return (
           <motion.div
@@ -829,655 +820,680 @@ export default function MarketDetail() {
           </div>
         </motion.div>
 
-        {/* Hero Section with Parallax */}
-        <div className="relative overflow-hidden rounded-b-3xl">
-          <motion.div
-            className="h-[50vh] sm:h-[60vh] md:h-[70vh] relative"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            {/* Hero Background */}
-            <div className="absolute inset-0">
-              <motion.img
-                src={imageUrl}
-                alt={metadata?.short_description || "Kuri Circle"}
-                className="w-full h-full object-cover"
-                initial={{ scale: 1.1 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            </div>
-
-            {/* Floating Action Button */}
-            <motion.div
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-40"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <ShareButton
-                market={{
-                  address: address || "",
-                  creator: marketData.creator,
-                  totalParticipants: marketData.totalParticipantsCount,
-                  activeParticipants: marketData.totalActiveParticipantsCount,
-                  kuriAmount: marketData.kuriAmount.toString(),
-                  intervalType: marketData.intervalType,
-                  state: convertToGraphQLKuriState(marketData.state),
-                  nextDepositTime:
-                    marketData.nextIntervalDepositTime.toString(),
-                  nextRaffleTime: marketData.nexRaffleTime.toString(),
-                  createdAt: "0",
-                  name: metadata?.short_description || "Kuri Circle",
-                  nextDraw: marketData.nexRaffleTime.toString(),
-                  launchPeriod: marketData.launchPeriod.toString(),
-                  startTime: marketData.startTime.toString(),
-                  endTime: marketData.endTime.toString(),
-                }}
-                isLoading={false}
-                onClick={() => {}}
-              />
-            </motion.div>
-
-            {/* Hero Content */}
-            <div className="absolute inset-0 flex items-end">
-              <div className="container mx-auto px-4 pb-6 sm:pb-8 md:pb-12">
-                <div className="max-w-4xl">
-                  <motion.h1
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.8 }}
-                    className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-sans font-semibold text-white mb-4 sm:mb-6 md:mb-8 tracking-tight animate-fade-in-up"
-                    style={{
-                      textShadow:
-                        "2px 4px 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.3)",
-                    }}
-                  >
-                    {metadata?.short_description || "Kuri Circle"}
-                  </motion.h1>
-
-                  {/* Quick Stats Bar */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.8 }}
-                    className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 md:gap-6 text-white/90"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--gold))]" />
-                      <span className="font-medium text-sm sm:text-base">
-                        {marketData.totalActiveParticipantsCount}/
-                        {marketData.totalParticipantsCount} Members
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--gold))]" />
-                      <span className="font-medium text-sm sm:text-base">
-                        $
-                        {(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}{" "}
-                        Contribution
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--gold))]" />
-                      <span className="font-medium text-sm sm:text-base">
-                        $
-                        {(
-                          (Number(marketData.kuriAmount) / 1_000_000) *
-                          marketData.totalParticipantsCount
-                        ).toFixed(2)}{" "}
-                        Pool
-                      </span>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
         {/* Main Content */}
         <div className="relative z-10 pt-4 sm:pt-6 md:pt-8">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {/* Left Sidebar - Stats & Actions */}
-              <div className="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
-                {/* Interactive Stats Card */}
-                <motion.div
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 }}
-                  className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-500"
-                >
-                  <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[hsl(var(--terracotta))]">
-                      Circle Stats
-                    </h3>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-orange-300 flex items-center justify-center">
-                      <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
-                    </div>
-                  </div>
+            {/* Row 1: Circle Image + About This Circle */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-8">
+              {/* Column 1: Circle Image with Hero Elements */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="lg:col-span-1 bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden flex flex-col"
+              >
+                {/* Circle Image */}
+                <div className="relative flex-1 min-h-[280px]">
+                  <motion.img
+                    src={imageUrl}
+                    alt={metadata?.short_description || "Kuri Circle"}
+                    className="w-full h-full object-cover"
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+                  {/* Active Member Tick - Top Left */}
+                  {membershipStatus === 1 && (
                     <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="absolute top-4 left-4 w-10 h-10 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center shadow-lg border border-white/30 hover:bg-white/30 transition-all duration-300"
                     >
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-orange-300 flex items-center justify-center">
-                        <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
-                      </div>
-                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
-                        Members
-                      </p>
-                      <p className="text-sm sm:text-lg md:text-xl font-bold text-[hsl(var(--terracotta))]">
-                        {marketData.totalActiveParticipantsCount}
-                        <span className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">
-                          /{marketData.totalParticipantsCount}
-                        </span>
-                      </p>
-                      {/* Progress Bar */}
-                      <div className="mt-1 sm:mt-2 w-full bg-[hsl(var(--muted))] rounded-full h-1 sm:h-1.5">
-                        <motion.div
-                          className="bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] h-1 sm:h-1.5 rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{
-                            width: `${
-                              (marketData.totalActiveParticipantsCount /
-                                marketData.totalParticipantsCount) *
-                              100
-                            }%`,
-                          }}
-                          transition={{
-                            delay: 1,
-                            duration: 1.5,
-                            ease: "easeOut",
-                          }}
-                        />
-                      </div>
+                      <CheckCircle className="w-5 h-5 text-white drop-shadow-lg" />
                     </motion.div>
+                  )}
 
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-orange-300 flex items-center justify-center">
-                        <Coins className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
-                      </div>
-                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
-                        Contribution
-                      </p>
-                      <p className="text-sm sm:text-lg md:text-xl font-bold text-[hsl(var(--terracotta))]">
-                        $
-                        {(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
-                      </p>
-                    </motion.div>
-
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] flex items-center justify-center">
-                        <Award className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
-                      </div>
-                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
-                        Win Amount
-                      </p>
-                      <p className="text-sm sm:text-lg md:text-xl font-bold text-[hsl(var(--forest))]">
-                        $
-                        {(
-                          (Number(marketData.kuriAmount) / 1_000_000) *
-                          marketData.totalParticipantsCount
-                        ).toFixed(2)}
-                      </p>
-                    </motion.div>
-
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      className="text-center p-2 sm:p-3 md:p-4 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 rounded-full bg-orange-300 flex items-center justify-center">
-                        <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
-                      </div>
-                      <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] mb-1">
-                        Frequency
-                      </p>
-                      <p className="text-sm sm:text-base md:text-lg font-bold text-[hsl(var(--terracotta))] capitalize">
-                        {getIntervalTypeText(marketData.intervalType)}
-                      </p>
-                    </motion.div>
-                  </div>
-                </motion.div>
-
-                {/* Launch Countdown */}
-                {marketData.state === KuriState.INLAUNCH && (
+                  {/* Share Button */}
                   <motion.div
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-2xl relative overflow-hidden"
+                    className="absolute top-4 right-4 sm:top-6 sm:right-6 z-40"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 }}
                   >
-                    {/* Animated Background Pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <motion.div
-                        className="absolute -top-10 -right-10 w-20 h-20 sm:w-32 sm:h-32 rounded-full border-2 sm:border-4 border-white"
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 20,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      />
-                      <motion.div
-                        className="absolute -bottom-10 -left-10 w-16 h-16 sm:w-24 sm:h-24 rounded-full border-1 sm:border-2 border-white"
-                        animate={{ rotate: -360 }}
-                        transition={{
-                          duration: 15,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      />
-                    </div>
-
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                        <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
-                        <h3 className="text-lg sm:text-xl font-bold">
-                          Launch Countdown
-                        </h3>
-                      </div>
-                      <div className="text-center">
-                        <motion.p
-                          key={timeLeft}
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-2xl sm:text-3xl font-mono font-bold mb-2"
-                        >
-                          {timeLeft}
-                        </motion.p>
-                        <p className="text-white/80 text-sm sm:text-base">
-                          Time remaining to join this circle
-                        </p>
-                      </div>
-                    </div>
+                    <ShareButton
+                      market={{
+                        address: address || "",
+                        creator: marketData.creator,
+                        totalParticipants: marketData.totalParticipantsCount,
+                        activeParticipants:
+                          marketData.totalActiveParticipantsCount,
+                        kuriAmount: marketData.kuriAmount.toString(),
+                        intervalType: marketData.intervalType,
+                        state: convertToGraphQLKuriState(marketData.state),
+                        nextDepositTime:
+                          marketData.nextIntervalDepositTime.toString(),
+                        nextRaffleTime: marketData.nexRaffleTime.toString(),
+                        createdAt: "0",
+                        name: metadata?.short_description || "Kuri Circle",
+                        nextDraw: marketData.nexRaffleTime.toString(),
+                        launchPeriod: marketData.launchPeriod.toString(),
+                        startTime: marketData.startTime.toString(),
+                        endTime: marketData.endTime.toString(),
+                      }}
+                      isLoading={false}
+                      onClick={() => {}}
+                    />
                   </motion.div>
-                )}
 
-                {/* Action Button */}
-                <motion.div
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.9 }}
-                  className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl border border-white/20"
-                >
-                  {renderActionButton()}
-                </motion.div>
-              </div>
+                  {/* Title and Quick Stats */}
+                  <div className="absolute inset-0 flex items-end">
+                    <div className="p-4 sm:p-6 w-full">
+                      <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.8 }}
+                        className="text-xl sm:text-2xl md:text-3xl font-sans font-semibold text-white mb-3 sm:mb-4 tracking-tight leading-tight"
+                        style={{
+                          textShadow:
+                            "2px 4px 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.3)",
+                        }}
+                      >
+                        {metadata?.short_description || "Kuri Circle"}
+                      </motion.h1>
 
-              {/* Center & Right Content - Details */}
-              <div className="lg:col-span-2 order-1 lg:order-2">
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 }}
-                  className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden"
-                >
-                  {/* Enhanced Tabs */}
-                  <div className="border-b border-[hsl(var(--border))] bg-gradient-to-r from-[hsl(var(--sand))] to-white">
-                    <nav className="flex">
-                      {[
-                        { id: "overview", label: "Overview", icon: null },
-                        { id: "activity", label: "Activity", icon: Activity },
-                        { id: "members", label: "Members", icon: Users },
-                      ].map(({ id, label, icon: Icon }) => (
-                        <motion.button
-                          key={id}
-                          onClick={() => setActiveTab(id as any)}
-                          className={`flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 text-xs sm:text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 relative ${
-                            activeTab === id
-                              ? "text-[hsl(var(--terracotta))] bg-white shadow-lg"
-                              : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--terracotta))] hover:bg-white/50"
-                          }`}
-                          whileHover={{ y: -2 }}
-                          whileTap={{ y: 0 }}
-                        >
-                          {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
-                          <span className="hidden sm:inline">{label}</span>
-                          <span className="sm:hidden">{label.slice(0, 3)}</span>
-                          {activeTab === id && (
-                            <motion.div
-                              layoutId="activeTab"
-                              className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] rounded-t-full"
-                            />
-                          )}
-                        </motion.button>
-                      ))}
-                    </nav>
+                      {/* Quick Stats Bar */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4, duration: 0.8 }}
+                        className="space-y-2 text-white/90"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-[hsl(var(--gold))] flex-shrink-0" />
+                          <span className="font-medium text-sm">
+                            {marketData.totalActiveParticipantsCount}/
+                            {marketData.totalParticipantsCount} Members
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-[hsl(var(--gold))] flex-shrink-0" />
+                          <span className="font-medium text-sm">
+                            $
+                            {(
+                              Number(marketData.kuriAmount) / 1_000_000
+                            ).toFixed(2)}{" "}
+                            Contribution
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-[hsl(var(--gold))] flex-shrink-0" />
+                          <span className="font-medium text-sm">
+                            $
+                            {(
+                              (Number(marketData.kuriAmount) / 1_000_000) *
+                              marketData.totalParticipantsCount
+                            ).toFixed(2)}{" "}
+                            Pool
+                          </span>
+                        </div>
+                      </motion.div>
+                    </div>
                   </div>
+                </div>
+              </motion.div>
 
-                  {/* Tab Content */}
-                  <div className="p-4 sm:p-6 md:p-8">
-                    <AnimatePresence mode="wait">
-                      {activeTab === "overview" && (
-                        <motion.div
-                          key="overview"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="space-y-8"
-                        >
-                          <div>
-                            <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))] mb-4">
-                              About This Circle
-                            </h3>
-                            <p className="text-[hsl(var(--foreground))] leading-relaxed text-lg">
-                              {metadata?.long_description ||
-                                metadata?.short_description ||
-                                "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
-                            </p>
-                          </div>
+              {/* Column 2: About This Circle */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden"
+              >
+                {/* Enhanced Tabs */}
+                <div className="border-b border-[hsl(var(--border))] bg-gradient-to-r from-[hsl(var(--sand))] to-white">
+                  <nav className="flex">
+                    {[
+                      { id: "overview", label: "Overview", icon: null },
+                      { id: "activity", label: "Activity", icon: Activity },
+                      { id: "members", label: "Members", icon: Users },
+                    ].map(({ id, label, icon: Icon }) => (
+                      <motion.button
+                        key={id}
+                        onClick={() => setActiveTab(id as any)}
+                        className={`flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 text-xs sm:text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 relative ${
+                          activeTab === id
+                            ? "text-[hsl(var(--terracotta))] bg-white shadow-lg"
+                            : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--terracotta))] hover:bg-white/50"
+                        }`}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ y: 0 }}
+                      >
+                        {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        <span className="hidden sm:inline">{label}</span>
+                        <span className="sm:hidden">{label.slice(0, 3)}</span>
+                      </motion.button>
+                    ))}
+                  </nav>
+                </div>
 
-                          {/* Winner Card - Show when there's a current winner */}
-                          {currentWinner && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.4 }}
-                              className="max-w-md"
-                            >
-                              <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                className="p-6 bg-gradient-to-br from-[hsl(var(--gold))] via-yellow-50 to-amber-50 rounded-2xl border-2 border-[hsl(var(--gold))] hover:shadow-lg transition-all duration-300 relative overflow-hidden"
-                              >
-                                {/* Crown decoration */}
-                                <div className="absolute top-4 right-4">
-                                  <Crown className="w-8 h-8 text-[hsl(var(--gold))] opacity-20" />
-                                </div>
+                {/* Tab Content */}
+                <div className="p-4 sm:p-6 md:p-8">
+                  <AnimatePresence mode="wait">
+                    {activeTab === "overview" && (
+                      <motion.div
+                        key="overview"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-8"
+                      >
+                        <div>
+                          <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))] mb-4">
+                            About This Circle
+                          </h3>
+                          <p className="text-[hsl(var(--foreground))] leading-relaxed text-lg">
+                            {metadata?.long_description ||
+                              metadata?.short_description ||
+                              "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
+                          </p>
+                        </div>
 
-                                <h4 className="font-bold text-[hsl(var(--terracotta))] mb-3 flex items-center gap-2">
-                                  <Trophy className="w-5 h-5 text-[hsl(var(--gold))]" />
-                                  Round #{currentWinner.intervalIndex} Winner
-                                </h4>
-
-                                {winnerProfileLoading ? (
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-16 h-16 bg-[hsl(var(--muted))] rounded-full animate-pulse" />
-                                    <div className="flex-1">
-                                      <div className="h-5 bg-[hsl(var(--muted))] rounded animate-pulse mb-2" />
-                                      <div className="h-4 bg-[hsl(var(--muted))] rounded animate-pulse w-2/3" />
-                                    </div>
-                                  </div>
-                                ) : winnerProfile ? (
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center border-2 border-white shadow-lg">
-                                      {winnerProfile.profile_image_url ? (
-                                        <img
-                                          src={winnerProfile.profile_image_url}
-                                          alt={
-                                            winnerProfile.display_name ||
-                                            winnerProfile.username ||
-                                            "Winner"
-                                          }
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <Trophy className="w-8 h-8 text-white" />
-                                      )}
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="font-bold text-[hsl(var(--foreground))] text-lg">
-                                        🎉{" "}
-                                        {winnerProfile.display_name ||
-                                          winnerProfile.username ||
-                                          "Anonymous Winner"}
-                                      </p>
-                                      <p className="text-sm text-[hsl(var(--muted-foreground))] font-mono break-all">
-                                        {currentWinner.winner.slice(0, 6)}...
-                                        {currentWinner.winner.slice(-4)}
-                                      </p>
-                                      <p className="text-xs text-[hsl(var(--terracotta))] mt-1 font-medium">
-                                        Congratulations on winning this round!
-                                        🏆
-                                      </p>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center border-2 border-white shadow-lg">
-                                      <Trophy className="w-8 h-8 text-white" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="font-bold text-[hsl(var(--foreground))] text-lg">
-                                        🎉 Anonymous Winner
-                                      </p>
-                                      <p className="text-sm text-[hsl(var(--muted-foreground))] font-mono break-all">
-                                        {currentWinner.winner.slice(0, 6)}...
-                                        {currentWinner.winner.slice(-4)}
-                                      </p>
-                                      <p className="text-xs text-[hsl(var(--terracotta))] mt-1 font-medium">
-                                        Congratulations on winning this round!
-                                        🏆
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                              </motion.div>
-                            </motion.div>
-                          )}
-
-                          <div className="max-w-md">
+                        {/* Winner Card - Show when there's a current winner */}
+                        {currentWinner && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.4 }}
+                            className="max-w-md"
+                          >
                             <motion.div
                               whileHover={{ scale: 1.02 }}
-                              className="p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                              className="p-6 bg-gradient-to-br from-[hsl(var(--gold))] via-yellow-50 to-amber-50 rounded-2xl border-2 border-[hsl(var(--gold))] hover:shadow-lg transition-all duration-300 relative overflow-hidden"
                             >
+                              {/* Crown decoration */}
+                              <div className="absolute top-4 right-4">
+                                <Crown className="w-8 h-8 text-[hsl(var(--gold))] opacity-20" />
+                              </div>
+
                               <h4 className="font-bold text-[hsl(var(--terracotta))] mb-3 flex items-center gap-2">
-                                <Users className="w-5 h-5" />
-                                Creator
+                                <Trophy className="w-5 h-5 text-[hsl(var(--gold))]" />
+                                Round #{currentWinner.intervalIndex} Winner
                               </h4>
-                              {creatorProfileLoading ? (
+
+                              {winnerProfileLoading ? (
                                 <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 bg-[hsl(var(--muted))] rounded-full animate-pulse" />
+                                  <div className="w-16 h-16 bg-[hsl(var(--muted))] rounded-full animate-pulse" />
                                   <div className="flex-1">
-                                    <div className="h-4 bg-[hsl(var(--muted))] rounded animate-pulse mb-2" />
-                                    <div className="h-3 bg-[hsl(var(--muted))] rounded animate-pulse w-2/3" />
+                                    <div className="h-5 bg-[hsl(var(--muted))] rounded animate-pulse mb-2" />
+                                    <div className="h-4 bg-[hsl(var(--muted))] rounded animate-pulse w-2/3" />
                                   </div>
                                 </div>
-                              ) : creatorProfile ? (
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] flex items-center justify-center">
-                                    {creatorProfile.profile_image_url ? (
+                              ) : winnerProfile ? (
+                                <div className="flex items-center gap-4">
+                                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center border-2 border-white shadow-lg">
+                                    {winnerProfile.profile_image_url ? (
                                       <img
-                                        src={creatorProfile.profile_image_url}
+                                        src={winnerProfile.profile_image_url}
                                         alt={
-                                          creatorProfile.display_name ||
-                                          creatorProfile.username ||
-                                          "Creator"
+                                          winnerProfile.display_name ||
+                                          winnerProfile.username ||
+                                          "Winner"
                                         }
                                         className="w-full h-full object-cover"
                                       />
                                     ) : (
-                                      <Users className="w-6 h-6 text-white" />
+                                      <Trophy className="w-8 h-8 text-white" />
                                     )}
                                   </div>
                                   <div className="flex-1">
-                                    <p className="font-semibold text-[hsl(var(--foreground))]">
-                                      {creatorProfile.display_name ||
-                                        creatorProfile.username ||
-                                        "Anonymous Creator"}
+                                    <p className="font-bold text-[hsl(var(--foreground))] text-lg">
+                                      🎉{" "}
+                                      {winnerProfile.display_name ||
+                                        winnerProfile.username ||
+                                        "Anonymous Winner"}
                                     </p>
-                                    <p className="text-xs text-[hsl(var(--muted-foreground))] font-mono break-all">
-                                      {marketData.creator.slice(0, 6)}...
-                                      {marketData.creator.slice(-4)}
+                                    <p className="text-sm text-[hsl(var(--muted-foreground))] font-mono break-all">
+                                      {currentWinner.winner.slice(0, 6)}...
+                                      {currentWinner.winner.slice(-4)}
+                                    </p>
+                                    <p className="text-xs text-[hsl(var(--terracotta))] mt-1 font-medium">
+                                      Congratulations on winning this round! 🏆
                                     </p>
                                   </div>
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] flex items-center justify-center">
-                                    <Users className="w-6 h-6 text-white" />
+                                <div className="flex items-center gap-4">
+                                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center border-2 border-white shadow-lg">
+                                    <Trophy className="w-8 h-8 text-white" />
                                   </div>
                                   <div className="flex-1">
-                                    <p className="font-semibold text-[hsl(var(--foreground))]">
-                                      Anonymous Creator
+                                    <p className="font-bold text-[hsl(var(--foreground))] text-lg">
+                                      🎉 Anonymous Winner
                                     </p>
-                                    <p className="text-xs text-[hsl(var(--muted-foreground))] font-mono break-all">
-                                      {marketData.creator.slice(0, 6)}...
-                                      {marketData.creator.slice(-4)}
+                                    <p className="text-sm text-[hsl(var(--muted-foreground))] font-mono break-all">
+                                      {currentWinner.winner.slice(0, 6)}...
+                                      {currentWinner.winner.slice(-4)}
+                                    </p>
+                                    <p className="text-xs text-[hsl(var(--terracotta))] mt-1 font-medium">
+                                      Congratulations on winning this round! 🏆
                                     </p>
                                   </div>
                                 </div>
                               )}
                             </motion.div>
-                          </div>
+                          </motion.div>
+                        )}
 
-                          {marketData.state === KuriState.ACTIVE && (
-                            <DualCountdown
-                              raffleTimestamp={
-                                Number(marketData.nexRaffleTime) * 1000
-                              }
-                              depositTimestamp={
-                                Number(marketData.nextIntervalDepositTime) *
-                                1000
-                              }
-                              raffleDate={new Date(
-                                Number(marketData.nexRaffleTime) * 1000
-                              ).toLocaleString()}
-                              depositDate={new Date(
-                                Number(marketData.nextIntervalDepositTime) *
-                                  1000
-                              ).toLocaleString()}
-                            />
-                          )}
-                        </motion.div>
-                      )}
-
-                      {activeTab === "activity" && (
-                        <motion.div
-                          key="activity"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="space-y-6"
-                        >
-                          <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))] flex items-center gap-3">
-                            <Activity className="w-6 h-6 text-gray-500" />
-                            Recent Activity
-                          </h3>
-                          <div className="text-center py-16">
-                            <motion.div
-                              initial={{ scale: 0.8, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.2 }}
-                              className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[hsl(var(--sand))] to-[hsl(var(--muted))] flex items-center justify-center"
-                            >
-                              <Calendar className="w-12 h-12 text-[hsl(var(--muted-foreground))]" />
-                            </motion.div>
-                            <h4 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">
-                              Activity Tracking Coming Soon
+                        <div className="max-w-md">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            className="p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                          >
+                            <h4 className="font-bold text-[hsl(var(--terracotta))] mb-3 flex items-center gap-2">
+                              <Users className="w-5 h-5" />
+                              Creator
                             </h4>
-                            <p className="text-[hsl(var(--muted-foreground))] max-w-md mx-auto">
-                              Deposits, raffles, and member activities will be
-                              displayed here with real-time updates and
-                              beautiful visualizations.
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
+                            {creatorProfileLoading ? (
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-[hsl(var(--muted))] rounded-full animate-pulse" />
+                                <div className="flex-1">
+                                  <div className="h-4 bg-[hsl(var(--muted))] rounded animate-pulse mb-2" />
+                                  <div className="h-3 bg-[hsl(var(--muted))] rounded animate-pulse w-2/3" />
+                                </div>
+                              </div>
+                            ) : creatorProfile ? (
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] flex items-center justify-center">
+                                  {creatorProfile.profile_image_url ? (
+                                    <img
+                                      src={creatorProfile.profile_image_url}
+                                      alt={
+                                        creatorProfile.display_name ||
+                                        creatorProfile.username ||
+                                        "Creator"
+                                      }
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <Users className="w-6 h-6 text-white" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-[hsl(var(--foreground))]">
+                                    {creatorProfile.display_name ||
+                                      creatorProfile.username ||
+                                      "Anonymous Creator"}
+                                  </p>
+                                  <p className="text-xs text-[hsl(var(--muted-foreground))] font-mono break-all">
+                                    {marketData.creator.slice(0, 6)}...
+                                    {marketData.creator.slice(-4)}
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] flex items-center justify-center">
+                                  <Users className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-[hsl(var(--foreground))]">
+                                    Anonymous Creator
+                                  </p>
+                                  <p className="text-xs text-[hsl(var(--muted-foreground))] font-mono break-all">
+                                    {marketData.creator.slice(0, 6)}...
+                                    {marketData.creator.slice(-4)}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </motion.div>
+                        </div>
 
-                      {activeTab === "members" && (
-                        <motion.div
-                          key="members"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="space-y-6"
-                        >
-                          <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))] flex items-center gap-3">
-                            <Users className="w-6 h-6 text-gray-500" />
-                            Circle Members
-                          </h3>
-                          <div className="text-center py-16">
-                            <motion.div
-                              initial={{ scale: 0.8, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.2 }}
-                              className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[hsl(var(--sand))] to-[hsl(var(--muted))] flex items-center justify-center"
-                            >
-                              <Users className="w-12 h-12 text-[hsl(var(--muted-foreground))]" />
-                            </motion.div>
-                            <h4 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">
-                              Member Directory Coming Soon
-                            </h4>
-                            <p className="text-[hsl(var(--muted-foreground))] mb-4 max-w-md mx-auto">
-                              View member profiles, contribution history, and
-                              community standings.
-                            </p>
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[hsl(var(--sand))] rounded-full border">
-                              <div className="w-2 h-2 bg-[hsl(var(--forest))] rounded-full animate-pulse" />
-                              <span className="text-sm font-medium text-[hsl(var(--foreground))]">
-                                {marketData.totalActiveParticipantsCount} of{" "}
-                                {marketData.totalParticipantsCount} spots filled
-                              </span>
-                            </div>
+                        {marketData.state === KuriState.ACTIVE && (
+                          <DualCountdown
+                            raffleTimestamp={
+                              Number(marketData.nexRaffleTime) * 1000
+                            }
+                            depositTimestamp={
+                              Number(marketData.nextIntervalDepositTime) * 1000
+                            }
+                            raffleDate={new Date(
+                              Number(marketData.nexRaffleTime) * 1000
+                            ).toLocaleString()}
+                            depositDate={new Date(
+                              Number(marketData.nextIntervalDepositTime) * 1000
+                            ).toLocaleString()}
+                          />
+                        )}
+                      </motion.div>
+                    )}
+
+                    {activeTab === "activity" && (
+                      <motion.div
+                        key="activity"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-6"
+                      >
+                        <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))] flex items-center gap-3">
+                          <Activity className="w-6 h-6 text-gray-500" />
+                          Recent Activity
+                        </h3>
+                        <div className="text-center py-16">
+                          <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[hsl(var(--sand))] to-[hsl(var(--muted))] flex items-center justify-center"
+                          >
+                            <Calendar className="w-12 h-12 text-[hsl(var(--muted-foreground))]" />
+                          </motion.div>
+                          <h4 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">
+                            Activity Tracking Coming Soon
+                          </h4>
+                          <p className="text-[hsl(var(--muted-foreground))] max-w-md mx-auto">
+                            Deposits, raffles, and member activities will be
+                            displayed here with real-time updates and beautiful
+                            visualizations.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {activeTab === "members" && (
+                      <motion.div
+                        key="members"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-6"
+                      >
+                        <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))] flex items-center gap-3">
+                          <Users className="w-6 h-6 text-gray-500" />
+                          Circle Members
+                        </h3>
+                        <div className="text-center py-16">
+                          <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[hsl(var(--sand))] to-[hsl(var(--muted))] flex items-center justify-center"
+                          >
+                            <Users className="w-12 h-12 text-[hsl(var(--muted-foreground))]" />
+                          </motion.div>
+                          <h4 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">
+                            Member Directory Coming Soon
+                          </h4>
+                          <p className="text-[hsl(var(--muted-foreground))] mb-4 max-w-md mx-auto">
+                            View member profiles, contribution history, and
+                            community standings.
+                          </p>
+                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[hsl(var(--sand))] rounded-full border">
+                            <div className="w-2 h-2 bg-[hsl(var(--forest))] rounded-full animate-pulse" />
+                            <span className="text-sm font-medium text-[hsl(var(--foreground))]">
+                              {marketData.totalActiveParticipantsCount} of{" "}
+                              {marketData.totalParticipantsCount} spots filled
+                            </span>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
             </div>
 
-            {/* Member Actions Section - Full Width Below Main Content */}
-            {membershipStatus === 1 &&
-              marketData.state === KuriState.ACTIVE && (
+            {/* Row 2: Enhanced Circle Stats with Member Actions */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-500 mb-8"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl sm:text-3xl font-bold text-[hsl(var(--terracotta))]">
+                  Circle Stats
+                </h3>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-300 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                 <motion.div
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2, duration: 0.6 }}
-                  className="mt-8 lg:mt-12"
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-[hsl(var(--terracotta))] mb-2">
-                      Member Actions
-                    </h2>
-                    <p className="text-[hsl(var(--muted-foreground))] text-lg">
-                      Manage your participation in this circle
-                    </p>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-3 rounded-full bg-orange-300 flex items-center justify-center">
+                    <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))] mb-2">
+                    Members
+                  </p>
+                  <p className="text-lg sm:text-xl font-bold text-[hsl(var(--terracotta))]">
+                    {marketData.totalActiveParticipantsCount}
+                    <span className="text-sm text-[hsl(var(--muted-foreground))]">
+                      /{marketData.totalParticipantsCount}
+                    </span>
+                  </p>
+                  {/* Progress Bar */}
+                  <div className="mt-2 w-full bg-[hsl(var(--muted))] rounded-full h-1.5">
+                    <motion.div
+                      className="bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--gold))] h-1.5 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${
+                          (marketData.totalActiveParticipantsCount /
+                            marketData.totalParticipantsCount) *
+                          100
+                        }%`,
+                      }}
+                      transition={{
+                        delay: 1,
+                        duration: 1.5,
+                        ease: "easeOut",
+                      }}
+                    />
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-3 rounded-full bg-orange-300 flex items-center justify-center">
+                    <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))] mb-2">
+                    Contribution
+                  </p>
+                  <p className="text-lg sm:text-xl font-bold text-[hsl(var(--terracotta))]">
+                    ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-3 rounded-full bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] flex items-center justify-center">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))] mb-2">
+                    Win Amount
+                  </p>
+                  <p className="text-lg sm:text-xl font-bold text-[hsl(var(--forest))]">
+                    $
+                    {(
+                      (Number(marketData.kuriAmount) / 1_000_000) *
+                      marketData.totalParticipantsCount
+                    ).toFixed(2)}
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-3 rounded-full bg-orange-300 flex items-center justify-center">
+                    <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))] mb-2">
+                    Frequency
+                  </p>
+                  <p className="text-base sm:text-lg font-bold text-[hsl(var(--terracotta))] capitalize">
+                    {getIntervalTypeText(marketData.intervalType)}
+                  </p>
+                </motion.div>
+              </div>
+
+              {/* Launch Countdown */}
+              {marketData.state === KuriState.INLAUNCH && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden mb-8"
+                >
+                  {/* Animated Background Pattern */}
+                  <div className="absolute inset-0 opacity-10">
+                    <motion.div
+                      className="absolute -top-10 -right-10 w-32 h-32 rounded-full border-4 border-white"
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    />
+                    <motion.div
+                      className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full border-2 border-white"
+                      animate={{ rotate: -360 }}
+                      transition={{
+                        duration: 15,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-7xl mx-auto">
-                    <motion.div
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1.4, duration: 0.5 }}
-                      className="group"
-                    >
-                      <DepositForm
-                        marketData={marketData}
-                        kuriAddress={address as `0x${string}`}
-                      />
-                    </motion.div>
-
-                    <motion.div
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1.6, duration: 0.5 }}
-                      className="group"
-                    >
-                      <ClaimInterface
-                        marketData={marketData}
-                        kuriAddress={address as `0x${string}`}
-                      />
-                    </motion.div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Timer className="w-6 h-6" />
+                      <h3 className="text-xl font-bold">Launch Countdown</h3>
+                    </div>
+                    <div className="text-center">
+                      <motion.p
+                        key={timeLeft}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-3xl font-mono font-bold mb-2"
+                      >
+                        {timeLeft}
+                      </motion.p>
+                      <p className="text-white/80">
+                        Time remaining to join this circle
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
               )}
+
+              {/* Member Actions - Only for Active Members in Active State */}
+              {membershipStatus === 1 &&
+                marketData.state === KuriState.ACTIVE && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.0 }}
+                    className="mt-8"
+                  >
+                    {/* Section Header with Subtle Divider */}
+                    <div className="relative mb-8">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-[hsl(var(--border))]/30"></div>
+                      </div>
+                      <div className="relative flex justify-center">
+                        <div className="bg-white px-6 py-3 rounded-full border border-[hsl(var(--border))]/50 shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] flex items-center justify-center">
+                              <Activity className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="text-center">
+                              <h4 className="text-lg font-bold text-[hsl(var(--terracotta))] mb-1">
+                                Member Actions
+                              </h4>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Cards Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Deposit Card */}
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 1.2 }}
+                        className="group relative"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--terracotta))]/10 to-[hsl(var(--ochre))]/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                        <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
+                          <DepositForm
+                            marketData={marketData}
+                            kuriAddress={address as `0x${string}`}
+                          />
+                        </div>
+                      </motion.div>
+
+                      {/* Claim Card */}
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 1.4 }}
+                        className="group relative"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--forest))]/10 to-[hsl(var(--gold))]/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                        <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
+                          <ClaimInterface
+                            marketData={marketData}
+                            kuriAddress={address as `0x${string}`}
+                          />
+                        </div>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+            </motion.div>
+
+            {/* Row 3: Creator-Specific Elements (Bottom) */}
+            {isCreator && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 }}
+                className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/20"
+              >
+                <div className="text-center mb-6">
+                  <h4 className="text-xl sm:text-2xl font-bold text-[hsl(var(--terracotta))] mb-2">
+                    Creator Actions
+                  </h4>
+                  <p className="text-[hsl(var(--muted-foreground))]">
+                    Manage your circle as the creator
+                  </p>
+                </div>
+
+                <div className="max-w-md mx-auto">{renderActionButton()}</div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
