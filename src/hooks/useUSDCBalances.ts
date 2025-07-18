@@ -18,6 +18,10 @@ export const useUSDCBalances = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Create stable string dependencies to prevent callback recreation
+  const addressesKey = contractAddresses.join(",");
+  const statesKey = marketStates?.join(",") || "";
+
   const fetchBalances = useCallback(async () => {
     if (!contractAddresses.length) {
       setBalances([]);
@@ -58,7 +62,7 @@ export const useUSDCBalances = (
     } finally {
       setIsLoading(false);
     }
-  }, [contractAddresses, marketStates]);
+  }, [addressesKey, statesKey]);
 
   useEffect(() => {
     fetchBalances();

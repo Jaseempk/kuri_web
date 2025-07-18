@@ -299,7 +299,7 @@ export default function MarketList() {
     };
 
     initializeMarketsData();
-  }, [markets, totalTVL]); // Combined dependencies to prevent multiple updates
+  }, [markets]);
 
   // Show loading state for both market data and user data
   if (isLoading || isLoadingBalances || userDataLoading) {
