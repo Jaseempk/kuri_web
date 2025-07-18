@@ -288,7 +288,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     setIsLoading(true);
 
     try {
-      await getMemberStatus(account.address);
+      await requestMembership();
 
       // Refresh membership status from contract to get the actual state
       const status = await getMemberStatus(account.address);
@@ -544,6 +544,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 market={market}
                 isLoading={showShareModal}
                 onClick={handleShareClick}
+                className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-terracotta shadow-lg border border-white/20"
               />
             </div>
 

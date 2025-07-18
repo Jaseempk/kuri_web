@@ -215,7 +215,7 @@ function App() {
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed w-full backdrop-blur-md bg-black/20 border-b border-white/10 z-50 transition-all duration-300 max-h-24 overflow-hidden">
+      <nav className="fixed w-full backdrop-blur-md bg-black/20 border-b border-white/10 z-50 transition-all duration-300">
         <div className="container mx-auto px-4 flex items-center justify-between h-24">
           <div className="flex items-center gap-12">
             <Logo variant="landing" />
@@ -262,15 +262,23 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="hidden md:flex items-center space-x-4">
-            <ConnectButton />
+          <div className="flex items-center space-x-4">
+            {/* Desktop Connect Button */}
+            <div className="hidden md:flex">
+              <ConnectButton />
+            </div>
+            {/* Mobile Connect Button - Always visible */}
+            <div className="md:hidden">
+              <ConnectButton />
+            </div>
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden text-white p-1"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
           </div>
-          <button
-            className="md:hidden text-white p-1"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
         </div>
 
         {/* Mobile menu */}
@@ -323,9 +331,6 @@ function App() {
                   Live Circles
                   <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[hsl(var(--gold))] transition-all duration-300 group-hover:w-full"></span>
                 </button>
-                <div className="flex flex-col space-y-2 pt-2">
-                  <ConnectButton />
-                </div>
               </div>
             </motion.div>
           )}

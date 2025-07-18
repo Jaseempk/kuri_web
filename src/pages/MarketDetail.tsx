@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { MarketSEO } from "../components/seo/MarketSEO";
 import { ShareButton } from "../components/ui/ShareButton";
+import { ShareModal } from "../components/modals/ShareModal";
 import { ManageMembersDialog } from "../components/markets/ManageMembersDialog";
 import { DepositForm } from "../components/markets/DepositForm";
 import { ClaimInterface } from "../components/markets/ClaimInterface";
@@ -158,6 +159,7 @@ export default function MarketDetail() {
   >("overview");
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [raffleTimeLeft, setRaffleTimeLeft] = useState<string>("");
   const [depositTimeLeft, setDepositTimeLeft] = useState<string>("");
@@ -698,6 +700,11 @@ export default function MarketDetail() {
     }
   };
 
+  const handleShareClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowShareModal(true);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#F9F5F1] flex items-center justify-center">
@@ -902,8 +909,9 @@ export default function MarketDetail() {
                         startTime: marketData.startTime.toString(),
                         endTime: marketData.endTime.toString(),
                       }}
-                      isLoading={false}
-                      onClick={() => {}}
+                      isLoading={showShareModal}
+                      onClick={handleShareClick}
+                      className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-terracotta shadow-lg border border-white/20"
                     />
                   </motion.div>
 
@@ -1491,31 +1499,43 @@ export default function MarketDetail() {
                     </div>
                   </motion.div>
                 )}
-            </motion.div>
 
-            {/* Row 3: Creator-Specific Elements (Bottom) */}
-            {isCreator && (
+              {/* Circle Action Button - Center aligned at bottom of Circle Stats */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 }}
-                className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/20"
+                transition={{ delay: 1.6 }}
+                className="mt-8 pt-6 border-t border-[hsl(var(--border))]/20"
               >
-                <div className="text-center mb-6">
-                  <h4 className="text-xl sm:text-2xl font-bold text-[hsl(var(--terracotta))] mb-2">
-                    Creator Actions
-                  </h4>
-                  <p className="text-[hsl(var(--muted-foreground))]">
-                    Manage your circle as the creator
-                  </p>
+                <div className="flex justify-center">
+                  <div className="w-full max-w-sm">{renderActionButton()}</div>
                 </div>
-
-                <div className="max-w-md mx-auto">{renderActionButton()}</div>
               </motion.div>
-            )}
+            </motion.div>
           </div>
         </div>
       </div>
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        market={{
+          address: address || "",
+          creator: marketData.creator,
+          totalParticipants: marketData.totalParticipantsCount,
+          activeParticipants: marketData.totalActiveParticipantsCount,
+          kuriAmount: marketData.kuriAmount.toString(),
+          intervalType: marketData.intervalType,
+          state: Number(marketData.state),
+          nextDepositTime: marketData.nextIntervalDepositTime.toString(),
+          nextRaffleTime: marketData.nexRaffleTime.toString(),
+          createdAt: "0",
+          name: metadata?.short_description || "Kuri Circle",
+          nextDraw: marketData.nexRaffleTime.toString(),
+          launchPeriod: marketData.launchPeriod.toString(),
+          startTime: marketData.startTime.toString(),
+          endTime: marketData.endTime.toString(),
+        }}
+      />
     </>
   );
 }

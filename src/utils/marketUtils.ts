@@ -23,8 +23,10 @@ export const shouldUseKuriCore = (
   userAddress?: string
 ): boolean => {
   const isActive = market.state === 2;
+  const isInLaunch = market.state === 0;
   const isCreator = userAddress?.toLowerCase() === market.creator.toLowerCase();
 
   // Creator needs it for initialization, active markets need it for interactions
-  return isActive || isCreator;
+  // Launch phase markets need it for membership requests
+  return isActive || isCreator || isInLaunch;
 };
