@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import {
-  readContract,
+  // readContract,
   writeContract,
   simulateContract,
   getAccount,
@@ -27,7 +27,7 @@ export const useKuriFactory = () => {
   const { handleTransaction, isSuccess: isCreationSuccess } =
     useTransactionStatus();
   const {
-    markets,
+    // markets,
     loading: marketsLoading,
     error: marketsError,
     refetch: refetchMarkets,
@@ -92,9 +92,8 @@ export const useKuriFactory = () => {
           errorMessage: "Failed to create Kuri market",
         });
 
-        // Refetch markets after successful creation
-        await refetchMarkets();
-        return marketAddress;
+        // Note: refetch is handled by the parent component to avoid double refresh
+        return { marketAddress, txHash };
       } catch (error) {
         console.error("Error creating Kuri market:", error);
         throw handleContractError(error);

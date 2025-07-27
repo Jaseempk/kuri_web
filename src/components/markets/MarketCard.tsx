@@ -583,10 +583,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 <p className="text-xs text-muted-foreground mb-1">Win Amount</p>
                 <p className="text-sm xs:text-base font-medium text-[hsl(var(--forest))]">
                   $
-                  {(
+                  {Math.floor(
                     (Number(market.kuriAmount) / 1_000_000) *
                     market.totalParticipants
-                  ).toFixed(2)}
+                  )}
                 </p>
               </div>
               <div>

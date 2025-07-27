@@ -2,17 +2,16 @@ import { useState, useMemo, useEffect } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
-import { LoadingSkeleton } from "../ui/loading-states";
+// import { LoadingSkeleton } from "../ui/loading-states";
 import { parseUnits } from "viem";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 import { sanitizeInput } from "../../utils/sanitize";
 import { setCsrfToken, validateCsrfToken } from "../../utils/csrf";
 import { Confetti } from "../ui/Confetti";
-import { PostCreationShare } from "./PostCreationShare";
-import { useNavigate } from "react-router-dom";
+// import { PostCreationShare } from "./PostCreationShare";
+// import { useNavigate } from "react-router-dom";
 import { trackMarketCreation, trackError } from "../../utils/analytics";
-import { useApiAuth } from "../../hooks/useApiAuth";
 import { apiClient } from "../../lib/apiClient";
 import { formatErrorForUser } from "../../utils/apiErrors";
 import { useAccount } from "wagmi";
@@ -49,11 +48,9 @@ export const CreateMarketForm = ({
   const [csrfToken, setCsrfTokenState] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { address } = useAccount();
-  const { getSignedAuth } = useApiAuth();
-  const { initialiseKuriMarket, isCreating, isCreationSuccess } =
-    useKuriFactory();
+  const { initialiseKuriMarket, isCreating } = useKuriFactory();
 
   useEffect(() => {
     // Set CSRF token when component mounts
@@ -134,26 +131,25 @@ export const CreateMarketForm = ({
 
     try {
       setError("");
-      const tx = await initialiseKuriMarket(
+      const result = await initialiseKuriMarket(
         parseUnits(monthlyContribution, 6), // USDC has 6 decimal places
         Number(formData.participantCount),
         Number(formData.intervalType) as 0 | 1
       );
 
-      const marketAddress = tx || "";
+      const { marketAddress, txHash } = result;
 
-      // Get signed authentication for market creation
-      const { message, signature } = await getSignedAuth('create_market');
+      // Small delay to ensure transaction is propagated to all RPC nodes
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Call backend API for metadata creation
+      // Call backend API for metadata creation using transaction hash
       const marketData = await apiClient.createCircleMetadata({
-        userAddress: address!,                               // ✅ Added user address
+        userAddress: address!,
         contractAddress: marketAddress,
+        transactionHash: txHash,
         shortDescription: formData.shortDescription,
         longDescription: formData.longDescription,
-        image: formData.image || undefined,                  // ✅ Fixed TypeScript error
-        message,
-        signature,
+        image: formData.image || undefined,
       });
 
       // Track successful market creation

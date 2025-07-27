@@ -25,11 +25,10 @@ interface ProfileData {
 interface CircleData {
   userAddress: string;
   contractAddress: string;
+  transactionHash: string;
   shortDescription: string;
   longDescription?: string;
   image?: File;
-  message: string;
-  signature: string;
 }
 
 class KuriApiClient {
@@ -96,12 +95,10 @@ class KuriApiClient {
    */
   async createCircleMetadata(data: CircleData): Promise<any> {
     const formData = new FormData();
-    // Add address field for authentication middleware (user's wallet address)
-    formData.append('address', data.userAddress);                   // ✅ Fixed: user address for auth
+    formData.append('userAddress', data.userAddress);
     formData.append('contractAddress', data.contractAddress);
+    formData.append('transactionHash', data.transactionHash);
     formData.append('shortDescription', data.shortDescription);
-    formData.append('message', data.message);
-    formData.append('signature', data.signature);
     
     if (data.longDescription) {
       formData.append('longDescription', data.longDescription);
