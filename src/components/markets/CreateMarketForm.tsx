@@ -6,13 +6,16 @@ import { LoadingSkeleton } from "../ui/loading-states";
 import { parseUnits } from "viem";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
-import { supabase } from "../../lib/supabase";
 import { sanitizeInput } from "../../utils/sanitize";
 import { setCsrfToken, validateCsrfToken } from "../../utils/csrf";
 import { Confetti } from "../ui/Confetti";
 import { PostCreationShare } from "./PostCreationShare";
 import { useNavigate } from "react-router-dom";
 import { trackMarketCreation, trackError } from "../../utils/analytics";
+import { useApiAuth } from "../../hooks/useApiAuth";
+import { apiClient } from "../../lib/apiClient";
+import { formatErrorForUser } from "../../utils/apiErrors";
+import { useAccount } from "wagmi";
 
 interface FormData {
   totalAmount: string;
@@ -47,6 +50,8 @@ export const CreateMarketForm = ({
   const [showConfetti, setShowConfetti] = useState(false);
 
   const navigate = useNavigate();
+  const { address } = useAccount();
+  const { getSignedAuth } = useApiAuth();
   const { initialiseKuriMarket, isCreating, isCreationSuccess } =
     useKuriFactory();
 
@@ -137,34 +142,19 @@ export const CreateMarketForm = ({
 
       const marketAddress = tx || "";
 
-      // Save metadata with sanitized content
-      let imageUrl = "";
-      if (formData.image) {
-        const filePath = `${Date.now()}_${formData.image.name.replace(
-          /[^a-zA-Z0-9.]/g,
-          "_"
-        )}`;
-        const { data, error } = await supabase.storage
-          .from("kuri")
-          .upload(filePath, formData.image);
+      // Get signed authentication for market creation
+      const { message, signature } = await getSignedAuth('create_market');
 
-        if (error) throw error;
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("kuri").getPublicUrl(filePath);
-        imageUrl = publicUrl;
-      }
-
-      const { data: marketData } = await supabase
-        .from("kuri_web")
-        .insert({
-          market_address: marketAddress,
-          short_description: sanitizeInput(formData.shortDescription),
-          long_description: sanitizeInput(formData.longDescription),
-          image_url: imageUrl,
-        })
-        .select()
-        .single();
+      // Call backend API for metadata creation
+      const marketData = await apiClient.createCircleMetadata({
+        userAddress: address!,                               // ✅ Added user address
+        contractAddress: marketAddress,
+        shortDescription: formData.shortDescription,
+        longDescription: formData.longDescription,
+        image: formData.image || undefined,                  // ✅ Fixed TypeScript error
+        message,
+        signature,
+      });
 
       // Track successful market creation
       trackMarketCreation(
@@ -207,10 +197,7 @@ export const CreateMarketForm = ({
       );
 
       if (!isUserRejection(err)) {
-        const errorMessage =
-          err instanceof Error
-            ? sanitizeInput(err.message)
-            : "Failed to create circle";
+        const errorMessage = formatErrorForUser(err);
         setError(errorMessage);
         toast.error(errorMessage);
       }

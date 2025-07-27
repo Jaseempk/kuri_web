@@ -40,7 +40,6 @@ export const useKuriFactory = () => {
       participantCount: number,
       intervalType: 0 | 1
     ) => {
-      console.log("accountAddress:", account.address);
       if (!account.address) throw new Error("Wallet not connected");
       setIsCreating(true);
       console.log("factooryAddress:", factoryAddress);
@@ -56,11 +55,9 @@ export const useKuriFactory = () => {
           functionName: "initialiseKuriMarket",
           args: [kuriAmount, participantCount, intervalType],
         });
-        console.log("Simulation request:", request);
 
         // If simulation succeeds, send the transaction
         const txHash = await writeContract(config, request);
-        console.log("Transaction request:", txHash);
 
         // Wait for the transaction to be mined
         const receipt = await waitForTransactionReceipt(config, {
@@ -76,7 +73,6 @@ export const useKuriFactory = () => {
               topics: log.topics,
             });
 
-            console.log("Decoded log:", decoded);
             if (decoded.eventName === "KuriMarketDeployed") {
               marketAddress = decoded.args.marketAddress;
               break;

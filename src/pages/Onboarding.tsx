@@ -3,12 +3,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { Button } from "../components/ui/button";
-import { supabase } from "../lib/supabase";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 import { sanitizeInput } from "../utils/sanitize";
 import { setCsrfToken, validateCsrfToken } from "../utils/csrf";
 import { trackEvent, trackError } from "../utils/analytics";
+import { formatErrorForUser } from "../utils/apiErrors";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -110,29 +110,11 @@ export default function Onboarding() {
     setError("");
 
     try {
-      let profile_image_url = "";
-      if (formData.image) {
-        const filePath = `${address.toLowerCase()}_${Date.now()}_${formData.image.name.replace(
-          /[^a-zA-Z0-9.]/g,
-          "_"
-        )}`;
-        const { error: uploadError } = await supabase.storage
-          .from("kuriprofiles")
-          .upload(filePath, formData.image);
-
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("kuriprofiles").getPublicUrl(filePath);
-
-        profile_image_url = publicUrl;
-      }
-
+      // Call updateProfile with image file - backend will handle upload
       await updateProfile({
         username: sanitizeInput(formData.username),
         display_name: sanitizeInput(formData.display_name),
-        profile_image_url,
+        image: formData.image || undefined,
         reputation_score: 0,
       });
 
@@ -164,10 +146,7 @@ export default function Onboarding() {
       );
 
       console.error("Error creating profile:", error);
-      const errorMessage =
-        error instanceof Error
-          ? sanitizeInput(error.message)
-          : "Failed to create profile. Please try again.";
+      const errorMessage = formatErrorForUser(error);
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
