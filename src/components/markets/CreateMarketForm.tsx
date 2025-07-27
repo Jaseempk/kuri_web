@@ -2,17 +2,19 @@ import { useState, useMemo, useEffect } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
-import { LoadingSkeleton } from "../ui/loading-states";
+// import { LoadingSkeleton } from "../ui/loading-states";
 import { parseUnits } from "viem";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
-import { supabase } from "../../lib/supabase";
 import { sanitizeInput } from "../../utils/sanitize";
 import { setCsrfToken, validateCsrfToken } from "../../utils/csrf";
 import { Confetti } from "../ui/Confetti";
-import { PostCreationShare } from "./PostCreationShare";
-import { useNavigate } from "react-router-dom";
+// import { PostCreationShare } from "./PostCreationShare";
+// import { useNavigate } from "react-router-dom";
 import { trackMarketCreation, trackError } from "../../utils/analytics";
+import { apiClient } from "../../lib/apiClient";
+import { formatErrorForUser } from "../../utils/apiErrors";
+import { useAccount } from "wagmi";
 
 interface FormData {
   totalAmount: string;
@@ -46,9 +48,9 @@ export const CreateMarketForm = ({
   const [csrfToken, setCsrfTokenState] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const navigate = useNavigate();
-  const { initialiseKuriMarket, isCreating, isCreationSuccess } =
-    useKuriFactory();
+  // const navigate = useNavigate();
+  const { address } = useAccount();
+  const { initialiseKuriMarket, isCreating } = useKuriFactory();
 
   useEffect(() => {
     // Set CSRF token when component mounts
@@ -129,42 +131,26 @@ export const CreateMarketForm = ({
 
     try {
       setError("");
-      const tx = await initialiseKuriMarket(
+      const result = await initialiseKuriMarket(
         parseUnits(monthlyContribution, 6), // USDC has 6 decimal places
         Number(formData.participantCount),
         Number(formData.intervalType) as 0 | 1
       );
 
-      const marketAddress = tx || "";
+      const { marketAddress, txHash } = result;
 
-      // Save metadata with sanitized content
-      let imageUrl = "";
-      if (formData.image) {
-        const filePath = `${Date.now()}_${formData.image.name.replace(
-          /[^a-zA-Z0-9.]/g,
-          "_"
-        )}`;
-        const { data, error } = await supabase.storage
-          .from("kuri")
-          .upload(filePath, formData.image);
+      // Small delay to ensure transaction is propagated to all RPC nodes
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-        if (error) throw error;
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("kuri").getPublicUrl(filePath);
-        imageUrl = publicUrl;
-      }
-
-      const { data: marketData } = await supabase
-        .from("kuri_web")
-        .insert({
-          market_address: marketAddress,
-          short_description: sanitizeInput(formData.shortDescription),
-          long_description: sanitizeInput(formData.longDescription),
-          image_url: imageUrl,
-        })
-        .select()
-        .single();
+      // Call backend API for metadata creation using transaction hash
+      const marketData = await apiClient.createCircleMetadata({
+        userAddress: address!,
+        contractAddress: marketAddress,
+        transactionHash: txHash,
+        shortDescription: formData.shortDescription,
+        longDescription: formData.longDescription,
+        image: formData.image || undefined,
+      });
 
       // Track successful market creation
       trackMarketCreation(
@@ -207,10 +193,7 @@ export const CreateMarketForm = ({
       );
 
       if (!isUserRejection(err)) {
-        const errorMessage =
-          err instanceof Error
-            ? sanitizeInput(err.message)
-            : "Failed to create circle";
+        const errorMessage = formatErrorForUser(err);
         setError(errorMessage);
         toast.error(errorMessage);
       }

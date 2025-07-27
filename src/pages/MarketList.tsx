@@ -412,15 +412,14 @@ export default function MarketList() {
   };
 
   const handleMarketCreated = (market: any) => {
-    // Set the created market first
+    // Set the created market and close the create form
     setCreatedMarket(market);
-    // Then update both modal states in the same render cycle
     setShowCreateForm(false);
-    // Use requestAnimationFrame to ensure the share modal opens in the next frame
-    requestAnimationFrame(() => {
-      setShowShareModal(true);
-    });
-    // Refresh market data after creation
+    
+    // Show share modal
+    setShowShareModal(true);
+    
+    // Refresh market data to include the new market
     refetch();
   };
 

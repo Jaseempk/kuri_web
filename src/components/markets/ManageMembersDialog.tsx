@@ -132,6 +132,7 @@ export const ManageMembersDialog = ({
                   />
                 </svg>
               </div>
+
               <div className="text-center max-w-md">
                 <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[hsl(var(--terracotta))] mb-2 sm:mb-3">
                   Join This Circle

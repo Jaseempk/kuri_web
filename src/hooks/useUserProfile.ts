@@ -2,9 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { KuriUserProfile } from "../types/user";
 import { useAccount } from "wagmi";
+import { useApiAuth } from "./useApiAuth";
+import { apiClient } from "../lib/apiClient";
+import { formatErrorForUser } from "../utils/apiErrors";
 
 export const useUserProfile = () => {
   const { address } = useAccount();
+  const { getSignedAuth } = useApiAuth();
   const [profile, setProfile] = useState<KuriUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,26 +31,34 @@ export const useUserProfile = () => {
     }
   }, [address]);
 
-  const updateProfile = async (updates: Partial<KuriUserProfile>) => {
+  const updateProfile = async (updates: Partial<KuriUserProfile> & { image?: File }) => {
     if (!address) return;
 
     try {
-      const { data, error } = await supabase
-        .from("kuri_user_profiles")
-        .upsert({
-          user_address: address.toLowerCase(),
-          ...updates,
-          last_active: new Date(),
-        })
-        .select()
-        .single();
+      // Get signed authentication for profile creation
+      const { message, signature } = await getSignedAuth('create_profile');
+      
+      // Call backend API
+      const result = await apiClient.createOrUpdateProfile({
+        userAddress: address,
+        username: updates.username || '',
+        displayName: updates.display_name || '',
+        image: updates.image,
+        message,
+        signature,
+      });
 
-      if (error) throw error;
-      setProfile(data);
-      return data;
+      setProfile(result);
+      
+      // Refresh profile data to ensure consistency
+      await fetchProfile();
+      
+      return result;
     } catch (error) {
       console.error("Error updating profile:", error);
-      throw error;
+      // Format error for better user experience
+      const formattedError = new Error(formatErrorForUser(error));
+      throw formattedError;
     }
   };
 
