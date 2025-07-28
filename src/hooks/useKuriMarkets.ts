@@ -50,10 +50,13 @@ export const useKuriMarkets = () => {
     queryFn: async () => {
       if (marketAddresses.length === 0) return [];
       
+      // Convert all addresses to lowercase for case-insensitive comparison
+      const lowercaseAddresses = marketAddresses.map(addr => addr.toLowerCase());
+      
       const { data, error } = await supabase
         .from("kuri_web")
         .select("market_address")
-        .in("market_address", marketAddresses);
+        .or(lowercaseAddresses.map(addr => `market_address.ilike.${addr}`).join(','));
       
       if (error) {
         console.error("Error fetching valid market addresses:", error);
