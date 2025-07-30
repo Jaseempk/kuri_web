@@ -35,6 +35,15 @@ export const useUSDCBalances = (
     try {
       const balancePromises = contractAddresses.map(async (address, index) => {
         try {
+          // Add additional validation for the contract address
+          if (!address || !address.startsWith('0x') || address.length !== 42) {
+            console.warn(`Invalid contract address: ${address}`);
+            return {
+              contractAddress: address,
+              balance: BigInt(0),
+            };
+          }
+
           const balance = await readContract(config, {
             address: USDC_ADDRESS,
             abi: ERC20ABI,
@@ -47,7 +56,12 @@ export const useUSDCBalances = (
             balance: balance as bigint,
           };
         } catch (err) {
-          console.error(`Error fetching USDC balance for ${address}:`, err);
+          // Check if this is a user rejection error and handle it silently
+          if (err instanceof Error && err.message.includes("User rejected")) {
+            console.warn(`User rejected request for ${address}:`, err);
+          } else {
+            console.error(`Error fetching USDC balance for ${address}:`, err);
+          }
           return {
             contractAddress: address,
             balance: BigInt(0),
@@ -58,7 +72,14 @@ export const useUSDCBalances = (
       const results = await Promise.all(balancePromises);
       setBalances(results);
     } catch (err) {
-      setError(err as Error);
+      // Handle user rejection errors more gracefully
+      if (err instanceof Error && err.message.includes("User rejected")) {
+        console.warn("User rejected USDC balance request:", err);
+        // Don't set this as an error since it's expected behavior
+        setBalances([]);
+      } else {
+        setError(err as Error);
+      }
     } finally {
       setIsLoading(false);
     }

@@ -32,7 +32,12 @@ export const checkMembershipStatus = async (
 
     return userData[0] as number;
   } catch (err) {
-    console.error(`Error checking membership for ${marketAddress}:`, err);
+    // Handle user rejection errors silently
+    if (err instanceof Error && err.message.includes("User rejected")) {
+      console.warn(`User rejected membership check for ${marketAddress}:`, err);
+    } else {
+      console.error(`Error checking membership for ${marketAddress}:`, err);
+    }
     return 0; // Default to NONE
   }
 };
@@ -77,7 +82,12 @@ export const checkPaymentStatusForMember = async (
 
     return hasPaid;
   } catch (err) {
-    console.error(`Error checking payment status for ${marketAddress}:`, err);
+    // Handle user rejection errors silently
+    if (err instanceof Error && err.message.includes("User rejected")) {
+      console.warn(`User rejected payment status check for ${marketAddress}:`, err);
+    } else {
+      console.error(`Error checking payment status for ${marketAddress}:`, err);
+    }
     return null;
   }
 };
@@ -130,9 +140,15 @@ export const batchUserMarketData = async (
         isCreator,
       };
     } catch (err) {
-      const errorMsg = `Failed to fetch user data for market ${address}`;
-      console.error(errorMsg, err);
-      errors.push(errorMsg);
+      // Handle user rejection errors more gracefully
+      if (err instanceof Error && err.message.includes("User rejected")) {
+        console.warn(`User rejected data fetch for market ${address}:`, err);
+        // Don't add user rejection to errors array as it's expected behavior
+      } else {
+        const errorMsg = `Failed to fetch user data for market ${address}`;
+        console.error(errorMsg, err);
+        errors.push(errorMsg);
+      }
 
       // Return default data for failed markets
       return {
@@ -140,7 +156,7 @@ export const batchUserMarketData = async (
         membershipStatus: 0,
         userPaymentStatus: null,
         isCreator: false,
-        error: errorMsg,
+        error: err instanceof Error && err.message.includes("User rejected") ? undefined : `Failed to fetch user data for market ${address}`,
       };
     }
   });

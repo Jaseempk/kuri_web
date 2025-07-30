@@ -2,8 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card } from "../components/ui/card";
 import { useOptimizedMarkets } from "../hooks/useOptimizedMarkets";
-import { useKuriFactory } from "../hooks/contracts/useKuriFactory";
-import { MarketStatus, IntervalType } from "../graphql/types";
+import { IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog";
 import { LoadingSkeleton } from "../components/ui/loading-states";
@@ -18,6 +17,8 @@ import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useNavigate } from "react-router-dom";
 import { PostCreationShare } from "../components/markets/PostCreationShare";
 import { useUSDCBalances } from "../hooks/useUSDCBalances";
+import { getAccount } from "@wagmi/core";
+import { config } from "../config/wagmi";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -71,38 +72,7 @@ const StatsCard = ({
   </Card>
 );
 
-// Filter button component
-const FilterButton = ({
-  label,
-  count,
-  isActive,
-  onClick,
-}: {
-  label: string;
-  count: number;
-  isActive: boolean;
-  onClick: () => void;
-}) => (
-  <button
-    onClick={onClick}
-    className={`px-3 xs:px-4 py-2 xs:py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-      isActive
-        ? "bg-[#8B6F47] text-white"
-        : "bg-white text-[#8B6F47] border border-[#E8DED1] hover:bg-[#F9F5F1]"
-    }`}
-  >
-    {label}
-    <span
-      className={`px-2 py-0.5 rounded-full text-xs ${
-        isActive
-          ? "bg-white/20 text-white"
-          : "bg-[#F9F5F1] text-[#8B6F47] border border-[#E8DED1]"
-      }`}
-    >
-      {count}
-    </span>
-  </button>
-);
+// FilterButton component was removed as it's unused - tabs are now implemented inline
 
 // Market search component
 const MarketSearch = ({
@@ -183,6 +153,10 @@ const IntervalTypeFilter = ({
 };
 
 export default function MarketList() {
+  // Check wallet connection status
+  const account = getAccount(config);
+  const isWalletConnected = Boolean(account.isConnected && account.address);
+
   // Replace useKuriMarkets with useOptimizedMarkets
   const {
     markets,
@@ -192,7 +166,9 @@ export default function MarketList() {
     userDataError,
     refetch,
     refetchUserData,
-  } = useOptimizedMarkets();
+  } = useOptimizedMarkets({
+    includeUserData: isWalletConnected, // Only fetch user data when wallet is connected
+  });
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -240,12 +216,12 @@ export default function MarketList() {
     [markets]
   );
 
-  // Fetch USDC balances for all markets
+  // Fetch USDC balances for all markets (only when we have markets)
   const {
     totalTVL,
     isLoading: isLoadingBalances,
     error: balancesError,
-  } = useUSDCBalances(marketAddresses, marketStates);
+  } = useUSDCBalances(markets.length > 0 ? marketAddresses : [], marketStates);
 
   useEffect(() => {
     const initializeMarketsData = async () => {
@@ -376,11 +352,11 @@ export default function MarketList() {
     0
   );
 
-  // Helper function to count markets by interval type
-  const countMarketsByIntervalType = (intervalType: number) => {
-    return markets.filter((market) => market.intervalType === intervalType)
-      .length;
-  };
+  // Helper function to count markets by interval type (unused but kept for future use)
+  // const countMarketsByIntervalType = (intervalType: number) => {
+  //   return markets.filter((market) => market.intervalType === intervalType)
+  //     .length;
+  // };
 
   // Calculate changes (comparing with previous stats)
   const tvlChange = previousStats.tvl
@@ -415,10 +391,10 @@ export default function MarketList() {
     // Set the created market and close the create form
     setCreatedMarket(market);
     setShowCreateForm(false);
-    
+
     // Show share modal
     setShowShareModal(true);
-    
+
     // Refresh market data to include the new market
     refetch();
   };
@@ -557,7 +533,7 @@ export default function MarketList() {
             })}
           </div>
 
-          {marketSections.map(({ title, description, filter, value }) => {
+          {marketSections.map(({ title, filter, value }) => {
             const sectionMarkets = filteredMarkets.filter(filter);
             const isActive = activeTab === value;
 
