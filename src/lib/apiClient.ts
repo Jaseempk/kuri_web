@@ -50,14 +50,39 @@ class KuriApiClient {
    * Get authentication message from backend
    */
   async getAuthMessage(action: 'create_profile' | 'create_market', address: string): Promise<AuthMessageResponse> {
-    const response = await fetch(`${this.baseUrl}/api/auth/message/${action}/${address}`);
-    const result: ApiResponse<AuthMessageResponse> = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to get auth message');
+    try {
+      const response = await fetch(`${this.baseUrl}/api/auth/message/${action}/${address}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Expected JSON but received: ${text.substring(0, 100)}...`);
+      }
+
+      const result: ApiResponse<AuthMessageResponse> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to get auth message');
+      }
+      
+      return result.data!;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to backend server. Please check your connection.');
+      }
+      throw error;
     }
-    
-    return result.data!;
   }
 
   /**
@@ -66,30 +91,49 @@ class KuriApiClient {
    * to ensure the message was actually signed by the claimed address
    */
   async createOrUpdateProfile(data: ProfileData): Promise<any> {
-    const formData = new FormData();
-    formData.append('address', data.userAddress);        // ✅ Fixed: 'address' instead of 'userAddress'
-    formData.append('userAddress', data.userAddress);     // Keep for backend controller
-    formData.append('username', data.username);
-    formData.append('displayName', data.displayName);
-    formData.append('message', data.message);
-    formData.append('signature', data.signature);
-    
-    if (data.image) {
-      formData.append('image', data.image);
-    }
+    try {
+      const formData = new FormData();
+      formData.append('address', data.userAddress);        // ✅ Fixed: 'address' instead of 'userAddress'
+      formData.append('userAddress', data.userAddress);     // Keep for backend controller
+      formData.append('username', data.username);
+      formData.append('displayName', data.displayName);
+      formData.append('message', data.message);
+      formData.append('signature', data.signature);
+      
+      if (data.image) {
+        formData.append('image', data.image);
+      }
 
-    const response = await fetch(`${this.baseUrl}/api/users/profile`, {
-      method: 'POST',
-      body: formData,
-    });
+      const response = await fetch(`${this.baseUrl}/api/users/profile`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    const result: ApiResponse<any> = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to create profile');
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Expected JSON but received: ${text.substring(0, 100)}...`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to create profile');
+      }
+      
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to backend server. Please check your connection.');
+      }
+      throw error;
     }
-    
-    return result.data;
   }
 
   /**
