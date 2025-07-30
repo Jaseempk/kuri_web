@@ -72,8 +72,6 @@ const StatsCard = ({
   </Card>
 );
 
-// FilterButton component was removed as it's unused - tabs are now implemented inline
-
 // Market search component
 const MarketSearch = ({
   value,
@@ -168,6 +166,7 @@ export default function MarketList() {
     refetchUserData,
   } = useOptimizedMarkets({
     includeUserData: isWalletConnected, // Only fetch user data when wallet is connected
+    includePaymentStatus: false, // Skip expensive payment status calls for Markets List
   });
 
   const [activeFilter, setActiveFilter] = useState("all");

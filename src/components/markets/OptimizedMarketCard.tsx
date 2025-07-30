@@ -118,6 +118,11 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   const [showShareModal, setShowShareModal] = useState(false);
 
   const account = getAccount(config);
+  
+  const { requireProfile } = useProfileRequired({
+    strict: false,
+    action: "join_circle",
+  });
 
   const { data: metadata } = useQuery({
     queryKey: ["market-metadata", market.address],
@@ -206,6 +211,11 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
 
     if (!account.address) {
       setError("Please connect your wallet first");
+      return;
+    }
+
+    const hasProfile = requireProfile();
+    if (!hasProfile) {
       return;
     }
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
@@ -7,7 +7,7 @@ import { parseUnits } from "viem";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 import { sanitizeInput } from "../../utils/sanitize";
-import { setCsrfToken, validateCsrfToken } from "../../utils/csrf";
+import { validateImageFile } from "../../utils/fileValidation";
 import { Confetti } from "../ui/Confetti";
 // import { PostCreationShare } from "./PostCreationShare";
 // import { useNavigate } from "react-router-dom";
@@ -45,18 +45,12 @@ export const CreateMarketForm = ({
     imagePreview: null,
   });
   const [error, setError] = useState<string>("");
-  const [csrfToken, setCsrfTokenState] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
 
   // const navigate = useNavigate();
   const { address } = useAccount();
   const { initialiseKuriMarket, isCreating } = useKuriFactory();
 
-  useEffect(() => {
-    // Set CSRF token when component mounts
-    const token = setCsrfToken();
-    setCsrfTokenState(token);
-  }, []);
 
   // Calculate monthly contribution per participant
   const monthlyContribution = useMemo(() => {
@@ -84,16 +78,10 @@ export const CreateMarketForm = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
-    if (!validTypes.includes(file.type)) {
-      setError("Please upload a valid image file (JPEG, JPG, PNG, or GIF)");
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image size should be less than 5MB");
+    // Use secure file validation
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      setError(validation.error || "Invalid file");
       return;
     }
 
@@ -115,11 +103,6 @@ export const CreateMarketForm = ({
     }
     if (Number(formData.participantCount) > 500) {
       setError("Maximum 500 participants allowed per circle");
-      return false;
-    }
-    // Validate CSRF token
-    if (!validateCsrfToken(csrfToken)) {
-      setError("Invalid form submission. Please try again.");
       return false;
     }
     return true;
@@ -160,9 +143,6 @@ export const CreateMarketForm = ({
         monthlyContribution
       );
 
-      // Generate new CSRF token after successful submission
-      const newToken = setCsrfToken();
-      setCsrfTokenState(newToken);
 
       // Show success state
       setShowConfetti(true);

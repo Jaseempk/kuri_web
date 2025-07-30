@@ -543,6 +543,23 @@ export default function MarketDetail() {
 
   // Render action button
   const renderActionButton = () => {
+    // Don't show action buttons when wallet is not connected
+    if (!account.address) {
+      return (
+        <motion.div>
+          <Button
+            disabled
+            className="w-full bg-gradient-to-r from-gray-300 to-gray-400 text-black border-0 py-4 text-lg font-semibold rounded-2xl shadow-lg cursor-not-allowed opacity-70"
+          >
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 0h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Connect Wallet to Join
+          </Button>
+        </motion.div>
+      );
+    }
+
     if (isCreator) {
       if (canInitialize) {
         return (

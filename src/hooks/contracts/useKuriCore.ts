@@ -443,7 +443,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
   // Request membership
   const requestMembership = useCallback(async () => {
-    console.log("Requesting membership for", kuriAddress, account.address);
     if (!kuriAddress || !account.address) throw new Error("Invalid parameters");
     setIsRequesting(true);
 

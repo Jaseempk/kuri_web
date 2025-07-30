@@ -13,6 +13,7 @@ export interface UseUserMarketDataOptions {
   staleTime?: number;
   gcTime?: number;
   refetchInterval?: number;
+  includePaymentStatus?: boolean;
 }
 
 export interface UseUserMarketDataResult {
@@ -37,6 +38,7 @@ export const useUserMarketData = (
     staleTime = 30000, // 30 seconds
     gcTime = 300000, // 5 minutes (replaces cacheTime in React Query v5)
     refetchInterval = false,
+    includePaymentStatus = true,
   } = options;
 
   // Filter markets where user data is relevant
@@ -54,6 +56,7 @@ export const useUserMarketData = (
       "userMarketData",
       address,
       relevantMarkets.map((m) => m.address).sort(),
+      includePaymentStatus,
     ],
     queryFn: async (): Promise<BatchUserDataResult> => {
       if (!address || relevantMarkets.length === 0) {
@@ -69,7 +72,8 @@ export const useUserMarketData = (
         marketAddresses,
         address,
         marketStates,
-        marketCreators
+        marketCreators,
+        includePaymentStatus
       );
 
       return result;

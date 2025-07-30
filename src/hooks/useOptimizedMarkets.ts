@@ -13,6 +13,7 @@ export interface OptimizedKuriMarket extends KuriMarket {
 export interface UseOptimizedMarketsOptions {
   userDataOptions?: UseUserMarketDataOptions;
   includeUserData?: boolean;
+  includePaymentStatus?: boolean;
 }
 
 export interface UseOptimizedMarketsResult {
@@ -32,7 +33,7 @@ export interface UseOptimizedMarketsResult {
 export const useOptimizedMarkets = (
   options: UseOptimizedMarketsOptions = {}
 ): UseOptimizedMarketsResult => {
-  const { userDataOptions = {}, includeUserData = true } = options;
+  const { userDataOptions = {}, includeUserData = true, includePaymentStatus = true } = options;
 
   // Fetch market data (already optimized with batch calls)
   const {
@@ -51,6 +52,7 @@ export const useOptimizedMarkets = (
     refetch: refetchUserData,
   } = useUserMarketData(rawMarkets, {
     enabled: includeUserData,
+    includePaymentStatus,
     ...userDataOptions,
   });
 

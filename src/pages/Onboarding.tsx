@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 import { sanitizeInput } from "../utils/sanitize";
-import { setCsrfToken, validateCsrfToken } from "../utils/csrf";
+import { validateImageFile } from "../utils/fileValidation";
 import { trackEvent, trackError } from "../utils/analytics";
 import { formatErrorForUser } from "../utils/apiErrors";
 
@@ -17,7 +17,6 @@ export default function Onboarding() {
   const { profile, updateProfile } = useUserProfile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
-  const [csrfToken, setCsrfTokenState] = useState<string>("");
   const [onboardingStartTime] = useState<number>(Date.now());
   const returnUrl = location.state?.returnUrl || "/markets";
 
@@ -28,11 +27,6 @@ export default function Onboarding() {
     imagePreview: null as string | null,
   });
 
-  // Set CSRF token on mount
-  useEffect(() => {
-    const token = setCsrfToken();
-    setCsrfTokenState(token);
-  }, []);
 
   // Redirect if user already has a profile
   useEffect(() => {
@@ -50,11 +44,6 @@ export default function Onboarding() {
   }, [location.state?.source]);
 
   const validateForm = (): boolean => {
-    if (!validateCsrfToken(csrfToken)) {
-      setError("Invalid form submission. Please try again.");
-      return false;
-    }
-
     if (!formData.username.trim()) {
       setError("Username is required");
       return false;
@@ -81,16 +70,10 @@ export default function Onboarding() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
-    if (!validTypes.includes(file.type)) {
-      setError("Please upload a valid image file (JPEG, JPG, PNG, or GIF)");
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image size should be less than 5MB");
+    // Use secure file validation
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      setError(validation.error || "Invalid file");
       return;
     }
 
@@ -131,9 +114,6 @@ export default function Onboarding() {
         steps_completed: 1, // Single step onboarding
       });
 
-      // Generate new CSRF token after successful submission
-      const newToken = setCsrfToken();
-      setCsrfTokenState(newToken);
 
       toast.success("Profile created successfully!");
       navigate(returnUrl, { replace: true });
@@ -162,7 +142,14 @@ export default function Onboarding() {
       duration,
     });
 
-    navigate("/markets", { replace: true });
+    // Navigate back to the return URL, but use history.back() if possible to maintain state
+    if (returnUrl && window.history.length > 1) {
+      // Go back in history to maintain page state (scroll position, filters, etc.)
+      navigate(-1);
+    } else {
+      // Fallback to direct navigation if no history or returnUrl
+      navigate(returnUrl || "/markets", { replace: true });
+    }
   };
 
   return (

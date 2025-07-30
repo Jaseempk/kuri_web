@@ -62,6 +62,8 @@ class KuriApiClient {
 
   /**
    * Create or update user profile via backend API
+   * SECURITY NOTE: Backend must verify the signature cryptographically
+   * to ensure the message was actually signed by the claimed address
    */
   async createOrUpdateProfile(data: ProfileData): Promise<any> {
     const formData = new FormData();
@@ -92,6 +94,8 @@ class KuriApiClient {
 
   /**
    * Create circle metadata via backend API
+   * SECURITY NOTE: Backend should verify the transaction hash exists
+   * and that the userAddress is the actual creator of the contract
    */
   async createCircleMetadata(data: CircleData): Promise<any> {
     const formData = new FormData();

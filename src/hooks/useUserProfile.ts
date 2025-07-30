@@ -20,12 +20,13 @@ export const useUserProfile = () => {
         .from("kuri_user_profiles")
         .select("*")
         .eq("user_address", address.toLowerCase())
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
 
       if (error) throw error;
-      setProfile(data);
+      setProfile(data); // data will be null if no profile exists
     } catch (error) {
       console.error("Error fetching profile:", error);
+      setProfile(null); // Explicitly set to null on error
     } finally {
       setLoading(false);
     }
@@ -85,10 +86,10 @@ export const useUserProfileByAddress = (userAddress: string | null) => {
         .from("kuri_user_profiles")
         .select("*")
         .eq("user_address", address.toLowerCase())
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
 
       if (error) throw error;
-      return data;
+      return data; // Will be null if no profile exists
     } catch (error) {
       console.error("Error fetching profile by address:", error);
       return null;

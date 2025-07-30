@@ -31,6 +31,8 @@ const wagmiConfig = getDefaultConfig({
   transports: {
     [baseSepolia.id]: transport,
   },
+  // Handle multiple wallet extensions gracefully
+  ssr: false, // Disable server-side rendering for wallet detection
 });
 
 export const config: Config = createConfig(wagmiConfig);

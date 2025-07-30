@@ -99,7 +99,8 @@ export const batchUserMarketData = async (
   marketAddresses: string[],
   userAddress: string,
   marketStates: number[],
-  marketCreators?: string[]
+  marketCreators?: string[],
+  includePaymentStatus: boolean = true
 ): Promise<BatchUserDataResult> => {
   if (!userAddress || marketAddresses.length === 0) {
     return { data: {}, errors: [] };
@@ -125,13 +126,15 @@ export const batchUserMarketData = async (
         userAddress
       );
 
-      // Then check payment status if needed
-      const userPaymentStatus = await checkPaymentStatusForMember(
-        address,
-        userAddress,
-        membershipStatus,
-        marketState
-      );
+      // Then check payment status if needed and requested
+      const userPaymentStatus = includePaymentStatus 
+        ? await checkPaymentStatusForMember(
+            address,
+            userAddress,
+            membershipStatus,
+            marketState
+          )
+        : null;
 
       return {
         address,

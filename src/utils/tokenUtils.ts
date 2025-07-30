@@ -25,12 +25,45 @@ export const formatUSDC = (amount: bigint): string => {
 };
 
 /**
- * Parse USDC amount from user input
+ * Parse USDC amount from user input with validation
  * @param amount - Amount as string (e.g., "100.50")
  * @returns Amount in wei (smallest units)
+ * @throws Error if amount is invalid
  */
 export const parseUSDC = (amount: string): bigint => {
-  return parseUnits(amount, 6);
+  if (!amount || typeof amount !== 'string') {
+    throw new Error('Amount is required and must be a string');
+  }
+
+  const trimmedAmount = amount.trim();
+  if (!trimmedAmount) {
+    throw new Error('Amount cannot be empty');
+  }
+
+  const num = parseFloat(trimmedAmount);
+  
+  // Check for invalid number
+  if (isNaN(num)) {
+    throw new Error('Invalid amount format');
+  }
+
+  // Check for negative values
+  if (num < 0) {
+    throw new Error('Amount cannot be negative');
+  }
+
+  // Check for reasonable maximum (1 billion USDC)
+  if (num > 1_000_000_000) {
+    throw new Error('Amount exceeds maximum allowed value');
+  }
+
+  // Check for excessive decimal places (USDC has 6 decimals)
+  const decimalPart = trimmedAmount.split('.')[1];
+  if (decimalPart && decimalPart.length > 6) {
+    throw new Error('Amount cannot have more than 6 decimal places');
+  }
+
+  return parseUnits(trimmedAmount, 6);
 };
 
 /**
