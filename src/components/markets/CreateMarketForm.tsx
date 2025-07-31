@@ -46,6 +46,7 @@ export const CreateMarketForm = ({
   });
   const [error, setError] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
+  const [hasInvalidImage, setHasInvalidImage] = useState(false);
 
   // const navigate = useNavigate();
   const { address } = useAccount();
@@ -76,15 +77,29 @@ export const CreateMarketForm = ({
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    
+    // Clear any previous errors first
+    setError("");
+    
+    if (!file) {
+      // Clear image if no file selected
+      setFormData((prev) => ({ ...prev, image: null, imagePreview: null }));
+      setHasInvalidImage(false);
+      return;
+    }
 
     // Use secure file validation
     const validation = validateImageFile(file);
     if (!validation.isValid) {
       setError(validation.error || "Invalid file");
+      setHasInvalidImage(true);
+      // Don't clear the file input - let user see their invalid selection
+      setFormData((prev) => ({ ...prev, image: file, imagePreview: URL.createObjectURL(file) }));
       return;
     }
 
+    // Valid image
+    setHasInvalidImage(false);
     setFormData((prev) => ({
       ...prev,
       image: file,
@@ -105,6 +120,13 @@ export const CreateMarketForm = ({
       setError("Maximum 500 participants allowed per circle");
       return false;
     }
+
+    // Simple validation: if no image OR invalid image, block submission
+    if (!formData.image || hasInvalidImage) {
+      setError("Creation failed: Please add a valid image (max 5MB, JPEG/PNG/GIF/WebP)");
+      return false;
+    }
+
     return true;
   };
 

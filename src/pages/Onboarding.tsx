@@ -18,6 +18,7 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [onboardingStartTime] = useState<number>(Date.now());
+  const [hasInvalidImage, setHasInvalidImage] = useState(false);
   const returnUrl = location.state?.returnUrl || "/markets";
 
   const [formData, setFormData] = useState({
@@ -63,20 +64,40 @@ export default function Onboarding() {
       return false;
     }
 
+    // Simple validation: if no image OR invalid image, block submission
+    if (!formData.image || hasInvalidImage) {
+      setError("Profile creation failed: Please add a valid profile picture (max 5MB, JPEG/PNG/GIF/WebP)");
+      return false;
+    }
+
     return true;
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    
+    // Clear any previous errors first
+    setError("");
+    
+    if (!file) {
+      // Clear image if no file selected
+      setFormData((prev) => ({ ...prev, image: null, imagePreview: null }));
+      setHasInvalidImage(false);
+      return;
+    }
 
     // Use secure file validation
     const validation = validateImageFile(file);
     if (!validation.isValid) {
       setError(validation.error || "Invalid file");
+      setHasInvalidImage(true);
+      // Don't clear the file input - let user see their invalid selection
+      setFormData((prev) => ({ ...prev, image: file, imagePreview: URL.createObjectURL(file) }));
       return;
     }
 
+    // Valid image
+    setHasInvalidImage(false);
     setFormData((prev) => ({
       ...prev,
       image: file,
