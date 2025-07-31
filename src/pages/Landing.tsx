@@ -81,6 +81,7 @@ function App() {
   const navigate = useNavigate();
   const { markets, loading: isLoading, error } = useKuriMarkets();
   const [inLaunchMarkets, setInLaunchMarkets] = useState<KuriMarket[]>([]);
+  const [showingFallback, setShowingFallback] = useState(false);
   // State for navigation
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
@@ -193,11 +194,34 @@ function App() {
       if (!markets.length) return;
 
       try {
-        const latestInLaunch = markets
-          .filter((m) => m.state === 0)
+        // First: Try to get circles with active launch periods
+        const activeInLaunch = markets
+          .filter((m) => {
+            if (m.state !== 0) return false;
+            
+            // Check if launch period is still active (3 days from creation)
+            const creationTime = Number(m.createdAt) * 1000;
+            const launchEndTime = creationTime + 3 * 24 * 60 * 60 * 1000; // 3 days
+            const now = Date.now();
+            
+            return now < launchEndTime;
+          })
           .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
           .slice(0, 3);
-        setInLaunchMarkets(latestInLaunch);
+
+        // Fallback: If no active launch circles, show recently active circles
+        if (activeInLaunch.length === 0) {
+          const recentlyActive = markets
+            .filter((m) => m.state === 2) // ACTIVE state
+            .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
+            .slice(0, 3);
+          
+          setInLaunchMarkets(recentlyActive);
+          setShowingFallback(true);
+        } else {
+          setInLaunchMarkets(activeInLaunch);
+          setShowingFallback(false);
+        }
       } catch (err) {
         console.error("Error processing markets:", err);
       }
@@ -478,11 +502,13 @@ function App() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-sans font-semibold mb-4">
-              Live Circles
+              {showingFallback ? "Recently Active Circles" : "Live Circles"}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Join one of our active circles or create your own to start your
-              saving journey.
+              {showingFallback 
+                ? "Recently started circles you can still join and contribute to."
+                : "Join one of our active circles or create your own to start your saving journey."
+              }
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -491,8 +517,25 @@ function App() {
                 Loading circles...
               </div>
             ) : inLaunchMarkets.length === 0 ? (
-              <div className="col-span-3 text-center text-muted-foreground">
-                No live circles in launch phase
+              <div className="col-span-3 text-center py-12">
+                <div className="text-muted-foreground mb-6">
+                  <div className="mx-auto h-12 w-12 mb-4 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center">
+                    <svg className="h-6 w-6 text-[hsl(var(--gold))]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium mb-2 text-foreground">No Active Circles Right Now</h3>
+                  <p className="text-sm max-w-sm mx-auto">
+                    Be the first to create a new circle and start building your community savings group.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => navigate("/markets")} 
+                  className="bg-[#C84E31] text-white hover:bg-[#b03e24] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  Create Your Circle
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
             ) : (
               inLaunchMarkets.map((market, index) => (

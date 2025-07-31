@@ -65,8 +65,13 @@ export default function Onboarding() {
     }
 
     // Simple validation: if no image OR invalid image, block submission
-    if (!formData.image || hasInvalidImage) {
-      setError("Profile creation failed: Please add a valid profile picture (max 5MB, JPEG/PNG/GIF/WebP)");
+    if (!formData.image) {
+      setError("Please add a profile picture to continue");
+      return false;
+    }
+    
+    if (hasInvalidImage) {
+      setError("Your image is too large or wrong format. Please choose a smaller image (under 5MB)");
       return false;
     }
 

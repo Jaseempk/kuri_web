@@ -122,8 +122,13 @@ export const CreateMarketForm = ({
     }
 
     // Simple validation: if no image OR invalid image, block submission
-    if (!formData.image || hasInvalidImage) {
-      setError("Creation failed: Please add a valid image (max 5MB, JPEG/PNG/GIF/WebP)");
+    if (!formData.image) {
+      setError("Please add a circle image to continue");
+      return false;
+    }
+    
+    if (hasInvalidImage) {
+      setError("Your image is too large or wrong format. Please choose a smaller image (under 5MB)");
       return false;
     }
 
