@@ -401,6 +401,7 @@ export default function MarketList() {
   // Handle user actions that require data refresh
   const handleUserAction = () => {
     refetchUserData();
+    refetch();
   };
 
   return (

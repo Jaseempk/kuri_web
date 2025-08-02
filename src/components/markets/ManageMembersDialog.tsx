@@ -40,6 +40,7 @@ export const ManageMembersDialog = ({
   const handleRequestMembership = async () => {
     try {
       await requestMembership();
+      onMemberActionComplete?.();
       onOpenChange?.(false);
     } catch (error) {
       console.error("Error requesting membership:", error);

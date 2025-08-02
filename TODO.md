@@ -1,1007 +1,1007 @@
-# 🎯 **Market Sharing Feature Implementation TODO**
+# 🎯 **Kuri Web Application: Comprehensive Testing Implementation Plan**
 
 ## 📋 **Project Overview**
 
-This document outlines the comprehensive implementation plan for adding market sharing functionality to the Kuri application. The feature will enable users to share market links after creation and provide share buttons on all market cards for external distribution.
+This document outlines the comprehensive testing implementation plan for the Kuri Web3 savings circles application. The plan is structured in phases to ensure all crucial user flows are thoroughly tested, from basic unit tests to complete end-to-end user journeys.
+
+**Current Testing Status**: ~5% coverage (basic UI component tests only)
+**Target Testing Coverage**: 85%+ for critical flows
+**Testing Framework**: Vitest + React Testing Library + Custom Web3 mocks
 
 ---
 
 ## 🏗️ **Codebase Architecture Context**
 
-### **Current Tech Stack**
-
+### **Tech Stack**
 - **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS + Custom Design System
-- **Routing**: React Router v6
-- **State Management**: React Hooks + Context API
-- **Web3**: Wagmi + Viem
-- **GraphQL**: Apollo Client
-- **Database**: Supabase
-- **Animations**: Framer Motion
-- **UI Components**: Custom components with Radix UI primitives
-
-### **Existing Route Structure**
-
-```
-├── / (Landing page)
-├── /markets (Market list page)
-├── /markets/:address (Market detail page) ← **ENHANCE THIS**
-├── /dashboard (User dashboard)
-├── /u/:identifier (User profiles)
-└── /onboarding (User onboarding)
-```
-
-### **Current Design System**
-
-- **Primary Colors**:
-  - Terracotta: `#C84E31` (buttons, CTAs)
-  - Gold: `#B8860B` (accents, highlights)
-  - Sand: `#F5F5DC` (backgrounds)
-  - Forest: `#228B22` (success states)
-- **Typography**: Inter (body), General Sans (headings), DM Mono (monospace)
-- **Border Radius**: 1rem (cards), 2rem (modals), rounded-xl (buttons)
-- **Shadows**: Subtle with hover states
-- **Animations**: 300ms transitions, hover lift effects
-
-### **Key Components to Enhance**
-
-- `MarketCard.tsx` - Add share button
-- `CreateMarketForm.tsx` - Add post-creation share flow
-- `MarketDetail.tsx` - Enhance as shareable page
-- Route `/markets/:address` - Transform into share-optimized page
-
----
-
-## 🎨 **UI/UX Design Guidelines**
-
-### **Brand Consistency Requirements**
-
-- Maintain earth-tone color palette (terracotta, gold, sand)
-- Follow existing button styling patterns
-- Use consistent border radius (rounded-xl for buttons, rounded-2xl for cards)
-- Preserve hover animations and subtle shadows
-- Maintain responsive design patterns (mobile-first approach)
-
-### **Share Button Design Specifications**
-
-- **Style**: Circular button with subtle shadow, consistent with existing icon buttons
-- **Colors**: White background with terracotta border, hover state with terracotta background
-- **Icon**: Share-2 or ExternalLink from Lucide React (already in use)
-- **Position**: Top-right corner of MarketCard with absolute positioning
-- **Size**: 40px × 40px (touch-friendly on mobile)
-
-### **Share Modal Design**
-
-- **Background**: White with rounded-2xl corners (consistent with CreateMarketForm)
-- **Layout**: Similar structure to existing modals
-- **Colors**: Terracotta accents, gold highlights, sand backgrounds
-- **Typography**: Existing font hierarchy
-- **Buttons**: Consistent with current button variants
-
----
-
-## 📱 **Mobile-First Considerations**
-
-### **Responsive Breakpoints** (Following existing patterns)
-
-- `xs`: 475px
-- `sm`: 640px
-- `md`: 768px
-- `lg`: 1024px
-
-### **Mobile Optimizations**
-
-- Native Web Share API support
-- Touch-friendly button sizes (minimum 44px)
-- Full-screen modals on small screens
-- Swipe gestures for modal dismissal
-- Optimized link copying for mobile keyboards
-
----
-
-## 🚀 **Implementation Phases**
-
-### **Phase 1: Foundation & Routing Enhancement**
-
-**Duration**: 2-3 days  
-**Priority**: Critical
-
-#### **1.1 URL Structure & Validation**
-
-- [ ] **File**: `src/utils/urlGenerator.ts`
-
-  - Create `generateMarketShareUrl(address: string)` utility
-  - Add contract address validation (0x + 40 hex characters)
-  - Add environment-based base URL handling
-  - Add address checksumming for consistency
-
-- [ ] **File**: `src/utils/validation.ts`
-  - Add `isValidContractAddress(address: string)` function
-  - Add error handling for invalid addresses
-  - Add redirect logic for malformed URLs
-
-#### **1.2 Enhanced Market Detail Route**
-
-- [ ] **File**: `src/pages/MarketDetail.tsx` (ENHANCE EXISTING)
-
-  - Add SEO meta tags with dynamic market data
-  - Add Open Graph tags for social media previews
-  - Add Twitter Card meta tags
-  - Improve loading states and error handling
-  - Add 404 fallback for invalid market addresses
-
-- [ ] **File**: `src/components/seo/MarketSEO.tsx` (NEW)
-  - Dynamic meta tag generation component
-  - Social media preview optimization
-  - Market-specific title and description generation
-
-#### **1.3 Route Security & Performance**
-
-- [ ] Add market address validation middleware
-- [ ] Implement proper loading states for shared links
-- [ ] Add error boundaries for market page failures
-- [ ] Add analytics tracking for shared link visits (optional)
-
----
-
-### **Phase 2: Core Sharing Infrastructure**
-
-**Duration**: 3-4 days  
-**Priority**: Critical
-
-#### **2.1 Share Utility Functions**
-
-- [ ] **File**: `src/utils/shareUtils.ts` (NEW)
-  - `copyToClipboard(text: string)` with fallback handling
-  - `generateShareText(market: KuriMarket, customMessage?: string)`
-  - `getShareUrl(marketAddress: string)` with environment handling
-  - `detectWebShareSupport()` for browser capability detection
-
-#### **2.2 Share Hook Development**
-
-- [ ] **File**: `src/hooks/useShare.ts` (NEW)
-  - Web Share API integration with fallbacks
-  - Toast notifications for success/error states
-  - Platform-specific share URL generation (Twitter, Telegram, WhatsApp)
-  - Share analytics tracking (optional)
-
-#### **2.3 Platform-Specific Share URLs**
-
-- [ ] **File**: `src/constants/shareTemplates.ts` (NEW)
-  - Default share message templates
-  - Platform-specific URL patterns
-  - Customizable message formatting
-  - Character limit handling for different platforms
-
----
-
-### **Phase 3: Market Card Share Button**
-
-**Duration**: 2-3 days  
-**Priority**: High
-
-#### **3.1 Share Button Component**
-
-- [ ] **File**: `src/components/ui/ShareButton.tsx` (NEW)
-  - Circular button design matching brand guidelines
-  - Hover animations and transitions
-  - Loading states during share operations
-  - Accessibility features (ARIA labels, keyboard navigation)
-
-#### **3.2 Market Card Enhancement**
-
-- [ ] **File**: `src/components/markets/MarketCard.tsx` (ENHANCE EXISTING)
-  - Add share button to top-right corner
-  - Ensure share button doesn't interfere with card click events
-  - Add share button visibility logic (always visible vs hover-only)
-  - Maintain responsive design across breakpoints
-
-#### **3.3 Share Button Integration**
-
-- [ ] Add share button click event handling
-- [ ] Prevent event bubbling to card click
-- [ ] Add loading states during share operations
-- [ ] Add success feedback (toast notifications)
-
----
-
-### **Phase 4: Share Modal & Options**
-
-**Duration**: 3-4 days  
-**Priority**: High
-
-#### **4.1 Share Modal Component**
-
-- [ ] **File**: `src/components/modals/ShareModal.tsx` (NEW)
-  - Modal structure consistent with existing modals
-  - Social media platform grid (2x3 layout)
-  - Copy link section with success feedback
-  - QR code generation for mobile sharing
-  - Custom message editing capability
-
-#### **4.2 Social Media Integration**
-
-- [ ] **File**: `src/components/share/SocialShareButtons.tsx` (NEW)
-  - Twitter/X share button with pre-filled text
-  - Telegram share integration
-  - WhatsApp share for mobile devices
-  - Email share with mailto links
-  - Generic social media button component
-
-#### **4.3 Share Modal Triggers**
-
-- [ ] Integrate modal with share buttons
-- [ ] Add keyboard shortcuts (Cmd/Ctrl + Shift + S)
-- [ ] Add share modal accessibility features
-- [ ] Add mobile-optimized modal behavior
-
----
-
-### **Phase 5: Post-Creation Share Flow**
-
-**Duration**: 2-3 days  
-**Priority**: High
-
-#### **5.1 Create Market Form Enhancement**
-
-- [ ] **File**: `src/components/markets/CreateMarketForm.tsx` (ENHANCE EXISTING)
-  - Add share success component after market creation
-  - Modify success flow to include sharing options
-  - Add confetti animation for successful creation
-  - Add "Share with Community" call-to-action
-
-#### **5.2 Post-Creation Share Component**
-
-- [ ] **File**: `src/components/markets/PostCreationShare.tsx` (NEW)
-  - Success message with sharing prompt
-  - Pre-generated share link display
-  - Social media sharing options
-  - "Invite your community" messaging
-  - Navigation options (Go to Market/Continue Sharing)
-
-#### **5.3 Create Market Success Flow**
-
-- [ ] Add share prompt to success state
-- [ ] Add automatic link generation after creation
-- [ ] Add copy-to-clipboard functionality
-- [ ] Add social media quick shares
-- [ ] Add analytics for post-creation sharing
-
----
-
-### **Phase 6: Enhanced Shareable Market Page**
-
-**Duration**: 4-5 days  
-**Priority**: Medium-High
-
-#### **6.1 Market Hero Section**
-
-- [ ] **File**: `src/components/markets/MarketHero.tsx` (NEW)
-  - Large, prominent market card display
-  - Enhanced visual design for social sharing
-  - Call-to-action optimized for new visitors
-  - Creator information and social proof
-
-#### **6.2 Visitor Experience Optimization**
-
-- [ ] **File**: `src/components/markets/MarketVisitorView.tsx` (NEW)
-  - "What is this circle?" explanation section
-  - "How it works" for newcomers
-  - Trust indicators (member count, creator info)
-  - Easy onboarding flow for visitors
-
-#### **6.3 Social Proof Elements**
-
-- [ ] **File**: `src/components/markets/SocialProof.tsx` (NEW)
-  - Member avatars and testimonials
-  - Activity feed display
-  - Recent member actions
-  - Trust and safety indicators
-
----
-
-### **Phase 7: SEO & Social Media Optimization**
-
-**Duration**: 2-3 days  
-**Priority**: Medium
-
-#### **7.1 Meta Tag Management**
-
-- [ ] **File**: `src/hooks/useDynamicMeta.ts` (NEW)
-  - Dynamic title generation based on market data
-  - Description optimization for search engines
-  - Image URL generation for social previews
-  - Canonical URL handling
-
-#### **7.2 Social Media Preview Optimization**
-
-- [ ] Open Graph image generation
-- [ ] Twitter Card optimization
-- [ ] Facebook share preview testing
-- [ ] LinkedIn share compatibility
-- [ ] Discord/Telegram embed optimization
-
-#### **7.3 Search Engine Optimization**
-
-- [ ] Structured data markup for markets
-- [ ] Sitemap generation for market pages
-- [ ] Meta description optimization
-- [ ] Title tag optimization
-
----
-
-### **Phase 8: Mobile Native Integration**
-
-**Duration**: 2-3 days  
-**Priority**: Medium
-
-#### **8.1 Web Share API Integration**
-
-- [ ] **File**: `src/utils/nativeShare.ts` (NEW)
-  - Web Share API implementation
-  - Fallback to custom modal on unsupported devices
-  - Share data formatting for native apps
-  - Error handling for share failures
-
-#### **8.2 Mobile-Specific Features**
-
-- [ ] Native app detection and deep linking
-- [ ] Mobile clipboard optimization
-- [ ] Touch gesture support for sharing
-- [ ] Mobile-optimized share text
-
-#### **8.3 Progressive Web App Features**
-
-- [ ] Add to home screen prompts for shared markets
-- [ ] Offline support for shared market viewing
-- [ ] Push notification setup for shared markets
-- [ ] PWA share target registration
-
----
-
-### **Phase 9: Analytics & Tracking**
-
-**Duration**: 1-2 days  
-**Priority**: Low-Medium
-
-#### **9.1 Share Analytics**
-
-- [ ] **File**: `src/utils/shareAnalytics.ts` (NEW)
-  - Share button click tracking
-  - Platform-specific share tracking
-  - Conversion tracking (shares → joins)
-  - Most shared markets analytics
-
-#### **9.2 Performance Monitoring**
-
-- [ ] Share modal load time tracking
-- [ ] Social media preview generation performance
-- [ ] Share link click-through rates
-- [ ] User engagement with shared markets
-
----
-
-### **Phase 10: Testing & Quality Assurance**
-
-**Duration**: 2-3 days  
-**Priority**: Critical
-
-#### **10.1 Cross-Browser Testing**
-
-- [ ] Chrome/Edge Web Share API testing
-- [ ] Safari clipboard API compatibility
-- [ ] Firefox share functionality
-- [ ] Mobile browser testing (iOS Safari, Chrome Mobile)
-
-#### **10.2 Social Media Platform Testing**
-
-- [ ] Twitter/X share preview validation
-- [ ] Facebook/Meta share preview testing
-- [ ] LinkedIn share compatibility
-- [ ] Discord/Telegram embed testing
-- [ ] WhatsApp share functionality
-
-#### **10.3 Responsive Design Testing**
-
-- [ ] Mobile device testing (iOS/Android)
-- [ ] Tablet interface optimization
-- [ ] Desktop share modal functionality
-- [ ] Accessibility testing (screen readers, keyboard navigation)
-
-#### **10.4 User Experience Testing**
-
-- [ ] Share flow usability testing
-- [ ] Market page load performance testing
-- [ ] Share link functionality validation
-- [ ] Error state handling verification
-
----
-
-## 🔗 **Technical Implementation Details**
-
-### **Key Files to Create**
-
+- **Web3**: Wagmi + Viem + ConnectKit
+- **State Management**: TanStack Query + React Hooks
+- **Database**: Supabase (profiles/metadata)
+- **GraphQL**: Apollo Client (market data)
+- **UI**: Tailwind CSS + Radix UI primitives
+- **Testing**: Vitest + React Testing Library + jsdom
+
+### **Current Application Structure**
 ```
 src/
+├── pages/                    # Route components
+│   ├── Landing.tsx          # Marketing/landing page
+│   ├── Onboarding.tsx       # Profile creation
+│   ├── MarketList.tsx       # Browse circles
+│   ├── MarketDetail.tsx     # Circle details/interactions
+│   └── UserDashboard.tsx    # User activity dashboard
 ├── components/
-│   ├── modals/
-│   │   └── ShareModal.tsx
-│   ├── share/
-│   │   ├── SocialShareButtons.tsx
-│   │   └── ShareButton.tsx
-│   ├── markets/
-│   │   ├── MarketHero.tsx
-│   │   ├── MarketVisitorView.tsx
-│   │   ├── PostCreationShare.tsx
-│   │   └── SocialProof.tsx
-│   └── seo/
-│       └── MarketSEO.tsx
+│   ├── markets/             # Circle-related components
+│   ├── ui/                  # Reusable UI components
+│   └── modals/              # Modal dialogs
 ├── hooks/
-│   ├── useShare.ts
-│   ├── useDynamicMeta.ts
-│   └── useClipboard.ts
-├── utils/
-│   ├── shareUtils.ts
-│   ├── urlGenerator.ts
-│   ├── nativeShare.ts
-│   ├── shareAnalytics.ts
-│   └── validation.ts
-└── constants/
-    └── shareTemplates.ts
+│   ├── contracts/           # Smart contract interactions
+│   ├── useUserProfile.ts    # Profile management
+│   └── use*.ts              # Various data hooks
+├── providers/               # Context providers
+└── utils/                   # Utility functions
 ```
 
-### **Key Files to Enhance**
-
-```
-src/
-├── components/markets/
-│   ├── MarketCard.tsx (add share button)
-│   └── CreateMarketForm.tsx (add post-creation flow)
-├── pages/
-│   └── MarketDetail.tsx (enhance for sharing)
-└── App.tsx (maintain existing routing)
-```
+### **Crucial User Flows Identified**
+**Tier 1 (App-Breaking)**: Wallet connection, Circle creation, Deposits, Payouts
+**Tier 2 (Feature-Breaking)**: Onboarding, Market discovery, Data loading, Balance management
+**Tier 3 (UX-Breaking)**: Transaction tracking, Error handling, State management
 
 ---
 
-## 🎯 **Success Metrics**
+## 🧪 **Testing Architecture Setup**
 
-### **Phase Completion Criteria**
+### **Current Test Infrastructure**
+✅ **Vitest** with jsdom environment
+✅ **React Testing Library** configured
+✅ **Basic mocking** for wagmi, supabase, apollo
+✅ **Provider wrapper** (`renderWithProviders`)
+✅ **Mock data** (basic market/user objects)
 
-- [ ] **Phase 1-3**: Share buttons visible on all market cards
-- [ ] **Phase 4-5**: Complete share modal with social media options
-- [ ] **Phase 6-7**: Enhanced market pages with SEO optimization
-- [ ] **Phase 8-10**: Mobile optimization and comprehensive testing
+### **Required Test Infrastructure Enhancements**
 
-### **Quality Gates**
-
-- [ ] All components follow existing design system
-- [ ] No breaking changes to existing functionality
-- [ ] Mobile responsiveness maintained across all breakpoints
-- [ ] Accessibility standards met (WCAG 2.1 AA)
-- [ ] Performance impact minimal (< 5% bundle size increase)
-
-### **Launch Readiness Checklist**
-
-- [ ] Cross-browser compatibility verified
-- [ ] Social media previews working correctly
-- [ ] Share analytics implemented and tested
-- [ ] Error handling comprehensive
-- [ ] User acceptance testing completed
-
----
-
-## 📝 **Implementation Notes**
-
-### **Code Quality Standards**
-
-- Follow existing TypeScript patterns and interfaces
-- Maintain consistent component structure with other modal components
-- Use existing utility functions where possible
-- Follow established naming conventions
-- Add comprehensive JSDoc comments for new utilities
-
-### **Performance Considerations**
-
-- Lazy load share modal components
-- Optimize social media preview image generation
-- Implement efficient caching for share URLs
-- Minimize bundle size impact with tree shaking
-
-### **Accessibility Requirements**
-
-- Implement proper ARIA labels for share buttons
-- Ensure keyboard navigation works correctly
-- Add screen reader announcements for share actions
-- Maintain focus management in share modals
-
-### **⚠️ Critical Data Handling Guidelines**
-
-- **NO MOCK DATA**: All components already have access to existing market data structures
-- **Use Existing Interfaces**: Leverage current `KuriMarket` types and GraphQL schemas
-- **No New Data Overhead**: Share functionality should work with existing market properties (address, title, description, member count, etc.)
-- **Preserve Data Flow**: Maintain existing data fetching patterns and state management
-- **Real Data Only**: All share URLs, previews, and meta tags must use actual market data
-- **Existing API Integration**: Work with current market queries and mutations without modification
-
-**Data Sources Already Available:**
-
-- Market address (for URL generation)
-- Market title and description (for share text)
-- Member count and creator info (for social proof)
-- Market status and activity (for previews)
-- User authentication state (for personalized sharing)
-
----
-
-## 🚀 **CRITICAL: useKuriCore Hook Optimization Phases**
-
-### **⚠️ CONTEXT: Payment Status Check Error Issue**
-
-**Problem Identified**: The `useKuriCore` hook was causing `KuriCore__InvalidUser()` errors on the markets page because it automatically checked payment status for every market card, even when users weren't members of those markets.
-
-**Root Cause**:
-
-- Every `MarketCard` component calls `useKuriCore` hook
-- Hook automatically runs `checkUserPaymentStatus()` in useEffect
-- `checkUserPaymentStatus()` calls `hasPaid(user, intervalIndex)` contract function
-- Contract throws `KuriCore__InvalidUser()` if user is not a member
-- Results in console errors for every non-member market on markets page
-
-**Solution Approach**: Three-phase optimization to eliminate errors and improve performance.
-
----
-
-### **Phase 1: Immediate Fix - Member Status Check ✅ COMPLETED**
-
-**Status**: ✅ **COMPLETED**  
-**Files Modified**: `src/hooks/contracts/useKuriCore.ts`
-
-#### **Implementation Details**
-
-**Problem**: `checkUserPaymentStatus()` was calling `hasPaid()` without checking if user is a member first.
-
-**Solution**: Added member status check before payment status check.
-
-**Code Changes**:
-
+#### **Enhanced Mock Setup**
 ```typescript
-// Added to checkUserPaymentStatus function in useKuriCore.ts
-try {
-  // 🔥 NEW: Check if user is an accepted member first
-  const userData = await readContract(config, {
-    address: kuriAddress,
-    abi: KuriCoreABI,
-    functionName: "userToData",
-    args: [account.address],
+// src/test/mocks/web3Mocks.ts - NEEDS CREATION
+export const mockWalletStates = {
+  connected: { address: "0x123...", isConnected: true },
+  disconnected: { address: undefined, isConnected: false },
+  connecting: { address: undefined, isConnecting: true },
+};
+
+export const mockContractInteractions = {
+  success: { data: mockResult, error: null, isPending: false },
+  pending: { data: null, error: null, isPending: true },
+  error: { data: null, error: new Error("Contract error"), isPending: false },
+};
+```
+
+#### **Test Data Fixtures**
+```typescript
+// src/test/fixtures/marketData.ts - NEEDS CREATION
+export const marketFixtures = {
+  inLaunch: { state: 0, activeParticipants: 3, totalParticipants: 10 },
+  active: { state: 2, activeParticipants: 10, totalParticipants: 10 },
+  completed: { state: 3, raffleWinners: ["0x123", "0x456"] },
+};
+```
+
+---
+
+## 🚀 **Phase 1: Critical Flow Foundation Tests**
+**Priority**: CRITICAL | **Duration**: 5-7 days | **Coverage Target**: Tier 1 Flows
+
+### **Phase 1A: Wallet Connection & Authentication Tests**
+
+#### **1A.1: Basic Wallet Connection**
+- [ ] **File**: `src/components/ui/__tests__/ConnectButton.test.tsx` *(ENHANCE EXISTING)*
+
+**Core Test Requirements:**
+1. **Mock Setup**: Mock `useAccount` from wagmi and `ConnectKitButton` from connectkit
+2. **Test Data**: Use realistic Ethereum addresses (42 chars, 0x prefix)
+3. **Key Scenarios**: Disconnected, connected, connecting, edge cases
+
+**Test: "shows connect prompt when wallet disconnected"**
+- **Mock State**: `useAccount` returns `{ address: undefined, isConnected: false }`
+- **Expected Behavior**: Button displays "Connect Wallet", is clickable, triggers show() function
+- **Key Assertions**: Button text, not disabled, click handler works
+- **Watch For**: Component might crash with undefined address, styling issues
+
+**Test: "shows wallet address when connected"**  
+- **Mock State**: `useAccount` returns valid address, `isConnected: true`
+- **Expected Behavior**: Shows truncated address (0x1234...7890 format), clickable for account options
+- **Key Assertions**: Correct truncation logic, full address not exposed, proper formatting
+- **Watch For**: Address truncation bugs, security issues showing full address
+
+**Test: "shows connecting state during connection"**
+- **Mock State**: `isConnecting: true` from ConnectKitButton
+- **Expected Behavior**: Button shows "Connecting...", is disabled, no click action
+- **Key Assertions**: Loading text, disabled state, visual feedback
+- **Watch For**: Button remains clickable when should be disabled, poor UX during loading
+
+**Edge Cases to Test:**
+- Null/undefined address when isConnected is true (inconsistent state)
+- Very long addresses or malformed addresses
+- ConnectKit integration failures
+
+#### **1A.2: Authentication Hook Tests**
+- [ ] **File**: `src/hooks/__tests__/useApiAuth.test.ts` *(NEW)*
+  ```typescript
+  describe("useApiAuth", () => {
+    it("generates signed message for profile creation", async () => {
+      // Mock wallet signing
+      // Test message format
+      // Verify signature generation
+    });
+    
+    it("handles user rejection of signing", async () => {
+      // Mock user rejection
+      // Test error handling
+      // Verify graceful fallback
+    });
+    
+    it("validates message format and content", () => {
+      // Test timestamp inclusion
+      // Test action-specific messages
+      // Verify security parameters
+    });
   });
+  ```
 
-  const membershipStatus = userData[0];
+#### **1A.3: Web3 Provider Tests**
+- [ ] **File**: `src/providers/__tests__/Web3Provider.test.tsx` *(NEW)*
+  ```typescript
+  describe("Web3Provider", () => {
+    it("initializes wagmi config correctly", () => {
+      // Test config setup
+      // Verify chain configuration
+      // Test connector initialization
+    });
+    
+    it("provides wallet state to children", () => {
+      // Test context provision
+      // Verify state updates
+      // Test error boundaries
+    });
+  });
+  ```
 
-  // If user is not an accepted member (status !== 1), skip payment check
-  if (membershipStatus !== 1) {
-    setUserPaymentStatus(null);
-    return false;
-  }
+### **Phase 1B: Smart Contract Interaction Tests**
 
-  // ... rest of existing logic (passedIntervalsCounter, hasPaid, etc.)
-}
-```
+#### **1B.1: Core Contract Hook Tests**
+- [ ] **File**: `src/hooks/contracts/__tests__/useKuriCore.test.ts` *(NEW)*
 
-**Membership Status Values**:
+**Critical Mock Requirements:**
+1. **Mock wagmi hooks**: `useReadContract`, `useWriteContract`, `useAccount`
+2. **Contract Addresses**: Use valid format (0x + 40 hex chars)
+3. **State Values**: Match KuriState enum (0=INLAUNCH, 2=ACTIVE, 3=COMPLETED)
 
-- `0` = NONE
-- `1` = ACCEPTED (required for payment check)
-- `2` = REJECTED
-- `4` = APPLIED
+**Test: "fetches market data successfully"**
+- **Mock Setup**: `useReadContract` returns valid market data structure
+- **Expected Behavior**: Hook returns marketData object, isLoading false, no error
+- **Key Assertions**: Data transformation from contract format to UI format
+- **Watch For**: Data mapping bugs, missing fields, type mismatches
 
-**Benefits Achieved**:
+**Test: "handles contract read failures"**  
+- **Mock Setup**: `useReadContract` throws ContractFunctionRevertedError
+- **Expected Behavior**: Hook sets error state, isLoading false, marketData null
+- **Key Assertions**: Error message formatting, user-friendly error display
+- **Watch For**: Unhandled contract errors, poor error messages, app crashes
 
-- ✅ Eliminated `KuriCore__InvalidUser()` errors
-- ✅ Reduced unnecessary contract calls
-- ✅ Maintained all existing functionality
-- ✅ Zero breaking changes
+**Test: "checks member status correctly"**
+- **Mock Setup**: `userToData` returns different membership statuses (0,1,2,4)
+- **Expected Behavior**: Correct parsing of: NONE(0), ACCEPTED(1), REJECTED(2), APPLIED(4) 
+- **Key Assertions**: Status enum mapping, conditional UI rendering
+- **Watch For**: Wrong status interpretation, missing status handling
+
+**Test: "validates payment status for members only"**
+- **Mock Setup**: Mix of member/non-member scenarios with payment checks
+- **Expected Behavior**: Only checks payment for ACCEPTED members, skips others
+- **Key Assertions**: Prevents KuriCore__InvalidUser errors, proper flow control  
+- **Watch For**: Payment checks for non-members, unnecessary contract calls
+
+#### **1B.2: Factory Contract Tests**
+- [ ] **File**: `src/hooks/contracts/__tests__/useKuriFactory.test.ts` *(NEW)*
+  ```typescript
+  describe("useKuriFactory", () => {
+    it("creates market with valid parameters", async () => {
+      // Mock contract write
+      // Test parameter validation
+      // Verify transaction flow
+    });
+    
+    it("handles market creation failures", async () => {
+      // Mock contract errors
+      // Test error handling
+      // Verify user feedback
+    });
+    
+    it("tracks creation transaction status", async () => {
+      // Mock transaction states
+      // Test status updates
+      // Verify completion handling
+    });
+  });
+  ```
+
+### **Phase 1C: Form Validation Tests**
+
+#### **1C.1: Market Creation Form Tests**
+- [ ] **File**: `src/components/markets/__tests__/CreateMarketForm.test.tsx` *(ENHANCE EXISTING)*
+
+**Form Testing Strategy:**
+1. **Mock Dependencies**: `useKuriFactory`, file validation, API calls
+2. **User Interactions**: Use `userEvent` for realistic form interactions
+3. **Validation Logic**: Test both client-side and submission validation
+
+**Test: "validates required fields"**
+- **User Action**: Submit empty form, then fill fields one by one
+- **Expected Behavior**: Shows specific error for each missing field
+- **Key Assertions**: Error messages appear, form doesn't submit, field highlighting
+- **Watch For**: Generic error messages, missing validation, form submits anyway
+
+**Test: "validates numeric inputs"**
+- **User Action**: Enter invalid amounts (negative, zero, too large, non-numeric)
+- **Expected Behavior**: Shows validation errors, calculates monthly contribution correctly
+- **Key Assertions**: Number parsing, calculation accuracy, reasonable limits
+- **Watch For**: Division by zero, precision errors, unrealistic amounts allowed
+
+**Test: "validates image upload"**
+- **User Action**: Upload invalid files (wrong type, too large, corrupted)
+- **Expected Behavior**: Rejects invalid files, shows preview for valid ones
+- **Key Assertions**: File type checking, size limits, security validation
+- **Watch For**: Security vulnerabilities, poor error messages, crashes on invalid files
+
+**Test: "submits form with valid data"**
+- **Mock Setup**: `initialiseKuriMarket` returns success, API calls succeed
+- **Expected Behavior**: Form submits, shows success, triggers onSuccess callback
+- **Key Assertions**: Correct data format sent, success state, form reset
+- **Watch For**: Data transformation errors, missing fields in submission
+
+**Test: "handles submission failures"**
+- **Mock Setup**: Contract throws error, network failures
+- **Expected Behavior**: Shows error message, preserves form data, allows retry
+- **Key Assertions**: Error display, form state preservation, retry capability
+- **Watch For**: Form clears on error, poor error handling, no retry option
+
+#### **1C.2: Profile Creation Form Tests**
+- [ ] **File**: `src/pages/__tests__/Onboarding.test.tsx` *(NEW)*
+  ```typescript
+  describe("Onboarding", () => {
+    it("validates profile form inputs", async () => {
+      // Test username validation
+      // Test display name requirements
+      // Test image upload validation
+    });
+    
+    it("creates profile successfully", async () => {
+      // Mock API calls
+      // Test form submission
+      // Verify navigation
+    });
+    
+    it("handles profile creation errors", async () => {
+      // Mock API failures
+      // Test error handling
+      // Verify retry capability
+    });
+  });
+  ```
 
 ---
 
-### **Phase 2: Lazy Loading Implementation ✅ COMPLETED**
+## 🔬 **Phase 2: Core Feature Integration Tests**
+**Priority**: HIGH | **Duration**: 7-10 days | **Coverage Target**: Tier 2 Flows
 
-**Status**: ✅ **COMPLETED**  
-**Files Modified**:
+### **Phase 2A: Circle Discovery & Joining Tests**
 
-- `src/hooks/contracts/useKuriCore.ts`
-- `src/pages/MarketDetail.tsx`
-- `src/components/markets/DepositForm.tsx`
-- `src/components/markets/ClaimInterface.tsx`
+#### **2A.1: Market List Tests**
+- [ ] **File**: `src/pages/__tests__/MarketList.test.tsx` *(NEW)*
+  ```typescript
+  describe("MarketList", () => {
+    it("displays markets correctly", async () => {
+      // Mock market data
+      // Test rendering
+      // Verify market information display
+    });
+    
+    it("filters markets by search query", async () => {
+      // Test search functionality
+      // Verify filtering logic
+      // Test empty results handling
+    });
+    
+    it("filters by interval type", async () => {
+      // Test weekly/monthly filters
+      // Verify filter combinations
+      // Test filter state persistence
+    });
+    
+    it("handles loading and error states", async () => {
+      // Mock loading states
+      // Test error scenarios
+      // Verify user feedback
+    });
+  });
+  ```
 
-#### **Implementation Details**
+#### **2A.2: Market Detail Tests**
+- [ ] **File**: `src/pages/__tests__/MarketDetail.test.tsx` *(NEW)*
+  ```typescript
+  describe("MarketDetail", () => {
+    it("displays market information correctly", async () => {
+      // Mock market data
+      // Test information display
+      // Verify state-specific content
+    });
+    
+    it("shows correct actions based on user state", async () => {
+      // Test member vs non-member views
+      // Verify action button states
+      // Test permission-based rendering
+    });
+    
+    it("handles invalid market addresses", async () => {
+      // Mock 404 scenarios
+      // Test error handling
+      // Verify fallback UI
+    });
+  });
+  ```
 
-**Problem**: Hook was automatically checking payment status for every market, even when not needed.
+### **Phase 2B: Deposit & Transaction Flow Tests**
 
-**Solution**: Transformed from "eager loading" to "lazy loading" approach.
+#### **2B.1: Deposit Form Tests**
+- [ ] **File**: `src/components/markets/__tests__/DepositForm.test.tsx` *(NEW)*
+  ```typescript
+  describe("DepositForm", () => {
+    it("prevents deposit with insufficient balance", async () => {
+      // Mock low USDC balance
+      // Test form disabled state
+      // Verify error messaging
+    });
+    
+    it("handles allowance approval flow", async () => {
+      // Mock approval transaction
+      // Test two-step process
+      // Verify user guidance
+    });
+    
+    it("processes deposit successfully", async () => {
+      // Mock successful deposit
+      // Test transaction flow
+      // Verify success feedback
+    });
+    
+    it("handles deposit failures", async () => {
+      // Mock transaction failures
+      // Test error handling
+      // Verify retry options
+    });
+  });
+  ```
 
-**Core Changes**:
+#### **2B.2: Claim Interface Tests**
+- [ ] **File**: `src/components/markets/__tests__/ClaimInterface.test.tsx` *(NEW)*
+  ```typescript
+  describe("ClaimInterface", () => {
+    it("shows claim button for winners", async () => {
+      // Mock winner status
+      // Test claim availability
+      // Verify winner validation
+    });
+    
+    it("processes claim successfully", async () => {
+      // Mock claim transaction
+      // Test success flow
+      // Verify amount display
+    });
+    
+    it("handles already claimed intervals", async () => {
+      // Mock claimed status
+      // Test UI updates
+      // Verify claim prevention
+    });
+  });
+  ```
 
-1. **Modified useKuriCore.ts**:
+### **Phase 2C: Balance & State Management Tests**
 
-```typescript
-// BEFORE: Automatic payment check
-useEffect(() => {
-  if (marketData?.state === 2 && account.address) {
-    checkUserPaymentStatus(); // ← REMOVED
-    checkUserBalance();
-  }
-}, [marketData?.state, account.address]);
+#### **2C.1: Balance Management Tests**
+- [ ] **File**: `src/hooks/__tests__/useUSDCBalances.test.ts` *(NEW)*
+  ```typescript
+  describe("useUSDCBalances", () => {
+    it("fetches balances for multiple markets", async () => {
+      // Mock balance calls
+      // Test batch fetching
+      // Verify data aggregation
+    });
+    
+    it("calculates TVL correctly", async () => {
+      // Mock market balances
+      // Test TVL calculation
+      // Verify format utils
+    });
+    
+    it("handles balance fetch failures", async () => {
+      // Mock network errors
+      // Test fallback values
+      // Verify error states
+    });
+  });
+  ```
 
-// AFTER: Lazy payment check
-useEffect(() => {
-  if (marketData?.state === 2 && account.address) {
-    checkUserBalance(); // Keep - safe for all users
-    // Payment status check REMOVED - now explicit only
-  }
-}, [marketData?.state, account.address]);
-
-// NEW: Added explicit method
-const checkPaymentStatusIfMember = useCallback(async (): Promise<boolean> => {
-  if (!kuriAddress || !account.address || !marketData) return false;
-  if (marketData.state !== 2) return false;
-  return checkUserPaymentStatus();
-}, [kuriAddress, account.address, marketData, checkUserPaymentStatus]);
-```
-
-2. **Updated Components**:
-
-**MarketDetail.tsx**:
-
-```typescript
-const {
-  // ... existing
-  checkPaymentStatusIfMember, // 🔥 NEW
-} = useKuriCore(address as `0x${string}`);
-
-// 🔥 NEW: Explicit payment status check
-useEffect(() => {
-  const checkPaymentStatus = async () => {
-    if (!account.address || !marketData) return;
-    if (marketData.state === 2) {
-      try {
-        await checkPaymentStatusIfMember();
-      } catch (err) {
-        console.error("Error checking payment status:", err);
-      }
-    }
-  };
-  checkPaymentStatus();
-}, [account.address, marketData?.state, checkPaymentStatusIfMember]);
-```
-
-**DepositForm.tsx & ClaimInterface.tsx**:
-
-```typescript
-const { checkPaymentStatusIfMember } = useKuriCore(kuriAddress);
-
-useEffect(() => {
-  const checkPaymentStatus = async () => {
-    if (!kuriAddress) return;
-    try {
-      await checkPaymentStatusIfMember();
-    } catch (err) {
-      console.error("Error checking payment status:", err);
-    }
-  };
-  checkPaymentStatus();
-}, [kuriAddress, checkPaymentStatusIfMember]);
-```
-
-**Benefits Achieved**:
-
-- ✅ Markets page: No automatic payment checks for every card
-- ✅ Reduced contract calls from 10+ to 0 on markets page
-- ✅ Explicit control over when payment status is checked
-- ✅ Better separation of concerns (market data vs user data)
-- ✅ Improved performance and loading times
+#### **2C.2: Market Data Optimization Tests**
+- [ ] **File**: `src/hooks/__tests__/useOptimizedMarkets.test.ts` *(NEW)*
+  ```typescript
+  describe("useOptimizedMarkets", () => {
+    it("batches market data fetching", async () => {
+      // Mock GraphQL queries
+      // Test batch efficiency
+      // Verify caching behavior
+    });
+    
+    it("updates data incrementally", async () => {
+      // Mock real-time updates
+      // Test cache invalidation
+      // Verify UI updates
+    });
+    
+    it("handles partial data failures", async () => {
+      // Mock mixed success/failure
+      // Test graceful degradation
+      // Verify error boundaries
+    });
+  });
+  ```
 
 ---
 
-### **Phase 3: Full Optimization - PENDING IMPLEMENTATION**
+## 🎭 **Phase 3: User Journey Integration Tests**
+**Priority**: HIGH | **Duration**: 5-7 days | **Coverage Target**: Complete User Flows
 
-**Status**: 🔄 **PENDING**  
-**Priority**: High  
-**Estimated Duration**: 3-4 days
+### **Phase 3A: New User Journey Tests**
 
-#### **Objective**
+#### **3A.1: Complete Onboarding Flow**
+- [ ] **File**: `src/__tests__/integration/NewUserJourney.test.tsx` *(NEW)*
+  ```typescript
+  describe("New User Journey", () => {
+    it("completes full onboarding to first deposit", async () => {
+      // 1. Start at landing page
+      // 2. Connect wallet
+      // 3. Complete profile creation
+      // 4. Browse and select market
+      // 5. Join market and make deposit
+      // 6. Verify success state
+    });
+    
+    it("handles interruptions and resumption", async () => {
+      // Test partial completion
+      // Verify state persistence
+      // Test resume capability
+    });
+  });
+  ```
 
-Transform from individual contract calls per market to batched, cached, and optimized data fetching for maximum performance and scalability.
+### **Phase 3B: Market Creator Journey Tests**
 
-#### **Current State Analysis**
+#### **3B.1: Market Creation & Management**
+- [ ] **File**: `src/__tests__/integration/MarketCreatorJourney.test.tsx` *(NEW)*
+  ```typescript
+  describe("Market Creator Journey", () => {
+    it("creates and manages market lifecycle", async () => {
+      // 1. Create market
+      // 2. Share market link
+      // 3. Approve members
+      // 4. Monitor deposits
+      // 5. Handle payouts
+    });
+    
+    it("handles member management", async () => {
+      // Test member approval/rejection
+      // Verify member communication
+      // Test removal scenarios
+    });
+  });
+  ```
 
-**Performance Issues**:
+### **Phase 3C: Active Member Journey Tests**
 
-- Each `MarketCard` still calls `useKuriCore` individually
-- 10 markets = 10 separate `kuriData` contract calls
-- No caching between market cards
-- No data sharing between components
-- Bundle size could be optimized
+#### **3C.1: Full Participation Cycle**
+- [ ] **File**: `src/__tests__/integration/ActiveMemberJourney.test.tsx` *(NEW)*
+  ```typescript
+  describe("Active Member Journey", () => {
+    it("completes full participation cycle", async () => {
+      // 1. Join existing market
+      // 2. Make multiple deposits
+      // 3. Win raffle and claim
+      // 4. Continue until market completion
+    });
+    
+    it("handles payment tracking", async () => {
+      // Test payment status updates
+      // Verify reminder systems
+      // Test late payment handling
+    });
+  });
+  ```
 
-**Target Architecture**:
+---
 
-```typescript
-// New optimized hook structure
-const useOptimizedMarkets = () => {
-  // Batch fetch all market data in single call
-  // Implement React Query caching with TTL
-  // Handle loading states efficiently
-  // Provide granular update mechanisms
-};
+## 🛡️ **Phase 4: Error Handling & Edge Cases**
+**Priority**: MEDIUM-HIGH | **Duration**: 4-6 days | **Coverage Target**: Tier 3 Flows
 
-// Separate user-specific data
-const useUserMarketData = (marketAddresses: string[]) => {
-  // Only fetch user data for relevant markets
-  // Lazy load on user interaction
-  // Cache user-specific state
-};
-```
+### **Phase 4A: Transaction Error Handling**
 
-#### **Implementation Strategy**
+#### **4A.1: Wallet Interaction Errors**
+- [ ] **File**: `src/__tests__/errors/WalletErrors.test.tsx` *(NEW)*
+  ```typescript
+  describe("Wallet Error Handling", () => {
+    it("handles user rejection of transactions", async () => {
+      // Mock user rejection
+      // Test error display
+      // Verify retry options
+    });
+    
+    it("handles insufficient gas fees", async () => {
+      // Mock gas estimation errors
+      // Test user guidance
+      // Verify fee adjustment
+    });
+    
+    it("handles network congestion", async () => {
+      // Mock network delays
+      // Test timeout handling
+      // Verify status updates
+    });
+  });
+  ```
 
-**Phase 3A: Batch Data Fetching**
+#### **4A.2: Contract Error Handling**
+- [ ] **File**: `src/__tests__/errors/ContractErrors.test.tsx` *(NEW)*
+  ```typescript
+  describe("Contract Error Handling", () => {
+    it("handles invalid user errors", async () => {
+      // Mock KuriCore__InvalidUser
+      // Test graceful handling
+      // Verify user feedback
+    });
+    
+    it("handles state transition errors", async () => {
+      // Mock invalid state calls
+      // Test error messages
+      // Verify fallback behavior
+    });
+    
+    it("handles insufficient allowance", async () => {
+      // Mock allowance errors
+      // Test approval flow
+      // Verify user guidance
+    });
+  });
+  ```
 
-- [ ] **File**: `src/hooks/useOptimizedMarkets.ts` (NEW)
+### **Phase 4B: Data Loading Error Handling**
 
-  - Implement batch market data fetching
-  - Use existing `useMultipleKuriData` hook as foundation
-  - Add intelligent caching layer
-  - Handle loading states efficiently
+#### **4B.1: Network & API Errors**
+- [ ] **File**: `src/__tests__/errors/NetworkErrors.test.tsx` *(NEW)*
+  ```typescript
+  describe("Network Error Handling", () => {
+    it("handles GraphQL query failures", async () => {
+      // Mock API failures
+      // Test fallback data
+      // Verify retry mechanisms
+    });
+    
+    it("handles Supabase connection errors", async () => {
+      // Mock database errors
+      // Test offline behavior
+      // Verify data persistence
+    });
+    
+    it("handles RPC endpoint failures", async () => {
+      // Mock blockchain connection errors
+      // Test provider switching
+      // Verify user notifications
+    });
+  });
+  ```
 
-- [ ] **File**: `src/pages/MarketList.tsx` (ENHANCE)
+### **Phase 4C: Edge Case Testing**
 
-  - Replace individual `useKuriCore` calls in cards
-  - Use batch data fetching approach
-  - Implement loading state optimization
+#### **4C.1: Boundary Conditions**
+- [ ] **File**: `src/__tests__/edge-cases/BoundaryConditions.test.tsx` *(NEW)*
+  ```typescript
+  describe("Boundary Conditions", () => {
+    it("handles maximum participant limits", async () => {
+      // Test upper limits
+      // Verify performance
+      // Test UI scaling
+    });
+    
+    it("handles minimum contribution amounts", async () => {
+      // Test precision limits
+      // Verify calculations
+      // Test rounding behavior
+    });
+    
+    it("handles very long usernames/descriptions", async () => {
+      // Test text truncation
+      // Verify display overflow
+      // Test input validation
+    });
+  });
+  ```
 
-- [ ] **File**: `src/components/markets/MarketCard.tsx` (ENHANCE)
-  - Remove individual `useKuriCore` calls
-  - Consume data from batch fetching
-  - Maintain existing functionality
+---
 
-**Phase 3B: Caching Layer**
+## 🎯 **Phase 5: Performance & Accessibility Tests**
+**Priority**: MEDIUM | **Duration**: 3-5 days | **Coverage Target**: Non-functional Requirements
 
-- [ ] **File**: `src/config/reactQuery.ts` (NEW)
+### **Phase 5A: Performance Testing**
 
-  - Configure React Query for market data
-  - Set appropriate TTL for different data types
-  - Implement cache invalidation strategies
+#### **5A.1: Component Performance**
+- [ ] **File**: `src/__tests__/performance/ComponentPerformance.test.tsx` *(NEW)*
+  ```typescript
+  describe("Component Performance", () => {
+    it("renders large market lists efficiently", async () => {
+      // Mock 100+ markets
+      // Test render performance
+      // Verify memory usage
+    });
+    
+    it("handles rapid state updates", async () => {
+      // Test frequent updates
+      // Verify no memory leaks
+      // Test cleanup on unmount
+    });
+  });
+  ```
 
-- [ ] **File**: `src/hooks/useMarketCache.ts` (NEW)
-  - Cache management utilities
-  - Background refresh mechanisms
-  - Stale data handling
+#### **5A.2: Hook Performance**
+- [ ] **File**: `src/__tests__/performance/HookPerformance.test.tsx` *(NEW)*
+  ```typescript
+  describe("Hook Performance", () => {
+    it("optimizes contract call batching", async () => {
+      // Test batch efficiency
+      // Verify call reduction
+      // Test caching effectiveness
+    });
+    
+    it("prevents unnecessary re-renders", async () => {
+      // Test memoization
+      // Verify dependency arrays
+      // Test optimization patterns
+    });
+  });
+  ```
 
-**Phase 3C: Performance Optimization**
+### **Phase 5B: Accessibility Testing**
 
-- [ ] **File**: `src/components/markets/VirtualizedMarketList.tsx` (NEW)
+#### **5B.1: Screen Reader Compatibility**
+- [ ] **File**: `src/__tests__/accessibility/ScreenReader.test.tsx` *(NEW)*
+  ```typescript
+  describe("Screen Reader Compatibility", () => {
+    it("provides proper ARIA labels", async () => {
+      // Test button labels
+      // Verify form descriptions
+      // Test navigation landmarks
+    });
+    
+    it("announces state changes", async () => {
+      // Test live regions
+      // Verify status updates
+      // Test error announcements
+    });
+  });
+  ```
 
-  - Implement virtualization for large market lists
-  - Handle 100+ markets without performance degradation
-  - Maintain smooth scrolling experience
+#### **5B.2: Keyboard Navigation**
+- [ ] **File**: `src/__tests__/accessibility/KeyboardNavigation.test.tsx` *(NEW)*
+  ```typescript
+  describe("Keyboard Navigation", () => {
+    it("supports tab navigation", async () => {
+      // Test tab order
+      // Verify focus management
+      // Test modal focus trapping
+    });
+    
+    it("provides keyboard shortcuts", async () => {
+      // Test ESC key handling
+      // Verify Enter key actions
+      // Test accessibility shortcuts
+    });
+  });
+  ```
 
-- [ ] **Bundle optimization**
-  - Analyze and optimize large chunks identified in build
-  - Implement code splitting for market components
-  - Lazy load heavy dependencies
+---
 
-#### **Expected Performance Improvements**
+## 🚀 **Phase 6: End-to-End Automation**
+**Priority**: MEDIUM | **Duration**: 4-6 days | **Coverage Target**: Complete User Journeys
 
-**Contract Calls Reduction**:
+### **Phase 6A: E2E Test Infrastructure**
 
-- **Before**: 10 markets = 10+ contract calls
-- **After**: 10 markets = 1-2 batch calls
-- **Improvement**: 80-90% reduction in blockchain calls
+#### **6A.1: Playwright Setup**
+- [ ] **File**: `e2e/setup/playwright.config.ts` *(NEW)*
+  ```typescript
+  // Playwright configuration for E2E tests
+  export default {
+    testDir: './e2e/tests',
+    timeout: 60000,
+    retries: 2,
+    use: {
+      baseURL: 'http://localhost:5173',
+      trace: 'on-first-retry',
+      screenshot: 'only-on-failure',
+    },
+    projects: [
+      { name: 'Chrome', use: { ...devices['Desktop Chrome'] } },
+      { name: 'Safari', use: { ...devices['Desktop Safari'] } },
+      { name: 'Mobile', use: { ...devices['iPhone 13'] } },
+    ],
+  };
+  ```
 
-**Page Load Performance**:
+#### **6A.2: Test Environment Mocks**
+- [ ] **File**: `e2e/mocks/walletMock.ts` *(NEW)*
+  ```typescript
+  // Mock wallet for E2E testing
+  export const mockWalletExtension = {
+    // Simulate MetaMask/wallet interactions
+    // Handle connection flows
+    // Mock transaction signing
+  };
+  ```
 
-- **Before**: Sequential loading, blocking UI
-- **After**: Batch loading with progressive enhancement
-- **Improvement**: 50%+ faster perceived performance
+### **Phase 6B: Critical E2E Flows**
 
-**Memory Usage**:
+#### **6B.1: Complete User Onboarding**
+- [ ] **File**: `e2e/tests/user-onboarding.spec.ts` *(NEW)*
+  ```typescript
+  test.describe("User Onboarding E2E", () => {
+    test("new user completes full onboarding", async ({ page }) => {
+      // Navigate to landing page
+      // Connect wallet
+      // Complete profile
+      // Browse markets
+      // Join first circle
+      // Make first deposit
+    });
+  });
+  ```
 
-- **Before**: Individual hook instances per card
-- **After**: Shared data layer with efficient caching
-- **Improvement**: Stable performance with 100+ markets
+#### **6B.2: Market Creation Flow**
+- [ ] **File**: `e2e/tests/market-creation.spec.ts` *(NEW)*
+  ```typescript
+  test.describe("Market Creation E2E", () => {
+    test("creates and shares new market", async ({ page }) => {
+      // Connect wallet
+      // Create market
+      // Share market link
+      // Verify shareable page
+    });
+  });
+  ```
 
-#### **Implementation Files to Create**
+---
 
+## 📊 **Testing Infrastructure & Tools**
+
+### **Required Test Files Structure**
 ```
 src/
-├── hooks/
-│   ├── useOptimizedMarkets.ts (NEW)
-│   ├── useMarketCache.ts (NEW)
-│   └── useBatchMarketData.ts (NEW)
-├── config/
-│   └── reactQuery.ts (NEW)
+├── __tests__/
+│   ├── integration/              # Phase 3 integration tests
+│   ├── errors/                   # Phase 4 error handling tests
+│   ├── edge-cases/               # Phase 4 edge case tests
+│   ├── performance/              # Phase 5 performance tests
+│   └── accessibility/            # Phase 5 accessibility tests
+├── test/
+│   ├── mocks/
+│   │   ├── web3Mocks.ts         # Enhanced Web3 mocking
+│   │   ├── contractMocks.ts     # Smart contract mocking
+│   │   └── apiMocks.ts          # API response mocking
+│   ├── fixtures/
+│   │   ├── marketData.ts        # Market test data
+│   │   ├── userData.ts          # User test data
+│   │   └── transactionData.ts   # Transaction test data
+│   └── utils/
+│       ├── testHelpers.ts       # Test utility functions
+│       └── customMatchers.ts    # Custom Jest matchers
 ├── components/
-│   └── markets/
-│       └── VirtualizedMarketList.tsx (NEW)
-└── utils/
-    ├── batchContractCalls.ts (NEW)
-    └── cacheStrategies.ts (NEW)
-```
-
-#### **Implementation Files to Enhance**
-
-```
-src/
+│   └── **/__tests__/            # Component-specific tests
+├── hooks/
+│   └── **/__tests__/            # Hook-specific tests
 ├── pages/
-│   └── MarketList.tsx (integrate batch fetching)
-├── components/markets/
-│   └── MarketCard.tsx (remove individual calls)
-└── hooks/
-    └── useKuriMarkets.ts (optimize with caching)
+│   └── **/__tests__/            # Page-specific tests
+└── utils/
+    └── **/__tests__/            # Utility function tests
+
+e2e/                             # Phase 6 E2E tests
+├── tests/
+├── fixtures/
+└── setup/
 ```
 
-#### **Success Metrics**
-
-**Performance KPIs**:
-
-- [ ] Contract calls: Reduce from 10+ to 1-2 per page load
-- [ ] Page load time: 50%+ improvement on markets page
-- [ ] Memory usage: Stable with 100+ markets
-- [ ] Bundle size: Optimize chunks > 500KB
-
-**User Experience KPIs**:
-
-- [ ] Time to interactive: Faster perceived performance
-- [ ] Smooth scrolling: No jank with large market lists
-- [ ] Error rates: Reduced due to fewer individual calls
-- [ ] User engagement: Better retention with faster interactions
-
-#### **Risk Assessment & Mitigation**
-
-**Risks**:
-
-- **Medium**: Increased complexity in data layer
-- **Medium**: Potential cache invalidation bugs
-- **Low**: Performance regression if not implemented correctly
-
-**Mitigation**:
-
-- Implement incrementally with rollback capability
-- Comprehensive testing at each step
-- Maintain backward compatibility during transition
-- Monitor performance metrics throughout implementation
-
-#### **Testing Strategy**
-
-**Phase 3 Testing Checklist**:
-
-- [ ] Performance testing with 100+ markets
-- [ ] Cache behavior validation
-- [ ] Error handling for batch failures
-- [ ] Memory leak detection
-- [ ] Mobile performance verification
-- [ ] Accessibility compliance maintained
-
----
-
-## 🔧 **Technical Implementation Context**
-
-### **Key Hook Structure (Current State)**
-
-**useKuriCore.ts** - Main hook for market interactions:
-
-```typescript
-// Current return structure
-return {
-  // Market data
-  marketData,
-  isLoading,
-  error,
-
-  // Token data
-  tokenAddress,
-
-  // State
-  userPaymentStatus,
-  userBalance,
-
-  // Actions
-  requestMembership,
-  acceptMember,
-  rejectMember,
-  getMemberStatus,
-  initializeKuri,
-  deposit,
-  claimKuriAmount,
-  fetchMarketData,
-  checkAllowance,
-  approveTokens,
-  checkUserPaymentStatus,
-  checkUserBalance,
-  refreshUserData,
-  checkPaymentStatusIfMember, // 🔥 NEW in Phase 2
-
-  // Loading states
-  isRequesting,
-  isAccepting,
-  isRejecting,
-  isApproving,
-};
-```
-
-### **Contract Integration Points**
-
-**Smart Contract Functions Used**:
-
-- `kuriData()` - Get market information
-- `userToData(address)` - Get user membership status
-- `hasPaid(address, intervalIndex)` - Check payment status
-- `passedIntervalsCounter()` - Get current interval
-- `userInstallmentDeposit()` - Make deposit
-- `claimKuriAmount(intervalIndex)` - Claim winnings
-
-**Membership Status Values**:
-
-- `0` = NONE (not a member)
-- `1` = ACCEPTED (active member)
-- `2` = REJECTED (rejected application)
-- `4` = APPLIED (pending approval)
-
-### **Data Flow Architecture**
-
-**Current Flow**:
-
-```
-MarketList Page
-├── MarketCard 1 → useKuriCore → kuriData() call
-├── MarketCard 2 → useKuriCore → kuriData() call
-├── MarketCard 3 → useKuriCore → kuriData() call
-└── ... (N cards = N contract calls)
-```
-
-**Phase 3 Target Flow**:
-
-```
-MarketList Page
-├── useOptimizedMarkets → Batch kuriData() calls
-├── MarketCard 1 → Consume cached data
-├── MarketCard 2 → Consume cached data
-└── ... (N cards = 1-2 contract calls)
-```
-
-### **Error Handling Patterns**
-
-**Current Error Handling**:
-
-```typescript
-try {
-  const result = await contractCall();
-  setData(result);
-} catch (err) {
-  console.error("Error:", err);
-  setError(handleContractError(err).message);
+### **Testing Commands & Scripts**
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:accessibility": "vitest --run accessibility",
+    "test:integration": "vitest --run integration",
+    "test:phase1": "vitest --run --testNamePattern='Phase 1'",
+    "test:phase2": "vitest --run --testNamePattern='Phase 2'",
+    "test:critical": "vitest --run --testNamePattern='(Phase 1|Phase 2)'"
+  }
 }
 ```
 
-**Required Error Handling for Phase 3**:
+### **Coverage Targets by Phase**
+- **Phase 1**: 90%+ coverage for Tier 1 flows (wallet, creation, deposits, claims)
+- **Phase 2**: 85%+ coverage for Tier 2 flows (onboarding, discovery, data loading)
+- **Phase 3**: 80%+ coverage for complete user journeys
+- **Phase 4**: 75%+ coverage for error scenarios
+- **Phase 5**: Performance/accessibility benchmarks met
+- **Phase 6**: All critical E2E flows automated
 
-```typescript
-// Batch error handling
-const handleBatchErrors = (results: ContractResult[]) => {
-  const successful = results.filter((r) => r.success);
-  const failed = results.filter((r) => !r.success);
+---
 
-  // Handle partial failures gracefully
-  if (failed.length > 0) {
-    console.warn(`${failed.length} markets failed to load`);
-  }
+## ⚠️ **CRITICAL: Testing vs Potentially Buggy Code**
 
-  return successful.map((r) => r.data);
-};
+### **Important Testing Philosophy**
+
+**The existing codebase is NOT absolute truth.** We are testing to verify the code works as expected, which means:
+
+- **Tests might fail because the actual code is buggy, not because tests are wrong**
+- **This is normal and expected** - we're testing to find bugs, not just validate working code
+- **Before making ANY code changes**, you must:
+  1. **Lay out exactly what you propose to change and why**
+  2. **Wait for explicit permission** before modifying any source code
+  3. **Document the bug/issue found** in your test results
+
+### **When Tests Fail - Decision Process**
+
+**If a test fails, determine:**
+1. **Is the test logic correct?** (Check mocks, assertions, test setup)
+2. **Is the component behavior buggy?** (Compare with expected UX/requirements)
+3. **Is it an integration issue?** (Missing dependencies, wrong props, etc.)
+
+**Examples:**
+- ✅ **Test is wrong**: Mock returns wrong data format, assertion checks wrong element
+- ⚠️ **Code is buggy**: Button shows "undefined" instead of "Connect Wallet", form accepts invalid input
+- 🔧 **Integration issue**: Component expects different prop structure than provided
+
+### **Bug Reporting Protocol**
+
+When you find potential bugs:
+```
+🚨 **POTENTIAL BUG FOUND**
+- **Component**: ConnectButton
+- **Expected**: Shows "Connect Wallet" when disconnected
+- **Actual**: Shows "undefined" or crashes
+- **Test**: ConnectButton should show connect prompt when wallet disconnected
+- **Proposed Fix**: Add null check for address before displaying
+- **Permission Needed**: Yes, before changing ConnectButton.tsx
 ```
 
 ---
 
-**🎉 Total Estimated Timeline: 3-4 weeks**  
-**👥 Recommended Team Size: 2-3 developers**  
-**🔄 Testing & Review: 1 week additional**
+## 🎯 **Implementation Guidelines for AI Execution**
+
+### **Context for Fresh Chat Sessions**
+
+When starting any phase, an AI should:
+
+1. **Read this TODO.md** to understand the complete context
+2. **Examine existing test files** in `/src/test/` and `__tests__/` directories
+3. **Review current mocks** in `/src/test/setup.ts`
+4. **Check component structure** to understand what needs testing
+5. **Verify test infrastructure** is working with `npm run test`
+6. **Remember: Code might be buggy - test to find issues, not just validate**
+
+### **Phase Execution Instructions**
+
+Each phase should be executed with:
+
+```bash
+# Before starting any phase
+npm run test                    # Verify current tests pass
+npm run test:coverage          # Check current coverage
+
+# During phase implementation
+npm run test:watch            # Run tests in watch mode
+npm run test:ui              # Use Vitest UI for debugging
+
+# After completing phase
+npm run test:coverage        # Verify coverage targets
+npm run lint                 # Ensure code quality
+```
+
+### **Key Implementation Patterns**
+
+#### **Web3 Testing Pattern**
+```typescript
+// Always use this pattern for contract testing
+const mockUseKuriCore = vi.mocked(useKuriCore);
+mockUseKuriCore.mockReturnValue({
+  marketData: mockMarketData,
+  isLoading: false,
+  error: null,
+  deposit: vi.fn(),
+  // ... other methods
+});
+```
+
+#### **Async Testing Pattern**
+```typescript
+// Always use this pattern for async operations
+test("handles async operation", async () => {
+  render(<Component />);
+  
+  await waitFor(() => {
+    expect(screen.getByText("Success")).toBeInTheDocument();
+  });
+});
+```
+
+#### **User Interaction Pattern**
+```typescript
+// Always use this pattern for user interactions
+test("handles user interaction", async () => {
+  const user = userEvent.setup();
+  render(<Component />);
+  
+  await user.click(screen.getByRole("button", { name: /submit/i }));
+  
+  await waitFor(() => {
+    expect(mockFunction).toHaveBeenCalled();
+  });
+});
+```
+
+### **Critical Testing Rules**
+
+1. **No Real Blockchain Calls**: All contract interactions must be mocked
+2. **No Real API Calls**: All Supabase/GraphQL calls must be mocked
+3. **Test User Experience**: Focus on what users see and do, not implementation details
+4. **Cover Error Cases**: Always test both success and failure scenarios
+5. **Maintain Performance**: Tests should run quickly (<5 seconds per suite)
+
+### **Success Criteria**
+
+Each phase is complete when:
+- [ ] All test files specified in phase are created/enhanced
+- [ ] Tests pass consistently (no flaky tests)
+- [ ] Coverage targets are met
+- [ ] No console errors during test runs
+- [ ] Performance benchmarks are maintained
+
+---
+
+## 📈 **Progress Tracking**
+
+### **Phase Completion Status**
+- [ ] **Phase 1: Critical Flow Foundation** (0/3 sub-phases complete)
+- [ ] **Phase 2: Core Feature Integration** (0/3 sub-phases complete)
+- [ ] **Phase 3: User Journey Integration** (0/3 sub-phases complete)
+- [ ] **Phase 4: Error Handling & Edge Cases** (0/3 sub-phases complete)
+- [ ] **Phase 5: Performance & Accessibility** (0/2 sub-phases complete)
+- [ ] **Phase 6: End-to-End Automation** (0/2 sub-phases complete)
+
+### **Overall Project Metrics**
+- **Current Test Coverage**: ~5%
+- **Target Test Coverage**: 85%
+- **Current Test Files**: 4
+- **Target Test Files**: 50+
+- **Estimated Total Duration**: 4-6 weeks
+- **Priority Phases**: 1, 2, 3 (Critical/High priority)
+
+---
+
+**🎉 This TODO provides complete context for implementing comprehensive test coverage across all crucial flows in the Kuri Web3 application. Any AI can pick up any phase and execute it with full understanding of the requirements, patterns, and success criteria.**

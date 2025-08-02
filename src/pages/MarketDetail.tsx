@@ -186,6 +186,7 @@ export default function MarketDetail() {
     requestMembership,
     initializeKuri,
     getMemberStatus,
+    fetchMarketData,
     checkPaymentStatusIfMember, // 🔥 NEW: Explicit payment status check
   } = useKuriCore(address as `0x${string}`);
 
@@ -491,6 +492,8 @@ export default function MarketDetail() {
       // Refresh membership status
       const status = await getMemberStatus(account.address);
       setMembershipStatus(status ?? 0);
+      // Refresh market data to get updated participant counts
+      await fetchMarketData();
     } catch (err) {
       console.error("Error refreshing member status:", err);
     }

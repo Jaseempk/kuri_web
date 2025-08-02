@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@apollo/client";
 import { Button } from "../ui/button";
 import {
@@ -48,8 +48,11 @@ export const ManageMembers = ({
     isRejecting,
   } = useKuriCore(marketAddress as `0x${string}`);
 
-  // Extract addresses for bulk profile fetching
-  const userAddresses = memberRequests.map((request) => request.user);
+  // Extract addresses for bulk profile fetching - memoized to prevent infinite loops
+  const userAddresses = useMemo(
+    () => memberRequests.map((request) => request.user),
+    [memberRequests.map(req => req.user).join(',')]
+  );
   const { getProfile, isLoading: isProfileLoading } =
     useBulkUserProfiles(userAddresses);
 
@@ -115,7 +118,7 @@ export const ManageMembers = ({
       setError(null);
       await acceptMember(address);
       await refetch();
-      // Refresh the specific user's state
+      // Refresh the specific user's state without creating new array reference
       const state = await getMemberStatus(address);
       setMemberRequests((prev) =>
         prev.map((req) =>
@@ -137,7 +140,7 @@ export const ManageMembers = ({
       setError(null);
       await rejectMember(address);
       await refetch();
-      // Refresh the specific user's state
+      // Refresh the specific user's state without creating new array reference
       const state = await getMemberStatus(address);
       setMemberRequests((prev) =>
         prev.map((req) =>
