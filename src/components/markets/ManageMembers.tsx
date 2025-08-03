@@ -16,6 +16,7 @@ import { MEMBERSHIP_REQUESTS_QUERY } from "../../graphql/queries";
 import { useAccount } from "wagmi";
 import { useBulkUserProfiles } from "../../hooks/useBulkUserProfiles";
 import { UserProfileCell } from "../ui/UserProfileCell";
+import { Checkbox } from "../ui/checkbox";
 
 interface MembershipRequest {
   id: string;
@@ -37,11 +38,16 @@ export const ManageMembers = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingUser, setProcessingUser] = useState<string | null>(null);
+  const [selectedRequests, setSelectedRequests] = useState<Set<string>>(
+    new Set()
+  );
+  const [isBatchAccepting, setIsBatchAccepting] = useState(false);
 
   const { address } = useAccount();
   const {
     marketData,
     acceptMember,
+    acceptMultipleMembers,
     rejectMember,
     getMemberStatus,
     isAccepting,
@@ -51,7 +57,7 @@ export const ManageMembers = ({
   // Extract addresses for bulk profile fetching - memoized to prevent infinite loops
   const userAddresses = useMemo(
     () => memberRequests.map((request) => request.user),
-    [memberRequests.map(req => req.user).join(',')]
+    [memberRequests.map((req) => req.user).join(",")]
   );
   const { getProfile, isLoading: isProfileLoading } =
     useBulkUserProfiles(userAddresses);
@@ -72,7 +78,7 @@ export const ManageMembers = ({
     refetch,
   } = useQuery(MEMBERSHIP_REQUESTS_QUERY, {
     variables: {
-      marketAddress: marketAddress.toLowerCase(),
+      marketAddress: marketAddress,
     },
     fetchPolicy: "cache-and-network",
   });
@@ -156,6 +162,72 @@ export const ManageMembers = ({
     }
   };
 
+  // Batch accept selected members
+  const handleBatchAccept = async () => {
+    const selectedAddresses = Array.from(selectedRequests) as `0x${string}`[];
+    if (selectedAddresses.length === 0) return;
+
+    try {
+      setIsBatchAccepting(true);
+      setError(null);
+      await acceptMultipleMembers(selectedAddresses);
+      await refetch();
+
+      // Refresh states for all selected users
+      const updatedRequests = await Promise.all(
+        memberRequests.map(async (req) => {
+          if (selectedRequests.has(req.user)) {
+            const state = await getMemberStatus(req.user as `0x${string}`);
+            return { ...req, state: state ?? 4 };
+          }
+          return req;
+        })
+      );
+
+      setMemberRequests(updatedRequests);
+      setSelectedRequests(new Set());
+      onMemberActionComplete?.();
+    } catch (err) {
+      console.error("Error accepting members:", err);
+      setError("Failed to accept selected members");
+    } finally {
+      setIsBatchAccepting(false);
+    }
+  };
+
+  // Toggle individual selection
+  const toggleSelection = (userId: string) => {
+    setSelectedRequests((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle all selections
+  const toggleSelectAll = () => {
+    const pendingRequests = memberRequests.filter((req) => req.state === 4);
+    if (
+      selectedRequests.size === pendingRequests.length &&
+      pendingRequests.length > 0
+    ) {
+      setSelectedRequests(new Set());
+    } else {
+      setSelectedRequests(new Set(pendingRequests.map((req) => req.user)));
+    }
+  };
+
+  // Get pending requests for batch operations
+  const pendingRequests = memberRequests.filter((req) => req.state === 4);
+  const hasSelectedRequests = selectedRequests.size > 0;
+  const allPendingSelected =
+    pendingRequests.length > 0 &&
+    selectedRequests.size === pendingRequests.length;
+
   const getMembershipStatusBadge = (state: number) => {
     switch (state) {
       case 0: // NONE
@@ -205,32 +277,46 @@ export const ManageMembers = ({
   const MemberRequestCard = ({ request }: { request: MembershipRequest }) => (
     <div className="bg-white border border-[hsl(var(--border))] rounded-xl p-4 space-y-3 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <UserProfileCell
-            profile={getProfile(request.user)}
-            address={request.user}
-            isLoading={isProfileLoading(request.user)}
-            className="mb-2"
-          />
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="w-3 h-3" />
-            <span>
-              {new Date(Number(request.timestamp) * 1000).toLocaleDateString()}
-            </span>
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          {request.state === 4 && (
+            <Checkbox
+              checked={selectedRequests.has(request.user)}
+              onCheckedChange={() => toggleSelection(request.user)}
+              className="mt-1 data-[state=checked]:bg-[hsl(var(--forest))] data-[state=checked]:border-[hsl(var(--forest))]"
+            />
+          )}
+          <div className="flex-1 min-w-0">
+            <UserProfileCell
+              profile={getProfile(request.user)}
+              address={request.user}
+              isLoading={isProfileLoading(request.user)}
+              className="mb-2"
+            />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Calendar className="w-3 h-3" />
+              <span>
+                {new Date(
+                  Number(request.timestamp) * 1000
+                ).toLocaleDateString()}
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex-shrink-0">
           {getMembershipStatusBadge(request.state)}
         </div>
       </div>
-      {request.state === 4 && (
+      {request.state === 4 && !selectedRequests.has(request.user) && (
         <div className="flex gap-2 pt-2 border-t border-[hsl(var(--border))]">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleAccept(request.user as `0x${string}`)}
             disabled={
-              isAccepting || isRejecting || processingUser === request.user
+              isAccepting ||
+              isRejecting ||
+              processingUser === request.user ||
+              isBatchAccepting
             }
             className="flex-1"
           >
@@ -248,7 +334,10 @@ export const ManageMembers = ({
             size="sm"
             onClick={() => handleReject(request.user as `0x${string}`)}
             disabled={
-              isAccepting || isRejecting || processingUser === request.user
+              isAccepting ||
+              isRejecting ||
+              processingUser === request.user ||
+              isBatchAccepting
             }
             className="flex-1"
           >
@@ -286,6 +375,54 @@ export const ManageMembers = ({
     <div className="space-y-4 p-3 sm:p-4 md:p-6">
       {renderStatus()}
 
+      {/* Batch Actions Bar */}
+      {pendingRequests.length > 0 && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={allPendingSelected}
+                onCheckedChange={toggleSelectAll}
+                className="data-[state=checked]:bg-[hsl(var(--forest))] data-[state=checked]:border-[hsl(var(--forest))]"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                {selectedRequests.size > 0
+                  ? `${selectedRequests.size} selected`
+                  : `Select all ${pendingRequests.length} pending requests`}
+              </span>
+            </div>
+            {hasSelectedRequests && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBatchAccept}
+                  disabled={isBatchAccepting || isAccepting || isRejecting}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                >
+                  {isBatchAccepting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Accepting...
+                    </>
+                  ) : (
+                    `Accept ${selectedRequests.size}`
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedRequests(new Set())}
+                  disabled={isBatchAccepting || isAccepting || isRejecting}
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Mobile Layout - Cards */}
       <div className="block md:hidden space-y-3">
         {memberRequests.map((request) => (
@@ -298,7 +435,16 @@ export const ManageMembers = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[35%]">User</TableHead>
+              <TableHead className="w-[5%]">
+                {pendingRequests.length > 0 && (
+                  <Checkbox
+                    checked={allPendingSelected}
+                    onCheckedChange={toggleSelectAll}
+                    className="data-[state=checked]:bg-[hsl(var(--forest))] data-[state=checked]:border-[hsl(var(--forest))]"
+                  />
+                )}
+              </TableHead>
+              <TableHead className="w-[30%]">User</TableHead>
               <TableHead className="w-[20%]">Requested</TableHead>
               <TableHead className="w-[20%]">Status</TableHead>
               <TableHead className="w-[25%] text-right">Actions</TableHead>
@@ -307,6 +453,17 @@ export const ManageMembers = ({
           <TableBody>
             {memberRequests.map((request) => (
               <TableRow key={request.id}>
+                <TableCell className="py-3">
+                  {request.state === 4 ? (
+                    <Checkbox
+                      checked={selectedRequests.has(request.user)}
+                      onCheckedChange={() => toggleSelection(request.user)}
+                      className="data-[state=checked]:bg-[hsl(var(--forest))] data-[state=checked]:border-[hsl(var(--forest))]"
+                    />
+                  ) : (
+                    <div className="w-4 h-4" /> // Placeholder for alignment
+                  )}
+                </TableCell>
                 <TableCell className="py-3">
                   <UserProfileCell
                     profile={getProfile(request.user)}
@@ -326,52 +483,55 @@ export const ManageMembers = ({
                   {getMembershipStatusBadge(request.state)}
                 </TableCell>
                 <TableCell className="text-right py-3">
-                  {request.state === 4 && (
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleAccept(request.user as `0x${string}`)
-                        }
-                        disabled={
-                          isAccepting ||
-                          isRejecting ||
-                          processingUser === request.user
-                        }
-                      >
-                        {processingUser === request.user && isAccepting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Accepting...
-                          </>
-                        ) : (
-                          "Accept"
-                        )}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() =>
-                          handleReject(request.user as `0x${string}`)
-                        }
-                        disabled={
-                          isAccepting ||
-                          isRejecting ||
-                          processingUser === request.user
-                        }
-                      >
-                        {processingUser === request.user && isRejecting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Rejecting...
-                          </>
-                        ) : (
-                          "Reject"
-                        )}
-                      </Button>
-                    </div>
-                  )}
+                  {request.state === 4 &&
+                    !selectedRequests.has(request.user) && (
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleAccept(request.user as `0x${string}`)
+                          }
+                          disabled={
+                            isAccepting ||
+                            isRejecting ||
+                            processingUser === request.user ||
+                            isBatchAccepting
+                          }
+                        >
+                          {processingUser === request.user && isAccepting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Accepting...
+                            </>
+                          ) : (
+                            "Accept"
+                          )}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() =>
+                            handleReject(request.user as `0x${string}`)
+                          }
+                          disabled={
+                            isAccepting ||
+                            isRejecting ||
+                            processingUser === request.user ||
+                            isBatchAccepting
+                          }
+                        >
+                          {processingUser === request.user && isRejecting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Rejecting...
+                            </>
+                          ) : (
+                            "Reject"
+                          )}
+                        </Button>
+                      </div>
+                    )}
                 </TableCell>
               </TableRow>
             ))}

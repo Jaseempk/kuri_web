@@ -5,7 +5,7 @@ import {
   simulateContract,
   getAccount,
 } from "@wagmi/core";
-import { KuriCoreABI } from "../../contracts/abis/KuriCore";
+import { KuriCoreABI } from "../../contracts/abis/KuriCoreV1";
 import { ERC20ABI } from "../../contracts/abis/ERC20";
 import { handleContractError } from "../../utils/errors";
 import { config } from "../../config/wagmi";
@@ -65,7 +65,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       const address = await readContract(config, {
         address: kuriAddress,
         abi: KuriCoreABI,
-        functionName: "SUPPORTED_TOKEN",
+        functionName: "circleCurrency",
       });
       setTokenAddress(address as `0x${string}`);
     } catch (err) {
@@ -182,7 +182,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         args: [account.address],
       });
 
-      const membershipStatus = userData[0];
+      const membershipStatus = (userData as any)[0];
 
       // If user is not an accepted member (status !== 1), skip payment check
       if (membershipStatus !== 1) {
@@ -267,19 +267,20 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         functionName: "kuriData",
       });
 
+      const marketArray = data as any[];
       setMarketData({
-        creator: data[0],
-        kuriAmount: BigInt(data[1]),
-        totalParticipantsCount: Number(data[2]),
-        totalActiveParticipantsCount: Number(data[3]),
-        intervalDuration: Number(data[4]),
-        nexRaffleTime: BigInt(data[5]),
-        nextIntervalDepositTime: BigInt(data[6]),
-        launchPeriod: BigInt(data[7]),
-        startTime: BigInt(data[8]),
-        endTime: BigInt(data[9]),
-        intervalType: data[10],
-        state: data[11],
+        creator: marketArray[0],
+        kuriAmount: BigInt(marketArray[1]),
+        totalParticipantsCount: Number(marketArray[2]),
+        totalActiveParticipantsCount: Number(marketArray[3]),
+        intervalDuration: Number(marketArray[4]),
+        nexRaffleTime: BigInt(marketArray[5]),
+        nextIntervalDepositTime: BigInt(marketArray[6]),
+        launchPeriod: BigInt(marketArray[7]),
+        startTime: BigInt(marketArray[8]),
+        endTime: BigInt(marketArray[9]),
+        intervalType: marketArray[10],
+        state: marketArray[11],
       });
     } catch (err) {
       setError(handleContractError(err).message);
@@ -533,6 +534,37 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     [kuriAddress, account.address, handleTransaction, fetchMarketData]
   );
 
+  // Accept multiple members (V1 batch operation)
+  const acceptMultipleMembers = useCallback(
+    async (addresses: `0x${string}`[]) => {
+      if (!kuriAddress || !account.address) throw new Error("Invalid parameters");
+      if (addresses.length === 0) throw new Error("No addresses provided");
+      
+      try {
+        const { request } = await simulateContract(config, {
+          address: kuriAddress,
+          abi: KuriCoreABI,
+          functionName: "acceptMultipleUserMembershipRequests",
+          args: [addresses],
+        });
+
+        const tx = await writeContract(config, request);
+
+        await handleTransaction(tx, {
+          loadingMessage: `Accepting ${addresses.length} members...`,
+          successMessage: `Successfully accepted ${addresses.length} members!`,
+          errorMessage: "Failed to accept members",
+        });
+
+        await fetchMarketData();
+        return tx;
+      } catch (error) {
+        throw handleContractError(error);
+      }
+    },
+    [kuriAddress, account.address, handleTransaction, fetchMarketData]
+  );
+
   // Get member status
   const getMemberStatus = useCallback(
     async (address: `0x${string}`) => {
@@ -546,7 +578,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           args: [address],
         });
 
-        return userData[0];
+        return (userData as any)[0];
       } catch (error) {
         throw handleContractError(error);
       }
@@ -570,6 +602,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     // Actions
     requestMembership,
     acceptMember: acceptUserMembershipRequest,
+    acceptMultipleMembers,
     rejectMember: rejectUserMembershipRequest,
     getMemberStatus,
     initializeKuri,

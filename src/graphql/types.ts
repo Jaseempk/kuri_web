@@ -60,26 +60,47 @@ export interface KuriMarketDeployed {
   blockNumber: string;
   blockTimestamp: string;
   transactionHash: string;
-  name: string;
+  wannabeMember?: boolean;
+  circleCurrencyAddress?: string;
+  name?: string;
 }
 
+// V1 KuriInitialised with envio indexed fields
 export interface KuriInitialised {
   id: string;
-  _kuriData_creator: string;
-  _kuriData_kuriAmount: string;
-  _kuriData_totalParticipantsCount: number;
-  _kuriData_totalActiveParticipantsCount: number;
-  _kuriData_intervalDuration: number;
-  _kuriData_nexRaffleTime: string;
-  _kuriData_nextIntervalDepositTime: string;
-  _kuriData_launchPeriod: string;
-  _kuriData_startTime: string;
-  _kuriData_endTime: string;
-  _kuriData_intervalType: number;
-  _kuriData_state: number;
-  blockNumber: string;
-  blockTimestamp: string;
-  transactionHash: string;
+  _kuriData_0: string;   // creator
+  _kuriData_1: string;   // kuriAmount
+  _kuriData_2: number;   // totalParticipantsCount
+  _kuriData_3: number;   // totalActiveParticipantsCount
+  _kuriData_4: string;   // intervalDuration
+  _kuriData_5: string;   // nexRaffleTime
+  _kuriData_6: string;   // nextIntervalDepositTime
+  _kuriData_7: string;   // launchPeriod
+  _kuriData_8: string;   // startTime
+  _kuriData_9: string;   // endTime
+  _kuriData_10: number;  // intervalType
+  _kuriData_11: number;  // state
+  contractAddress?: string;
+}
+
+// Transformed KuriInitialised with named fields (for UI consumption)
+export interface TransformedKuriInitialised {
+  id: string;
+  creator: string;
+  kuriAmount: string;
+  totalParticipantsCount: number;
+  totalActiveParticipantsCount: number;
+  intervalDuration: number;
+  nexRaffleTime: string;
+  nextIntervalDepositTime: string;
+  launchPeriod: string;
+  startTime: string;
+  endTime: string;
+  intervalType: IntervalType;
+  state: KuriState;
+  blockNumber?: string;
+  blockTimestamp?: string;
+  transactionHash?: string;
 }
 
 export interface UserDeposited {
@@ -90,9 +111,9 @@ export interface UserDeposited {
   amountDeposited: string;
   depositTimestamp: string;
   contractAddress: string;
-  blockNumber: string;
-  blockTimestamp: string;
-  transactionHash: string;
+  blockNumber?: string;
+  blockTimestamp?: string;
+  transactionHash?: string;
 }
 
 export interface RaffleWinnerSelected {
@@ -101,10 +122,11 @@ export interface RaffleWinnerSelected {
   winnerIndex: number;
   winnerAddress: string;
   winnerTimestamp: string;
-  requestId: string;
-  blockNumber: string;
-  blockTimestamp: string;
-  transactionHash: string;
+  requestId?: string;
+  contractAddress?: string;
+  blockNumber?: string;
+  blockTimestamp?: string;
+  transactionHash?: string;
 }
 
 export interface MembershipRequested {
@@ -112,19 +134,20 @@ export interface MembershipRequested {
   user: string;
   timestamp: string;
   contractAddress: string;
-  blockNumber: string;
-  blockTimestamp: string;
-  transactionHash: string;
+  blockNumber?: string;
+  blockTimestamp?: string;
+  transactionHash?: string;
 }
 
 export interface UserAccepted {
   id: string;
   user: string;
-  caller: string;
+  caller?: string;
   _totalActiveParticipantsCount: number;
-  blockNumber: string;
-  blockTimestamp: string;
-  transactionHash: string;
+  contractAddress?: string;
+  blockNumber?: string;
+  blockTimestamp?: string;
+  transactionHash?: string;
 }
 
 export interface KuriSlotClaimed {
@@ -134,9 +157,9 @@ export interface KuriSlotClaimed {
   kuriAmount: string;
   intervalIndex: number;
   contractAddress: string;
-  blockNumber: string;
-  blockTimestamp: string;
-  transactionHash: string;
+  blockNumber?: string;
+  blockTimestamp?: string;
+  transactionHash?: string;
 }
 
 // Query Response Interfaces
@@ -145,8 +168,23 @@ export interface KuriMarketsQueryResult {
   kuriInitialiseds: KuriInitialised[];
 }
 
+// Transformed query result for UI consumption
+export interface TransformedKuriMarketsResult {
+  kuriMarketDeployeds: KuriMarketDeployed[];
+  kuriInitialiseds: TransformedKuriInitialised[];
+}
+
 export interface KuriMarketDetailQueryResult {
-  kuriInitialised: KuriInitialised;
+  kuriInitialised: KuriInitialised | null;
+  userDepositeds: UserDeposited[];
+  raffleWinnerSelecteds: RaffleWinnerSelected[];
+  membershipRequesteds: MembershipRequested[];
+  userAccepteds: UserAccepted[];
+}
+
+// Transformed market detail result for UI consumption
+export interface TransformedKuriMarketDetailResult {
+  kuriInitialised: TransformedKuriInitialised | null;
   userDepositeds: UserDeposited[];
   raffleWinnerSelecteds: RaffleWinnerSelected[];
   membershipRequesteds: MembershipRequested[];

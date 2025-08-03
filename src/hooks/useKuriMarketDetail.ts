@@ -6,6 +6,7 @@ import {
   KuriState,
 } from "../graphql/types";
 import { useMemo } from "react";
+import { transformV1KuriInitialised } from "../utils/v1DataTransform";
 
 export interface MarketDetail {
   creator: string;
@@ -46,21 +47,23 @@ export const useKuriMarketDetail = (marketAddress: string) => {
   const marketDetail = useMemo((): MarketDetail | null => {
     if (!data?.kuriInitialised) return null;
 
+    // Transform the indexed fields to named fields
+    const transformedData = transformV1KuriInitialised(data.kuriInitialised);
+
     // Create a map of accepted members for quick lookup
     const acceptedMembersMap = new Map(
       data.userAccepteds.map((accepted) => [accepted.user, accepted])
     );
 
     return {
-      creator: data.kuriInitialised._kuriData_creator,
-      kuriAmount: data.kuriInitialised._kuriData_kuriAmount,
-      totalParticipants: data.kuriInitialised._kuriData_totalParticipantsCount,
-      activeParticipants:
-        data.kuriInitialised._kuriData_totalActiveParticipantsCount,
-      intervalDuration: data.kuriInitialised._kuriData_intervalDuration,
-      nextRaffleTime: data.kuriInitialised._kuriData_nexRaffleTime,
-      nextDepositTime: data.kuriInitialised._kuriData_nextIntervalDepositTime,
-      state: data.kuriInitialised._kuriData_state as KuriState,
+      creator: transformedData._kuriData_creator,
+      kuriAmount: transformedData._kuriData_kuriAmount,
+      totalParticipants: transformedData._kuriData_totalParticipantsCount,
+      activeParticipants: transformedData._kuriData_totalActiveParticipantsCount,
+      intervalDuration: Number(transformedData._kuriData_intervalDuration),
+      nextRaffleTime: transformedData._kuriData_nexRaffleTime,
+      nextDepositTime: transformedData._kuriData_nextIntervalDepositTime,
+      state: transformedData._kuriData_state as KuriState,
       deposits: data.userDepositeds.map((deposit) => ({
         user: deposit.user,
         intervalIndex: deposit.intervalIndex,

@@ -375,14 +375,26 @@ export default function MarketDetail() {
     );
   }, [marketData, account.address]);
 
-  // Check if market can be initialized
+  // Check if market can be initialized - V1 Flexible Initialization
   const canInitialize = useMemo(() => {
-    return (
-      marketData &&
-      marketData.state === KuriState.INLAUNCH &&
-      marketData.totalActiveParticipantsCount ===
-        marketData.totalParticipantsCount
-    );
+    if (!marketData || marketData.state !== KuriState.INLAUNCH) return false;
+    
+    const isFull = marketData.totalActiveParticipantsCount === marketData.totalParticipantsCount;
+    const launchPeriodEnded = Date.now() > Number(marketData.launchPeriod) * 1000;
+    
+    return isFull || launchPeriodEnded; // V1: Initialize when full OR launch period ended
+  }, [marketData]);
+
+  // Get initialization reason for user messaging
+  const initializationReason = useMemo(() => {
+    if (!marketData || marketData.state !== KuriState.INLAUNCH) return "";
+    
+    const isFull = marketData.totalActiveParticipantsCount === marketData.totalParticipantsCount;
+    const launchPeriodEnded = Date.now() > Number(marketData.launchPeriod) * 1000;
+    
+    if (isFull && !launchPeriodEnded) return "Circle is full - ready to start!";
+    if (launchPeriodEnded) return "Launch period completed";
+    return "Waiting for more members or launch period end";
   }, [marketData]);
 
   // Check if market is full
@@ -569,7 +581,7 @@ export default function MarketDetail() {
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               onClick={handleInitialize}
-              disabled={isInitializing}
+              disabled={isInitializing || !canInitialize}
               className="w-full bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] hover:from-[hsl(var(--terracotta))] hover:to-[hsl(var(--terracotta))] text-white border-0 py-4 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -580,8 +592,15 @@ export default function MarketDetail() {
               )}
               {isInitializing
                 ? "Initializing Circle..."
-                : "Initialize Kuri Circle"}
+                : initializationReason.includes("full") 
+                  ? "Start Circle Now (Full)" 
+                  : "Initialize Kuri Circle"}
             </Button>
+            
+            {/* Add explanation text */}
+            <p className="text-sm text-muted-foreground mt-2 text-center">
+              {initializationReason}
+            </p>
           </motion.div>
         );
       }

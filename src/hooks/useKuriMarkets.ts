@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useMultipleKuriData } from "./useKuriData";
 import { supabase } from "../lib/supabase";
 import { useQuery as useTanstackQuery } from "@tanstack/react-query";
+import { transformV1KuriInitialised } from "../utils/v1DataTransform";
 
 export interface KuriMarket {
   address: string;
@@ -99,23 +100,31 @@ export const useKuriMarkets = () => {
         addr.toLowerCase() === deployed.marketAddress.toLowerCase()
       );
       const kuriData = kuriDataResults[kuriDataIndex];
+      
+      // Find corresponding initialized data from V1 GraphQL
+      const initializedData = subgraphData.kuriInitialiseds.find(init => 
+        init.id.toLowerCase() === deployed.marketAddress.toLowerCase()
+      );
+      
+      // Transform V1 data if available, otherwise use contract data
+      const transformedData = initializedData ? transformV1KuriInitialised(initializedData) : null;
 
       return {
         address: deployed.marketAddress,
-        creator: deployed.caller,
-        kuriAmount: kuriData?.kuriAmount.toString() ?? "0",
-        totalParticipants: kuriData?.totalParticipantsCount ?? 0,
-        activeParticipants: kuriData?.totalActiveParticipantsCount ?? 0,
-        intervalType: deployed.intervalType,
-        state: (kuriData?.state ?? 0) as KuriState,
-        nextDepositTime: kuriData?.nextIntervalDepositTime.toString() ?? "0",
-        nextRaffleTime: kuriData?.nexRaffleTime.toString() ?? "0",
+        creator: transformedData?.creator || deployed.caller,
+        kuriAmount: transformedData?.kuriAmount || kuriData?.kuriAmount.toString() || "0",
+        totalParticipants: transformedData?.totalParticipantsCount || kuriData?.totalParticipantsCount || 0,
+        activeParticipants: transformedData?.totalActiveParticipantsCount || kuriData?.totalActiveParticipantsCount || 0,
+        intervalType: transformedData?.intervalType || deployed.intervalType,
+        state: (transformedData?.state ?? kuriData?.state ?? 0) as KuriState,
+        nextDepositTime: transformedData?.nextIntervalDepositTime || kuriData?.nextIntervalDepositTime.toString() || "0",
+        nextRaffleTime: transformedData?.nexRaffleTime || kuriData?.nexRaffleTime.toString() || "0",
         createdAt: deployed.timestamp,
-        name: deployed.name,
-        nextDraw: kuriData?.nexRaffleTime.toString() ?? "0",
-        launchPeriod: kuriData?.launchPeriod.toString() ?? "0",
-        startTime: kuriData?.startTime.toString() ?? "0",
-        endTime: kuriData?.endTime.toString() ?? "0",
+        name: deployed.name || "",
+        nextDraw: transformedData?.nexRaffleTime || kuriData?.nexRaffleTime.toString() || "0",
+        launchPeriod: transformedData?.launchPeriod || kuriData?.launchPeriod.toString() || "0",
+        startTime: transformedData?.startTime || kuriData?.startTime.toString() || "0",
+        endTime: transformedData?.endTime || kuriData?.endTime.toString() || "0",
       };
     });
   }, [subgraphData, kuriDataResults, validMarketAddresses, filteredMarketAddresses]);

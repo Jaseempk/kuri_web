@@ -24,6 +24,7 @@ interface FormData {
   longDescription: string;
   image: File | null;
   imagePreview: string | null;
+  joinAsFirstMember: boolean;
 }
 
 interface CreateMarketFormProps {
@@ -43,6 +44,7 @@ export const CreateMarketForm = ({
     longDescription: "",
     image: null,
     imagePreview: null,
+    joinAsFirstMember: true, // Default to joining as first member
   });
   const [error, setError] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
@@ -65,13 +67,20 @@ export const CreateMarketForm = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    // Sanitize text inputs
-    const sanitizedValue =
-      name === "shortDescription" || name === "longDescription"
-        ? sanitizeInput(value)
-        : value;
-    setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
+    const { name, value, type } = e.target;
+    
+    // Handle checkbox inputs
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      // Sanitize text inputs
+      const sanitizedValue =
+        name === "shortDescription" || name === "longDescription"
+          ? sanitizeInput(value)
+          : value;
+      setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
+    }
     setError("");
   };
 
@@ -144,7 +153,9 @@ export const CreateMarketForm = ({
       const result = await initialiseKuriMarket(
         parseUnits(monthlyContribution, 6), // USDC has 6 decimal places
         Number(formData.participantCount),
-        Number(formData.intervalType) as 0 | 1
+        Number(formData.intervalType) as 0 | 1,
+        formData.joinAsFirstMember, // V1: creator participation choice
+        0 // V1: currency index (hardcoded to 0 for USDC)
       );
 
       const { marketAddress, txHash } = result;
@@ -280,6 +291,32 @@ export const CreateMarketForm = ({
               <p className="text-xs text-gray-500 mt-1">
                 How often participants will contribute
               </p>
+            </div>
+            
+            {/* Creator Participation Choice */}
+            <div>
+              <label className="block font-semibold mb-3 text-[#8B6F47]">
+                Creator Participation
+              </label>
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-[#E8DED1] bg-[#F9F5F1]">
+                <input
+                  type="checkbox"
+                  id="joinAsFirstMember"
+                  name="joinAsFirstMember"
+                  checked={formData.joinAsFirstMember}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#8B6F47] bg-white border-[#E8DED1] rounded focus:ring-[#8B6F47] focus:ring-2"
+                />
+                <label htmlFor="joinAsFirstMember" className="text-sm text-gray-700 cursor-pointer">
+                  <span className="font-medium">Join your own circle as the first member</span>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.joinAsFirstMember 
+                      ? "You'll participate in deposits and be eligible to win" 
+                      : "You'll only manage the circle as an administrator"
+                    }
+                  </p>
+                </label>
+              </div>
             </div>
           </div>
           <hr className="my-4 border-[#E8DED1]" />
