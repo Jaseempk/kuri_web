@@ -52,6 +52,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     isApproving,
     userPaymentStatus,
     userBalance,
+    currentInterval,
     checkUserBalance,
     refreshUserData,
     checkPaymentStatusIfMember, // 🔥 NEW: Explicit payment status check
@@ -60,6 +61,15 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] =
     useState(false);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
+
+  // Check if this is user's first deposit (interval 1 and hasn't paid yet)
+  const isFirstDeposit = currentInterval === 1 && userPaymentStatus === false;
+  
+  // Calculate required amount including fee for first deposit
+  const baseAmount = marketData.kuriAmount;
+  const requiredAmount = isFirstDeposit 
+    ? baseAmount + (baseAmount / BigInt(100)) // Add 1% fee
+    : baseAmount;
 
   const nextDepositTime = new Date(
     Number(marketData.nextIntervalDepositTime) * 1000
@@ -90,7 +100,6 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     try {
       // First, check if user has sufficient balance
       const currentBalance = await checkUserBalance();
-      const requiredAmount = marketData.kuriAmount;
 
       if (!hasSufficientBalance(currentBalance, requiredAmount)) {
         setShowInsufficientBalanceModal(true);
@@ -259,12 +268,37 @@ export const DepositForm: React.FC<DepositFormProps> = ({
         <div className="relative z-10 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
-              <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
-                Required Amount
-              </h3>
-              <p className="text-2xl sm:text-3xl font-bold text-[hsl(var(--foreground))]">
-                ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
-              </p>
+              {isFirstDeposit ? (
+                <div>
+                  <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
+                    First Deposit Breakdown
+                  </h3>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Kuri Amount:</span>
+                      <span>${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-orange-600">
+                      <span>Platform Fee (1%):</span>
+                      <span>${(Number(marketData.kuriAmount) / 100_000_000).toFixed(2)}</span>
+                    </div>
+                    <hr className="border-gray-300" />
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total:</span>
+                      <span>${((Number(marketData.kuriAmount) * 1.01) / 1_000_000).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
+                    Required Amount
+                  </h3>
+                  <p className="text-2xl sm:text-3xl font-bold text-[hsl(var(--foreground))]">
+                    ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
+                  </p>
+                </div>
+              )}
             </div>
 
             {canDeposit ? (
@@ -311,7 +345,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
         isOpen={showInsufficientBalanceModal}
         onClose={() => setShowInsufficientBalanceModal(false)}
         userBalance={userBalance}
-        requiredAmount={marketData.kuriAmount}
+        requiredAmount={requiredAmount}
         onRefreshBalance={handleRefreshBalance}
         isRefreshing={isRefreshingBalance}
       />

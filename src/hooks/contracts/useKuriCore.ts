@@ -53,6 +53,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     null
   );
   const [userBalance, setUserBalance] = useState<bigint>(BigInt(0));
+  const [currentInterval, setCurrentInterval] = useState<number>(0);
 
   const account = getAccount(config);
   const { handleTransaction } = useTransactionStatus();
@@ -208,6 +209,9 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         return false;
       }
 
+      // Store current interval for UI components
+      setCurrentInterval(intervalCounter);
+
       // Convert to bigint for hasPaid function (which expects uint256)
       const currentIntervalIndex = BigInt(intervalCounter);
 
@@ -338,19 +342,27 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
     try {
       const kuriAmount = marketData.kuriAmount;
-      const requiredApproval = calculateApprovalAmount(kuriAmount);
-
+      
+      // Check if this is a first deposit (interval 1) that requires 1% fee
+      const isFirstDeposit = currentInterval === 1 && userPaymentStatus === false;
+      
+      // Calculate required amount including fee for first deposit
+      const requiredAmount = isFirstDeposit 
+        ? kuriAmount + (kuriAmount / BigInt(100)) // Add 1% fee
+        : kuriAmount;
+      
+      const requiredApproval = calculateApprovalAmount(requiredAmount);
       const currentAllowance = await checkAllowance();
 
-      if (currentAllowance < kuriAmount) {
+      if (currentAllowance < requiredAmount) {
         console.log(
-          `Insufficient allowance. Current: ${currentAllowance}, Required: ${kuriAmount}`
+          `Insufficient allowance. Current: ${currentAllowance}, Required: ${requiredAmount}${isFirstDeposit ? ' (includes 1% fee)' : ''}`
         );
 
         await approveTokens(requiredApproval);
 
         const newAllowance = await checkAllowance();
-        if (newAllowance < kuriAmount) {
+        if (newAllowance < requiredAmount) {
           throw new Error(
             "Token approval failed - insufficient allowance after approval"
           );
@@ -598,6 +610,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     // State
     userPaymentStatus,
     userBalance,
+    currentInterval,
 
     // Actions
     requestMembership,
