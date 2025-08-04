@@ -15,7 +15,7 @@ interface NetworkConfig {
 const NETWORK_CONFIG: { [key: number]: NetworkConfig } = {
   [baseSepolia.id]: {
     addresses: {
-      KuriFactory: "0x866af7b1A1eDdAadE318cDe882ED0f2004dC6d7F",
+      KuriFactory: "0x62679d727a0004e8143026A4a32F51CC8efD468c", // V1 Factory Address
     },
     chainId: baseSepolia.id,
   },

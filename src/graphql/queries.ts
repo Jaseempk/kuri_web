@@ -70,63 +70,71 @@ export const USER_MARKETS_QUERY = gql`
 
 export const KURI_MARKETS_QUERY = gql`
   query KuriMarkets {
-    kuriMarketDeployeds(orderBy: timestamp, orderDirection: desc) {
+    kuriMarketDeployeds: KuriCoreFactory_KuriMarketDeployed(
+      order_by: { timestamp: desc }
+    ) {
       id
       caller
       marketAddress
       intervalType
       timestamp
-      blockTimestamp
+      wannabeMember
+      circleCurrencyAddress
     }
-    kuriInitialiseds {
+    kuriInitialiseds: KuriCore_KuriInitialised {
       id
-      _kuriData_creator
-      _kuriData_kuriAmount
-      _kuriData_totalParticipantsCount
-      _kuriData_totalActiveParticipantsCount
-      _kuriData_intervalDuration
-      _kuriData_nexRaffleTime
-      _kuriData_nextIntervalDepositTime
-      _kuriData_launchPeriod
-      _kuriData_startTime
-      _kuriData_endTime
-      _kuriData_intervalType
-      _kuriData_state
+      _kuriData_0
+      _kuriData_1
+      _kuriData_10
+      _kuriData_11
+      _kuriData_2
+      _kuriData_3
+      _kuriData_4
+      _kuriData_5
+      _kuriData_6
+      _kuriData_7
+      _kuriData_8
+      _kuriData_9
+      contractAddress
     }
   }
 `;
 
 export const MEMBERSHIP_REQUESTS_QUERY = gql`
   query MembershipRequests($marketAddress: String!) {
-    membershipRequesteds(
-      where: { contractAddress: $marketAddress }
-      orderBy: timestamp
-      orderDirection: desc
+    membershipRequesteds: KuriCore_MembershipRequested(
+      where: { contractAddress: { _eq: $marketAddress } }
+      order_by: { timestamp: desc }
     ) {
       id
       user
       timestamp
+      contractAddress
     }
   }
 `;
 
 export const KURI_MARKET_DETAIL_QUERY = gql`
   query KuriMarketDetail($marketAddress: String!) {
-    kuriInitialised(id: $marketAddress) {
+    kuriInitialised: KuriCore_KuriInitialised_by_pk(id: $marketAddress) {
       id
-      _kuriData_creator
-      _kuriData_kuriAmount
-      _kuriData_totalParticipantsCount
-      _kuriData_totalActiveParticipantsCount
-      _kuriData_intervalDuration
-      _kuriData_nexRaffleTime
-      _kuriData_nextIntervalDepositTime
-      _kuriData_state
+      _kuriData_0
+      _kuriData_1
+      _kuriData_10
+      _kuriData_11
+      _kuriData_2
+      _kuriData_3
+      _kuriData_4
+      _kuriData_5
+      _kuriData_6
+      _kuriData_7
+      _kuriData_8
+      _kuriData_9
+      contractAddress
     }
-    userDepositeds(
-      where: { id_contains: $marketAddress }
-      orderBy: depositTimestamp
-      orderDirection: desc
+    userDepositeds: KuriCore_UserDeposited(
+      where: { contractAddress: { _eq: $marketAddress } }
+      order_by: { depositTimestamp: desc }
     ) {
       id
       user
@@ -134,63 +142,94 @@ export const KURI_MARKET_DETAIL_QUERY = gql`
       intervalIndex
       amountDeposited
       depositTimestamp
+      contractAddress
+      blockNumber
+      blockTimestamp
+      transactionHash
     }
-    raffleWinnerSelecteds(
-      where: { id_contains: $marketAddress }
-      orderBy: winnerTimestamp
-      orderDirection: desc
+    raffleWinnerSelecteds: KuriCore_RaffleWinnerSelected(
+      where: { contractAddress: { _ilike: $marketAddress } }
+      order_by: { winnerTimestamp: desc }
     ) {
       id
       intervalIndex
       winnerIndex
       winnerAddress
       winnerTimestamp
+      requestId
+      contractAddress
+      blockNumber
+      blockTimestamp
+      transactionHash
     }
-    membershipRequesteds(where: { id_contains: $marketAddress }) {
+    membershipRequesteds: KuriCore_MembershipRequested(
+      where: { contractAddress: { _eq: $marketAddress } }
+    ) {
       id
       user
       timestamp
+      contractAddress
+      blockNumber
+      blockTimestamp
+      transactionHash
     }
-    userAccepteds(where: { id_contains: $marketAddress }) {
+    userAccepteds: KuriCore_UserAccepted(
+      where: { contractAddress: { _ilike: $marketAddress } }
+    ) {
       id
       user
+      caller
       _totalActiveParticipantsCount
+      contractAddress
+      blockNumber
+      blockTimestamp
+      transactionHash
     }
   }
 `;
 
 export const USER_ACTIVITY_QUERY = gql`
   query UserActivity($userAddress: String!) {
-    membershipRequesteds(
-      where: { user: $userAddress }
-      orderBy: timestamp
-      orderDirection: desc
+    membershipRequesteds: KuriCore_MembershipRequested(
+      where: { user: { _eq: $userAddress } }
+      order_by: { timestamp: desc }
     ) {
       id
+      user
       timestamp
       contractAddress
+      blockNumber
+      blockTimestamp
+      transactionHash
     }
-    userDepositeds(
-      where: { user: $userAddress }
-      orderBy: depositTimestamp
-      orderDirection: desc
+    userDepositeds: KuriCore_UserDeposited(
+      where: { user: { _eq: $userAddress } }
+      order_by: { depositTimestamp: desc }
     ) {
       id
+      user
+      userIndex
       intervalIndex
       amountDeposited
       depositTimestamp
       contractAddress
+      blockNumber
+      blockTimestamp
+      transactionHash
     }
-    kuriSlotClaimeds(
-      where: { user: $userAddress }
-      orderBy: timestamp
-      orderDirection: desc
+    kuriSlotClaimeds: KuriCore_KuriSlotClaimed(
+      where: { user: { _eq: $userAddress } }
+      order_by: { timestamp: desc }
     ) {
       id
+      user
       timestamp
       kuriAmount
       intervalIndex
       contractAddress
+      blockNumber
+      blockTimestamp
+      transactionHash
     }
   }
 `;

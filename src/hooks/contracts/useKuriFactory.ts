@@ -8,7 +8,7 @@ import {
 } from "@wagmi/core";
 import { decodeEventLog } from "viem";
 import { useAccount } from "wagmi";
-import { KuriFactoryABI } from "../../contracts/abis/KuriFactory";
+import { KuriFactoryABI } from "../../contracts/abis/KuriFactoryV1";
 import { getContractAddress } from "../../config/contracts";
 import { handleContractError } from "../../utils/errors";
 import { config } from "../../config/wagmi";
@@ -38,7 +38,9 @@ export const useKuriFactory = () => {
     async (
       kuriAmount: bigint,
       participantCount: number,
-      intervalType: 0 | 1
+      intervalType: 0 | 1,
+      wannabeMember: boolean = true,
+      currencyIndex: number = 0
     ) => {
       if (!account.address) throw new Error("Wallet not connected");
       setIsCreating(true);
@@ -53,7 +55,7 @@ export const useKuriFactory = () => {
           abi: KuriFactoryABI,
           address: factoryAddress,
           functionName: "initialiseKuriMarket",
-          args: [kuriAmount, participantCount, intervalType],
+          args: [kuriAmount, participantCount, intervalType, wannabeMember, currencyIndex],
         });
 
         // If simulation succeeds, send the transaction
@@ -74,7 +76,7 @@ export const useKuriFactory = () => {
             });
 
             if (decoded.eventName === "KuriMarketDeployed") {
-              marketAddress = decoded.args.marketAddress;
+              marketAddress = (decoded.args as any)?.marketAddress;
               break;
             }
           } catch (e) {
