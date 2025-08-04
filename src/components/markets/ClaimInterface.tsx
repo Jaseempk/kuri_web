@@ -4,11 +4,8 @@ import {
   KuriState,
   IntervalType,
 } from "../../hooks/contracts/useKuriCore";
-import { Button } from "../ui/button";
-import { Card } from "../ui/card";
-import { TransactionLoading, ErrorMessage } from "../ui/loading-states";
-import { handleContractError } from "../../utils/errors";
-import { Gift, AlertTriangle, XCircle, Clock, Trophy } from "lucide-react";
+
+import { AlertTriangle } from "lucide-react";
 
 interface KuriData {
   creator: `0x${string}`;
@@ -36,7 +33,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
 }) => {
   const { claimKuriAmount, isLoading, error, checkPaymentStatusIfMember } =
     useKuriCore(kuriAddress);
-  const [currentInterval, setCurrentInterval] = useState(0);
+  const [currentInterval] = useState(0);
 
   // 🔥 NEW: Explicitly check payment status when component mounts (lazy loading)
   useEffect(() => {
@@ -98,7 +95,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 h-full">
           <div className="flex-1">
-            <h3 className="text-lg font-medium text-[hsl(var(--forest))] mb-2 font-semibold">
+            <h3 className="text-lg text-[hsl(var(--forest))] mb-2 font-semibold">
               Claimable Amount
             </h3>
             <p className="text-3xl sm:text-4xl font-bold text-[hsl(var(--foreground))]">
