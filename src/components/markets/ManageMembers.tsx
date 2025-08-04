@@ -1,5 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
-import { useQuery } from "@apollo/client";
+import { useState, useMemo } from "react";
 import { Button } from "../ui/button";
 import {
   Table,
@@ -9,21 +8,15 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { Badge } from "../ui/badge";
 import { Loader2, Calendar, User } from "lucide-react";
-import { MEMBERSHIP_REQUESTS_QUERY } from "../../graphql/queries";
 import { useAccount } from "wagmi";
-import { useBulkUserProfiles } from "../../hooks/useBulkUserProfiles";
 import { UserProfileCell } from "../ui/UserProfileCell";
 import { Checkbox } from "../ui/checkbox";
-
-interface MembershipRequest {
-  id: string;
-  user: string;
-  timestamp: string;
-  state: number;
-}
+import {
+  useCircleMembers,
+  MembershipRequest,
+} from "../../hooks/useCircleMembers";
 
 interface ManageMembersProps {
   marketAddress: string;
@@ -34,9 +27,6 @@ export const ManageMembers = ({
   marketAddress,
   onMemberActionComplete,
 }: ManageMembersProps) => {
-  const [memberRequests, setMemberRequests] = useState<MembershipRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [processingUser, setProcessingUser] = useState<string | null>(null);
   const [selectedRequests, setSelectedRequests] = useState<Set<string>>(
     new Set()
@@ -44,119 +34,66 @@ export const ManageMembers = ({
   const [isBatchAccepting, setIsBatchAccepting] = useState(false);
 
   const { address } = useAccount();
+
+  // Use shared hook without filtering (we need all members for management)
   const {
+    members: memberRequests,
+    membersByStatus,
     marketData,
+    getProfile,
+    isProfileLoading,
+    isLoading,
+    error,
     acceptMember,
     acceptMultipleMembers,
     rejectMember,
-    getMemberStatus,
     isAccepting,
     isRejecting,
-  } = useKuriCore(marketAddress as `0x${string}`);
-
-  // Extract addresses for bulk profile fetching - memoized to prevent infinite loops
-  const userAddresses = useMemo(
-    () => memberRequests.map((request) => request.user),
-    [memberRequests.map((req) => req.user).join(",")]
-  );
-  const { getProfile, isLoading: isProfileLoading } =
-    useBulkUserProfiles(userAddresses);
-
-  // Verify creator access
-  useEffect(() => {
-    if (marketData && address && marketData.creator !== address) {
-      setError("Only the creator can manage members");
-      setIsLoading(false);
-    }
-  }, [marketData, address]);
-
-  // Query membership requests from subgraph
-  const {
-    data,
-    loading: queryLoading,
-    error: queryError,
+    refreshMemberStatus,
     refetch,
-  } = useQuery(MEMBERSHIP_REQUESTS_QUERY, {
-    variables: {
-      marketAddress: marketAddress,
-    },
-    fetchPolicy: "cache-and-network",
+  } = useCircleMembers(marketAddress, {
+    includeCreator: false, // Don't include creator in management view
+    filterActiveOnly: false, // Need all members for management
   });
 
-  // Fetch member states from contract
-  useEffect(() => {
-    const fetchMemberStates = async () => {
-      if (!data?.membershipRequesteds) return;
+  // Verify creator access
+  const hasCreatorAccess = useMemo(() => {
+    return (
+      marketData &&
+      address &&
+      marketData.creator.toLowerCase() === address.toLowerCase()
+    );
+  }, [marketData, address]);
 
-      try {
-        const requestsWithState = await Promise.all(
-          data.membershipRequesteds.map(
-            async (request: Omit<MembershipRequest, "state">) => {
-              try {
-                const state = await getMemberStatus(
-                  request.user as `0x${string}`
-                );
-                return { ...request, state: state ?? 4 }; // Default to APPLIED state
-              } catch (err) {
-                console.error(`Error fetching state for ${request.user}:`, err);
-                return { ...request, state: 4 }; // Default to APPLIED state on error
-              }
-            }
-          )
-        );
-        setMemberRequests(requestsWithState);
-      } catch (err) {
-        console.error("Error fetching member states:", err);
-        setError("Failed to fetch member states");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const accessError = useMemo(() => {
+    if (!marketData || !address) return null;
+    if (!hasCreatorAccess) return "Only the creator can manage members";
+    return null;
+  }, [marketData, address, hasCreatorAccess]);
 
-    if (data) {
-      fetchMemberStates();
-    }
-  }, [data, getMemberStatus]);
-
-  const handleAccept = async (address: `0x${string}`) => {
+  const handleAccept = async (userAddress: `0x${string}`) => {
     try {
-      setProcessingUser(address);
-      setError(null);
-      await acceptMember(address);
+      setProcessingUser(userAddress);
+      await acceptMember(userAddress);
       await refetch();
-      // Refresh the specific user's state without creating new array reference
-      const state = await getMemberStatus(address);
-      setMemberRequests((prev) =>
-        prev.map((req) =>
-          req.user === address ? { ...req, state: state ?? 4 } : req
-        )
-      );
+      await refreshMemberStatus(userAddress);
       onMemberActionComplete?.();
     } catch (err) {
       console.error("Error accepting member:", err);
-      setError("Failed to accept member");
     } finally {
       setProcessingUser(null);
     }
   };
 
-  const handleReject = async (address: `0x${string}`) => {
+  const handleReject = async (userAddress: `0x${string}`) => {
     try {
-      setProcessingUser(address);
-      setError(null);
-      await rejectMember(address);
+      setProcessingUser(userAddress);
+      await rejectMember(userAddress);
       await refetch();
-      // Refresh the specific user's state without creating new array reference
-      const state = await getMemberStatus(address);
-      setMemberRequests((prev) =>
-        prev.map((req) =>
-          req.user === address ? { ...req, state: state ?? 4 } : req
-        )
-      );
+      await refreshMemberStatus(userAddress);
       onMemberActionComplete?.();
     } catch (err) {
       console.error("Error rejecting member:", err);
-      setError("Failed to reject member");
     } finally {
       setProcessingUser(null);
     }
@@ -169,27 +106,18 @@ export const ManageMembers = ({
 
     try {
       setIsBatchAccepting(true);
-      setError(null);
       await acceptMultipleMembers(selectedAddresses);
       await refetch();
 
       // Refresh states for all selected users
-      const updatedRequests = await Promise.all(
-        memberRequests.map(async (req) => {
-          if (selectedRequests.has(req.user)) {
-            const state = await getMemberStatus(req.user as `0x${string}`);
-            return { ...req, state: state ?? 4 };
-          }
-          return req;
-        })
+      await Promise.all(
+        selectedAddresses.map((address) => refreshMemberStatus(address))
       );
 
-      setMemberRequests(updatedRequests);
       setSelectedRequests(new Set());
       onMemberActionComplete?.();
     } catch (err) {
       console.error("Error accepting members:", err);
-      setError("Failed to accept selected members");
     } finally {
       setIsBatchAccepting(false);
     }
@@ -210,7 +138,7 @@ export const ManageMembers = ({
 
   // Toggle all selections
   const toggleSelectAll = () => {
-    const pendingRequests = memberRequests.filter((req) => req.state === 4);
+    const pendingRequests = membersByStatus.pending;
     if (
       selectedRequests.size === pendingRequests.length &&
       pendingRequests.length > 0
@@ -222,7 +150,7 @@ export const ManageMembers = ({
   };
 
   // Get pending requests for batch operations
-  const pendingRequests = memberRequests.filter((req) => req.state === 4);
+  const pendingRequests = membersByStatus.pending;
   const hasSelectedRequests = selectedRequests.size > 0;
   const allPendingSelected =
     pendingRequests.length > 0 &&
@@ -355,7 +283,7 @@ export const ManageMembers = ({
     </div>
   );
 
-  if (queryLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -363,10 +291,13 @@ export const ManageMembers = ({
     );
   }
 
-  if (queryError || error) {
+  if (error || accessError) {
     return (
       <div className="text-red-500 p-4 rounded-lg bg-red-50">
-        Error: {queryError?.message || error || "Unknown error"}
+        Error:{" "}
+        {accessError ||
+          (typeof error === "string" ? error : error?.message) ||
+          "Unknown error"}
       </div>
     );
   }

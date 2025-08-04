@@ -55,6 +55,8 @@ import { useUserProfileByAddress } from "../hooks/useUserProfile";
 import { isUserRejection } from "../utils/errors";
 import { DualCountdown } from "../components/ui/DotMatrixCountdown";
 import { trackEvent, trackError } from "../utils/analytics";
+import { CircleMembersDisplay } from "../components/markets/CircleMembersDisplay";
+import { useMarketTimers } from "../hooks/useMarketTimers";
 
 // Available circle images
 const CIRCLE_IMAGES = [
@@ -160,9 +162,6 @@ export default function MarketDetail() {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<string>("");
-  const [raffleTimeLeft, setRaffleTimeLeft] = useState<string>("");
-  const [depositTimeLeft, setDepositTimeLeft] = useState<string>("");
   const [isRequesting, setIsRequesting] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
@@ -203,6 +202,9 @@ export default function MarketDetail() {
 
   // Fetch market detail with winners data
   const { marketDetail } = useKuriMarketDetail(address || "");
+
+  // Use custom timer hook
+  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimers(marketData);
 
   // Determine current winner logic
   const currentWinner = useMemo(() => {
@@ -265,106 +267,6 @@ export default function MarketDetail() {
     checkPaymentStatus();
   }, [account.address, marketData?.state, checkPaymentStatusIfMember]);
 
-  // Calculate launch end time and countdown
-  const launchEndTime = useMemo(() => {
-    if (!marketData) return 0;
-    return Number(marketData.launchPeriod) * 1000;
-  }, [marketData]);
-
-  useEffect(() => {
-    if (!marketData) return;
-
-    let timer: NodeJS.Timeout;
-
-    const updateTimers = () => {
-      const now = Date.now();
-
-      // Handle INLAUNCH countdown (existing logic)
-      if (marketData.state === KuriState.INLAUNCH) {
-        const end = launchEndTime;
-        const diff = end - now;
-
-        if (diff <= 0) {
-          setTimeLeft("Launch period ended");
-        } else {
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor(
-            (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          );
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-          setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-        }
-      }
-
-      // Handle ACTIVE market countdowns (new logic)
-      if (marketData.state === KuriState.ACTIVE) {
-        // Raffle countdown
-        const raffleEnd = Number(marketData.nexRaffleTime) * 1000;
-        const raffleDiff = raffleEnd - now;
-
-        if (raffleDiff <= 0) {
-          setRaffleTimeLeft("Raffle due now");
-        } else {
-          const days = Math.floor(raffleDiff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor(
-            (raffleDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          );
-          const minutes = Math.floor(
-            (raffleDiff % (1000 * 60 * 60)) / (1000 * 60)
-          );
-          const seconds = Math.floor((raffleDiff % (1000 * 60)) / 1000);
-
-          if (days > 0) {
-            setRaffleTimeLeft(`${days}d ${hours}h ${minutes}m`);
-          } else if (hours > 0) {
-            setRaffleTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
-          } else {
-            setRaffleTimeLeft(`${minutes}m ${seconds}s`);
-          }
-        }
-
-        // Deposit countdown
-        const depositEnd = Number(marketData.nextIntervalDepositTime) * 1000;
-        const depositDiff = depositEnd - now;
-
-        if (depositDiff <= 0) {
-          setDepositTimeLeft("Payment due now");
-        } else {
-          const days = Math.floor(depositDiff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor(
-            (depositDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          );
-          const minutes = Math.floor(
-            (depositDiff % (1000 * 60 * 60)) / (1000 * 60)
-          );
-          const seconds = Math.floor((depositDiff % (1000 * 60)) / 1000);
-
-          if (days > 0) {
-            setDepositTimeLeft(`${days}d ${hours}h ${minutes}m`);
-          } else if (hours > 0) {
-            setDepositTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
-          } else {
-            setDepositTimeLeft(`${minutes}m ${seconds}s`);
-          }
-        }
-      }
-    };
-
-    // Run timer for both INLAUNCH and ACTIVE states
-    if (
-      marketData.state === KuriState.INLAUNCH ||
-      marketData.state === KuriState.ACTIVE
-    ) {
-      timer = setInterval(updateTimers, 1000);
-      updateTimers(); // Initial update
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [marketData, launchEndTime]);
 
   // Check if user is creator
   const isCreator = useMemo(() => {
@@ -1154,10 +1056,10 @@ export default function MarketDetail() {
                           </motion.div>
                         )}
 
-                        <div className="max-w-md">
+                        <div className="max-w-sm sm:max-w-md">
                           <motion.div
                             whileHover={{ scale: 1.02 }}
-                            className="p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
+                            className="p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
                           >
                             <h4 className="font-bold text-[hsl(var(--terracotta))] mb-3 flex items-center gap-2">
                               <Users className="w-5 h-5" />
@@ -1281,34 +1183,7 @@ export default function MarketDetail() {
                         transition={{ duration: 0.3 }}
                         className="space-y-6"
                       >
-                        <h3 className="text-2xl font-bold text-[hsl(var(--terracotta))] flex items-center gap-3">
-                          <Users className="w-6 h-6 text-gray-500" />
-                          Circle Members
-                        </h3>
-                        <div className="text-center py-16">
-                          <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[hsl(var(--sand))] to-[hsl(var(--muted))] flex items-center justify-center"
-                          >
-                            <Users className="w-12 h-12 text-[hsl(var(--muted-foreground))]" />
-                          </motion.div>
-                          <h4 className="text-xl font-semibold text-[hsl(var(--foreground))] mb-2">
-                            Member Directory Coming Soon
-                          </h4>
-                          <p className="text-[hsl(var(--muted-foreground))] mb-4 max-w-md mx-auto">
-                            View member profiles, contribution history, and
-                            community standings.
-                          </p>
-                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[hsl(var(--sand))] rounded-full border">
-                            <div className="w-2 h-2 bg-[hsl(var(--forest))] rounded-full animate-pulse" />
-                            <span className="text-sm font-medium text-[hsl(var(--foreground))]">
-                              {marketData.totalActiveParticipantsCount} of{" "}
-                              {marketData.totalParticipantsCount} spots filled
-                            </span>
-                          </div>
-                        </div>
+                        <CircleMembersDisplay marketAddress={address || ""} />
                       </motion.div>
                     )}
                   </AnimatePresence>
