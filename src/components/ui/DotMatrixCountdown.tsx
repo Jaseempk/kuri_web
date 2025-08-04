@@ -510,22 +510,88 @@ export function DualCountdown({
   raffleDate,
   depositDate,
 }: DualCountdownProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Define countdown cards once
+  const countdownCards = [
+    <CountdownCard
+      key="raffle"
+      title="Next Raffle"
+      targetTimestamp={raffleTimestamp}
+      icon={<Trophy className="w-5 h-5" />}
+      accentColor="forest"
+      dateString={raffleDate}
+    />,
+    <CountdownCard
+      key="deposit"
+      title="Next Deposit Due"
+      targetTimestamp={depositTimestamp}
+      icon={<Calendar className="w-5 h-5" />}
+      accentColor="ochre"
+      dateString={depositDate}
+    />
+  ];
+
+  const handleSwipe = (direction: "left" | "right") => {
+    if (direction === "left" && currentSlide < countdownCards.length - 1) {
+      setCurrentSlide(currentSlide + 1);
+    } else if (direction === "right" && currentSlide > 0) {
+      setCurrentSlide(currentSlide - 1);
+    }
+  };
+
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      <CountdownCard
-        title="Next Raffle"
-        targetTimestamp={raffleTimestamp}
-        icon={<Trophy className="w-5 h-5" />}
-        accentColor="forest"
-        dateString={raffleDate}
-      />
-      <CountdownCard
-        title="Next Deposit Due"
-        targetTimestamp={depositTimestamp}
-        icon={<Calendar className="w-5 h-5" />}
-        accentColor="ochre"
-        dateString={depositDate}
-      />
+    <div>
+      {/* Mobile: Swipeable Carousel */}
+      <div className="md:hidden">
+        <motion.div
+          className="relative overflow-hidden"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            const threshold = 50;
+            if (info.offset.x > threshold) {
+              handleSwipe("right");
+            } else if (info.offset.x < -threshold) {
+              handleSwipe("left");
+            }
+          }}
+        >
+          <motion.div
+            className="flex"
+            animate={{ x: `${-currentSlide * 100}%` }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            {countdownCards.map((card, index) => (
+              <div key={index} className="w-full flex-shrink-0 px-2">
+                {card}
+              </div>
+            ))}
+          </motion.div>
+        </motion.div>
+
+        {/* Dots Indicator */}
+        <div className="flex justify-center gap-2 mt-4">
+          {countdownCards.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                index === currentSlide
+                  ? "bg-[hsl(var(--terracotta))] scale-125"
+                  : "bg-gray-300 hover:bg-gray-400"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: Grid Layout (unchanged) */}
+      <div className="hidden md:grid md:grid-cols-2 gap-6">
+        {countdownCards}
+      </div>
     </div>
   );
 }

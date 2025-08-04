@@ -206,6 +206,14 @@ export interface UserActivityQueryVariables {
   userAddress: string;
 }
 
+export interface MarketDeploymentQueryResult {
+  kuriMarketDeployeds: KuriMarketDeployed[];
+}
+
+export interface MarketDeploymentQueryVariables {
+  marketAddress: string;
+}
+
 // Enums
 export enum KuriState {
   UNINITIALIZED = 0,

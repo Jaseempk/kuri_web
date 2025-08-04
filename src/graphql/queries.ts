@@ -233,3 +233,19 @@ export const USER_ACTIVITY_QUERY = gql`
     }
   }
 `;
+
+export const MARKET_DEPLOYMENT_QUERY = gql`
+  query MarketDeployment($marketAddress: String!) {
+    kuriMarketDeployeds: KuriCoreFactory_KuriMarketDeployed(
+      where: { marketAddress: { _ilike: $marketAddress } }
+    ) {
+      id
+      caller
+      marketAddress
+      intervalType
+      timestamp
+      wannabeMember
+      circleCurrencyAddress
+    }
+  }
+`;
