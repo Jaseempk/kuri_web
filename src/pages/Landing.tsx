@@ -991,7 +991,7 @@ function App() {
                 <Button
                   variant="default"
                   size="lg"
-                  className="group bg-[hsl(var(--gold))] hover:bg-white hover:text-[hsl(var(--gold))] text-white border border-[hsl(var(--gold))]"
+                  className="group bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))]"
                   onClick={() => navigate("/markets")}
                 >
                   Start Your Circle
@@ -1133,9 +1133,9 @@ function App() {
 
               <div className="mt-8 inline-block">
                 <Button
-                  variant="forest"
+                  variant="default"
                   size="lg"
-                  className="bg-[hsl(var(--forest))] hover:bg-white hover:text-[hsl(var(--forest))] text-white border border-[hsl(var(--forest))] group"
+                  className="group bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))]"
                   onClick={() => navigate("/markets")}
                 >
                   Start Your Circle

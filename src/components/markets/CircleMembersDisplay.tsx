@@ -74,7 +74,7 @@ export const CircleMembersDisplay = ({ marketAddress }: CircleMembersDisplayProp
           </h3>
         </div>
         <div className="text-red-500 p-4 rounded-lg bg-red-50">
-          Error: {error?.message || error || "Unknown error"}
+          Error: {typeof error === 'string' ? error : error?.message || "Unknown error"}
         </div>
       </div>
     );
@@ -116,6 +116,7 @@ export const CircleMembersDisplay = ({ marketAddress }: CircleMembersDisplayProp
                   address={member.user}
                   isLoading={isProfileLoading(member.user)}
                   className="group-hover:scale-[1.02] transition-transform duration-200"
+                  showAddress={false}
                 />
               </div>
             ))}

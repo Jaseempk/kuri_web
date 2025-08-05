@@ -9,6 +9,7 @@ interface UserProfileCellProps {
   address: string;
   isLoading?: boolean;
   className?: string;
+  showAddress?: boolean;
 }
 
 export function UserProfileCell({
@@ -16,6 +17,7 @@ export function UserProfileCell({
   address,
   isLoading = false,
   className,
+  showAddress = true,
 }: UserProfileCellProps) {
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
 
@@ -51,9 +53,11 @@ export function UserProfileCell({
               <span className="font-medium text-sm truncate">
                 {displayName}
               </span>
-              <span className="text-xs text-muted-foreground font-mono">
-                {formatAddress(address)}
-              </span>
+              {showAddress && (
+                <span className="text-xs text-muted-foreground font-mono">
+                  {formatAddress(address)}
+                </span>
+              )}
             </>
           ) : (
             <span className="font-mono text-sm">{formatAddress(address)}</span>
