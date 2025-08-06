@@ -394,8 +394,7 @@ export default function MarketList() {
     // Show share modal
     setShowShareModal(true);
 
-    // Refresh market data to include the new market
-    refetch();
+    // Refresh will happen when share modal closes
   };
 
   // Handle user actions that require data refresh
@@ -468,9 +467,13 @@ export default function MarketList() {
         {showShareModal && createdMarket && (
           <PostCreationShare
             market={createdMarket}
-            onClose={() => setShowShareModal(false)}
+            onClose={() => {
+              setShowShareModal(false);
+              refetch(); // Refresh market data after modal closes
+            }}
             onViewMarket={() => {
               setShowShareModal(false);
+              refetch(); // Refresh market data before navigation
               navigate(`/markets/${createdMarket.address}`);
             }}
           />
