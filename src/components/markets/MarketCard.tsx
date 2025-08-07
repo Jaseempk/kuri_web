@@ -12,32 +12,32 @@ import { KuriMarket } from "../../hooks/useKuriMarkets";
 import {
   Clock,
   Loader2,
-  Share2,
-  Users,
-  Target,
-  ExternalLink,
-  Calendar,
+  // Share2,
+  // Users,
+  // Target,
+  // ExternalLink,
+  // Calendar,
 } from "lucide-react";
 import { IntervalType } from "../../graphql/types";
 import { toast } from "sonner";
-import { formatEther } from "viem";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { MarketParticipation } from "../../types/market";
-import { supabase } from "../../lib/supabase";
-import { formatDistanceToNow } from "date-fns";
+// import { formatEther } from "viem";
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from "../ui/card";
+// import { MarketParticipation } from "../../types/market";
+// import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../lib/utils";
 import { ShareModal } from "../modals/ShareModal";
 import { useQuery } from "@tanstack/react-query";
 import { useProfileRequired } from "../../hooks/useProfileRequired";
 import { ShareButton } from "../ui/ShareButton";
-import { useShare } from "../../hooks/useShare";
+// import { useShare } from "../../hooks/useShare";
 import { shouldUseKuriCore } from "../../utils/marketUtils";
+import { apiClient } from "../../lib/apiClient";
 
 interface MarketCardProps {
   market: KuriMarket;
@@ -86,18 +86,16 @@ export interface MarketMetadata {
   image_url: string;
 }
 
-// Dummy getMetadata function (replace with actual implementation if needed)
+// Metadata fetching function using backend API
 export const getMetadata = async (
   marketAddress: string
 ): Promise<MarketMetadata | null> => {
-  const { data, error } = await supabase
-    .from("kuri_web")
-    .select("*")
-    .ilike("market_address", marketAddress)
-    .single();
-
-  if (error || !data) return null;
-  return data as MarketMetadata;
+  try {
+    return await apiClient.getMarketMetadata(marketAddress);
+  } catch (error) {
+    console.error("Error fetching market metadata:", error);
+    return null;
+  }
 };
 
 // Hardcoded fallback data for markets without Supabase metadata
@@ -149,7 +147,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const [showShareModal, setShowShareModal] = useState(false);
 
   const account = getAccount(config);
-  
+
   const { requireProfile } = useProfileRequired({
     strict: false,
     action: "join_circle",
@@ -595,7 +593,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   $
                   {Math.floor(
                     (Number(market.kuriAmount) / 1_000_000) *
-                    market.totalParticipants
+                      market.totalParticipants
                   )}
                 </p>
               </div>

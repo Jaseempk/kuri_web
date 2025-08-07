@@ -8,13 +8,13 @@ type ProfileRequiredOptions = {
 };
 
 export const useProfileRequired = (options: ProfileRequiredOptions = {}) => {
-  const { profile, loading } = useUserProfile();
+  const { profile, isLoading } = useUserProfile();
   const navigate = useNavigate();
   const { strict = false, action } = options;
 
   useEffect(() => {
     // Only redirect if in strict mode
-    if (strict && !loading && !profile) {
+    if (strict && !isLoading && !profile) {
       navigate("/onboarding", {
         state: {
           returnUrl: window.location.pathname,
@@ -22,11 +22,11 @@ export const useProfileRequired = (options: ProfileRequiredOptions = {}) => {
         },
       });
     }
-  }, [profile, loading, navigate, strict, action]);
+  }, [profile, isLoading, navigate, strict, action]);
 
   return {
     hasProfile: !!profile,
-    isLoading: loading,
+    isLoading,
     requireProfile: () => {
       if (!profile) {
         navigate("/onboarding", {

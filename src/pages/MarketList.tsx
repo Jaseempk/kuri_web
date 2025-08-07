@@ -11,7 +11,7 @@ import { OptimizedMarketCard } from "../components/markets/OptimizedMarketCard";
 import { OptimizedKuriMarket } from "../hooks/useOptimizedMarkets";
 import { Search, SlidersHorizontal, Check, ChevronDown } from "lucide-react";
 import { formatUnits } from "viem";
-import { supabase } from "../lib/supabase";
+import { apiClient } from "../lib/apiClient";
 import { MarketMetadata } from "../components/markets/MarketCard";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useNavigate } from "react-router-dom";
@@ -241,19 +241,18 @@ export default function MarketList() {
       }
 
       try {
-        // Fetch metadata for all markets from Supabase
-        const { data } = await supabase.from("kuri_web").select("*");
+        // Fetch metadata only for current market addresses (much more efficient than fetching all)
+        const marketAddresses = markets.map(m => m.address);
+        const metadataArray = await apiClient.getBulkMarketMetadata(marketAddresses);
 
         // Create a lookup map by market address
-        if (data) {
-          const metadataMap: Record<string, MarketMetadata> = {};
-          data.forEach((item: any) => {
-            // Store with lowercase address for case-insensitive lookup
-            const address = item.market_address.toLowerCase();
-            metadataMap[address] = item as MarketMetadata;
-          });
-          setMarketMetadata(metadataMap);
-        }
+        const metadataMap: Record<string, MarketMetadata> = {};
+        metadataArray.forEach((item: any) => {
+          // Store with lowercase address for case-insensitive lookup
+          const address = item.market_address.toLowerCase();
+          metadataMap[address] = item as MarketMetadata;
+        });
+        setMarketMetadata(metadataMap);
 
         // Store current stats for comparison (including USDC balances if available)
         const currentStats = {

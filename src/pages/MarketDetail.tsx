@@ -49,7 +49,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../lib/supabase";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useUserProfileByAddress } from "../hooks/useUserProfile";
 import { isUserRejection } from "../utils/errors";
@@ -57,6 +56,7 @@ import { DualCountdown } from "../components/ui/DotMatrixCountdown";
 import { trackEvent, trackError } from "../utils/analytics";
 import { CircleMembersDisplay } from "../components/markets/CircleMembersDisplay";
 import { useMarketTimers } from "../hooks/useMarketTimers";
+import { apiClient } from "../lib/apiClient";
 
 // Available circle images
 const CIRCLE_IMAGES = [
@@ -83,14 +83,12 @@ interface MarketMetadata {
 const getMetadata = async (
   marketAddress: string
 ): Promise<MarketMetadata | null> => {
-  const { data, error } = await supabase
-    .from("kuri_web")
-    .select("*")
-    .ilike("market_address", marketAddress)
-    .single();
-
-  if (error || !data) return null;
-  return data as MarketMetadata;
+  try {
+    return await apiClient.getMarketMetadata(marketAddress);
+  } catch (error) {
+    console.error("Error fetching market metadata:", error);
+    return null;
+  }
 };
 
 const getIntervalTypeText = (intervalType: number): string => {
@@ -190,7 +188,7 @@ export default function MarketDetail() {
   } = useKuriCore(address as `0x${string}`);
 
   // Fetch creator's profile
-  const { profile: creatorProfile, loading: creatorProfileLoading } =
+  const { profile: creatorProfile, isLoading: creatorProfileLoading } =
     useUserProfileByAddress(marketData?.creator || null);
 
   // Fetch metadata
@@ -230,7 +228,7 @@ export default function MarketDetail() {
   }, [marketDetail?.winners, marketData?.state, marketData?.nexRaffleTime]);
 
   // Fetch winner's profile
-  const { profile: winnerProfile, loading: winnerProfileLoading } =
+  const { profile: winnerProfile, isLoading: winnerProfileLoading } =
     useUserProfileByAddress(currentWinner?.winner || null);
 
   // Fetch membership status

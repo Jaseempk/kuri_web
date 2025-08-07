@@ -29,7 +29,6 @@ import {
   CardTitle,
 } from "../ui/card";
 import { MarketParticipation } from "../../types/market";
-import { supabase } from "../../lib/supabase";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../lib/utils";
 import { ShareModal } from "../modals/ShareModal";
@@ -37,6 +36,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useProfileRequired } from "../../hooks/useProfileRequired";
 import { ShareButton } from "../ui/ShareButton";
 import { useShare } from "../../hooks/useShare";
+import { apiClient } from "../../lib/apiClient";
 import { shouldUseKuriCore } from "../../utils/marketUtils";
 
 interface OptimizedMarketCardProps {
@@ -69,18 +69,16 @@ const getIntervalTypeText = (intervalType: number): string => {
   return intervalType === 0 ? "weekly" : "monthly";
 };
 
-// Dummy getMetadata function (replace with actual implementation if needed)
+// Metadata fetching function using backend API
 export const getMetadata = async (
   marketAddress: string
 ): Promise<MarketMetadata | null> => {
-  const { data, error } = await supabase
-    .from("kuri_web")
-    .select("*")
-    .ilike("market_address", marketAddress)
-    .single();
-
-  if (error || !data) return null;
-  return data as MarketMetadata;
+  try {
+    return await apiClient.getMarketMetadata(marketAddress);
+  } catch (error) {
+    console.error("Error fetching market metadata:", error);
+    return null;
+  }
 };
 
 export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({

@@ -1,38 +1,29 @@
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useCallback } from "react";
 import { KuriUserProfile } from "../types/user";
 import { useAccount } from "wagmi";
 import { useApiAuth } from "./useApiAuth";
 import { apiClient } from "../lib/apiClient";
 import { formatErrorForUser } from "../utils/apiErrors";
+import { useQuery } from "@tanstack/react-query";
 
 export const useUserProfile = () => {
   const { address } = useAccount();
   const { getSignedAuth } = useApiAuth();
-  const [profile, setProfile] = useState<KuriUserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async () => {
-    if (!address) return;
+  const {
+    data: profile,
+    isLoading,
+    error,
+    refetch: refreshProfile,
+  } = useQuery({
+    queryKey: ['user-profile', address?.toLowerCase()],
+    queryFn: () => apiClient.getUserProfile(address!),
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
-    try {
-      const { data, error } = await supabase
-        .from("kuri_user_profiles")
-        .select("*")
-        .eq("user_address", address.toLowerCase())
-        .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
-
-      if (error) throw error;
-      setProfile(data); // data will be null if no profile exists
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      setProfile(null); // Explicitly set to null on error
-    } finally {
-      setLoading(false);
-    }
-  }, [address]);
-
-  const updateProfile = async (updates: Partial<KuriUserProfile> & { image?: File }) => {
+  const updateProfile = useCallback(async (updates: Partial<KuriUserProfile> & { image?: File }) => {
     if (!address) return;
 
     try {
@@ -48,11 +39,9 @@ export const useUserProfile = () => {
         message,
         signature,
       });
-
-      setProfile(result);
       
       // Refresh profile data to ensure consistency
-      await fetchProfile();
+      await refreshProfile();
       
       return result;
     } catch (error) {
@@ -61,60 +50,36 @@ export const useUserProfile = () => {
       const formattedError = new Error(formatErrorForUser(error));
       throw formattedError;
     }
-  };
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  }, [address, getSignedAuth, refreshProfile]);
 
   return {
     profile,
-    loading,
+    isLoading,
+    error,
     updateProfile,
-    refreshProfile: fetchProfile,
+    refreshProfile,
   };
 };
 
 // Hook to fetch any user's profile by address
 export const useUserProfileByAddress = (userAddress: string | null) => {
-  const [profile, setProfile] = useState<KuriUserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchProfileByAddress = useCallback(async (address: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("kuri_user_profiles")
-        .select("*")
-        .eq("user_address", address.toLowerCase())
-        .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
-
-      if (error) throw error;
-      return data; // Will be null if no profile exists
-    } catch (error) {
-      console.error("Error fetching profile by address:", error);
-      return null;
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!userAddress) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      const profileData = await fetchProfileByAddress(userAddress);
-      setProfile(profileData);
-      setLoading(false);
-    };
-
-    fetchProfile();
-  }, [userAddress, fetchProfileByAddress]);
+  const {
+    data: profile,
+    isLoading,
+    error,
+    refetch: fetchProfileByAddress,
+  } = useQuery({
+    queryKey: ['user-profile-by-address', userAddress?.toLowerCase()],
+    queryFn: () => apiClient.getUserProfile(userAddress!),
+    enabled: !!userAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
   return {
     profile,
-    loading,
+    isLoading,
+    error,
     fetchProfileByAddress,
   };
 };

@@ -6,16 +6,16 @@ import { LoadingSkeleton } from "../components/ui/loading-states";
 
 export default function ProfileRedirect() {
   const navigate = useNavigate();
-  const { profile, loading } = useUserProfile();
+  const { profile, isLoading } = useUserProfile();
   const { address } = useAccount();
 
   useEffect(() => {
-    if (!loading && (profile?.username || address)) {
+    if (!isLoading && (profile?.username || address)) {
       // Prefer Farcaster username if available, fallback to wallet address
       const identifier = profile?.username || address;
       navigate(`/u/${identifier}`, { replace: true });
     }
-  }, [loading, profile, address, navigate]);
+  }, [isLoading, profile, address, navigate]);
 
   return <LoadingSkeleton />;
 }

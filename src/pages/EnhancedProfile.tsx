@@ -21,7 +21,7 @@ export default function EnhancedProfile() {
   const { identifier } = useParams();
   const navigate = useNavigate();
   const { address } = useAccount();
-  const { profile, loading } = useUserProfile();
+  const { profile, isLoading } = useUserProfile();
   const { activity } = useUserActivity(identifier || "");
   const { markets, loading: marketsLoading } = useKuriMarkets();
 
@@ -33,7 +33,7 @@ export default function EnhancedProfile() {
     window.scrollTo(0, 0);
   }, [identifier, navigate]);
 
-  if (loading) return <LoadingSkeleton />;
+  if (isLoading) return <LoadingSkeleton />;
 
   if (!profile) {
     return (

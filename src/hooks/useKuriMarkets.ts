@@ -3,9 +3,9 @@ import { KURI_MARKETS_QUERY } from "../graphql/queries";
 import { KuriMarketsQueryResult, KuriState } from "../graphql/types";
 import { useMemo } from "react";
 import { useMultipleKuriData } from "./useKuriData";
-import { supabase } from "../lib/supabase";
 import { useQuery as useTanstackQuery } from "@tanstack/react-query";
 import { transformV1KuriInitialised } from "../utils/v1DataTransform";
+import { apiClient } from "../lib/apiClient";
 
 export interface KuriMarket {
   address: string;
@@ -51,29 +51,16 @@ export const useKuriMarkets = () => {
     queryFn: async () => {
       if (marketAddresses.length === 0) return [];
 
-      // Convert all addresses to lowercase for case-insensitive comparison
-      const lowercaseAddresses = marketAddresses.map((addr) =>
-        addr.toLowerCase()
-      );
-
-      const { data, error } = await supabase
-        .from("kuri_web")
-        .select("market_address")
-        .or(
-          lowercaseAddresses
-            .map((addr) => `market_address.ilike.${addr}`)
-            .join(",")
-        );
-
-      if (error) {
+      try {
+        const validAddresses = await apiClient.validateMarketAddresses(marketAddresses);
+        return validAddresses.map((addr) => addr.toLowerCase());
+      } catch (error) {
         console.error("Error fetching valid market addresses:", error);
         return [];
       }
-
-      return data?.map((m) => m.market_address.toLowerCase()) || [];
     },
     enabled: marketAddresses.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 60 * 1000, // 30 minutes - backend caches this
     refetchOnWindowFocus: false,
   });
 

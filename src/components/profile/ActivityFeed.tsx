@@ -5,7 +5,7 @@ import { formatEther } from "viem";
 import { useUserActivity } from "../../hooks/useUserActivity";
 import { ArrowUpIcon, ArrowDownIcon, UserPlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { apiClient } from "../../lib/apiClient";
 
 interface MarketMetadata {
   id: number;
@@ -43,25 +43,15 @@ export function ActivityFeed() {
 
       console.log("Market addresses to fetch:", Array.from(marketAddresses));
 
-      // Fetch metadata for each market using ilike for case-insensitive matching
-      const promises = Array.from(marketAddresses).map((address) =>
-        supabase
-          .from("kuri_web")
-          .select("*")
-          .ilike("market_address", address)
-          .single()
-      );
-      console.log("Promises to fetch metadata:", promises);
-
-      const results = await Promise.all(promises);
+      // Fetch metadata for all market addresses in one efficient batch call
+      const metadataArray = await apiClient.getBulkMarketMetadata(Array.from(marketAddresses));
+      console.log("Fetched metadata for", metadataArray.length, "markets");
 
       const metadataMap: Record<string, MarketMetadata> = {};
-      results.forEach((result, index) => {
-        if (!result.error && result.data) {
-          const address = Array.from(marketAddresses)[index];
-          metadataMap[address] = result.data;
-          console.log("Stored metadata for:", address, result.data);
-        }
+      metadataArray.forEach((metadata) => {
+        const address = metadata.market_address.toLowerCase();
+        metadataMap[address] = metadata;
+        console.log("Stored metadata for:", address, metadata);
       });
 
       setMarketMetadata(metadataMap);
