@@ -17,8 +17,6 @@ import { config } from "../config/wagmi";
 import { formatUnits } from "viem";
 import {
   motion,
-  useScroll,
-  useTransform,
   AnimatePresence,
 } from "framer-motion";
 import {
@@ -167,6 +165,11 @@ export default function MarketDetail() {
     strict: false,
     action: "join_circle",
   });
+
+  // Scroll to top when navigating to a different market
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [address]);
 
   // Validate address
   useEffect(() => {
