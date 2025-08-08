@@ -11,6 +11,8 @@ import { FarcasterProvider } from "./contexts/FarcasterContext";
 import { FarcasterAwareLayout } from "./components/layouts/FarcasterAwareLayout";
 import { ApolloProvider } from "./providers/ApolloProvider";
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
+import { InstallPrompt } from "./components/InstallPrompt";
+import { NetworkStatus } from "./components/NetworkStatus";
 import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
@@ -54,9 +56,11 @@ function App() {
         <FarcasterProvider>
           <ToastProvider />
           <Analytics debug={false} />
+          <NetworkStatus />
           <Router future={{ v7_relativeSplatPath: true }}>
             <RoutesWithAnalytics />
           </Router>
+          <InstallPrompt />
         </FarcasterProvider>
       </ApolloProvider>
     </Web3Provider>
