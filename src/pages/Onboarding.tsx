@@ -271,15 +271,21 @@ export default function Onboarding() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-[#8B6F47] text-white hover:bg-[#725A3A]"
+                className="flex-1 bg-[#8B6F47] text-white hover:bg-[#725A3A] text-sm sm:text-base"
               >
                 {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
-                    Creating Profile...
+                  <div className="flex items-center justify-center gap-1.5 min-w-0">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white flex-shrink-0" />
+                    <span className="truncate">
+                      <span className="sm:hidden">Creating...</span>
+                      <span className="hidden sm:inline">Creating Profile...</span>
+                    </span>
                   </div>
                 ) : (
-                  "Complete Profile"
+                  <span className="truncate">
+                    <span className="sm:hidden">Create Profile</span>
+                    <span className="hidden sm:inline">Complete Profile</span>
+                  </span>
                 )}
               </Button>
             </div>
