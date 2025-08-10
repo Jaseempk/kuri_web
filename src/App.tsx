@@ -13,6 +13,8 @@ import { ApolloProvider } from "./providers/ApolloProvider";
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { NetworkStatus } from "./components/NetworkStatus";
+import { PushPermissionPrompt } from "./components/notifications/PushPermissionPrompt";
+import { NotificationHandler } from "./components/notifications/NotificationHandler";
 import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
@@ -58,9 +60,11 @@ function App() {
           <Analytics debug={false} />
           <NetworkStatus />
           <Router future={{ v7_relativeSplatPath: true }}>
+            <NotificationHandler />
             <RoutesWithAnalytics />
           </Router>
           <InstallPrompt />
+          <PushPermissionPrompt />
         </FarcasterProvider>
       </ApolloProvider>
     </Web3Provider>

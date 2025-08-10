@@ -15,6 +15,7 @@ import { MarketCard } from "../components/markets/MarketCard";
 import { Memberships } from "../components/profile/Memberships";
 import { PendingRequests } from "../components/profile/PendingRequests";
 import { ActivityFeed } from "../components/profile/ActivityFeed";
+import { NotificationSettings } from "../components/notifications/NotificationSettings";
 import { motion } from "framer-motion";
 
 export default function EnhancedProfile() {
@@ -193,6 +194,14 @@ export default function EnhancedProfile() {
               >
                 Activity
               </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold 
+                  rounded-lg transition-all text-xs xs:text-sm md:text-base 
+                  px-2 py-1 xs:px-3 xs:py-2 sm:px-4 flex-shrink-0"
+              >
+                Notifications
+              </TabsTrigger>
             </TabsList>
 
             <motion.div
@@ -320,6 +329,10 @@ export default function EnhancedProfile() {
 
               <TabsContent value="activity">
                 <ActivityFeed />
+              </TabsContent>
+
+              <TabsContent value="notifications">
+                <NotificationSettings />
               </TabsContent>
             </motion.div>
           </Tabs>

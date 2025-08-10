@@ -368,6 +368,43 @@ class KuriApiClient {
   }
 
   /**
+   * Store push subscription for notifications
+   */
+  async storePushSubscription(data: {
+    userAddress: string;
+    playerId: string;
+    platform: string;
+    enabled: boolean;
+  }): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/users/push-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to store push subscription');
+      }
+      
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to backend server. Please check your connection.');
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Health check endpoint
    */
   async healthCheck(): Promise<boolean> {

@@ -17,6 +17,21 @@
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json">
 
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "%VITE_ONESIGNAL_APP_ID%",
+          safari_web_id: "%VITE_ONESIGNAL_SAFARI_WEB_ID%",
+          notifyButton: {
+            enable: false, // Using custom UI instead
+          },
+        });
+      });
+    </script>
+
     <!-- Farcaster Mini App Metadata -->
     <meta
       property="fc:frame"

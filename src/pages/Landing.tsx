@@ -547,17 +547,19 @@ function App() {
               ))
             )}
           </div>
-          <div className="text-center mt-12">
-            <Button
-              variant="gold"
-              size="lg"
-              className="bg-[hsl(var(--gold))] hover:bg-white hover:text-[hsl(var(--gold))] text-white border border-[hsl(var(--gold))] group"
-              onClick={() => navigate("/markets")}
-            >
-              View All Circles
-              <ChevronRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </div>
+          {inLaunchMarkets.length > 0 && (
+            <div className="text-center mt-12">
+              <Button
+                variant="gold"
+                size="lg"
+                className="bg-[hsl(var(--gold))] hover:bg-white hover:text-[hsl(var(--gold))] text-white border border-[hsl(var(--gold))] group"
+                onClick={() => navigate("/markets")}
+              >
+                View All Circles
+                <ChevronRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
