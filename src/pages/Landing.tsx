@@ -367,7 +367,7 @@ function App() {
         className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#f8f5f0]"
         id="hero"
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative py-12 md:py-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative pt-32 pb-12 md:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left content column */}
             <motion.div
