@@ -50,7 +50,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useUserProfileByAddress } from "../hooks/useUserProfile";
 import { isUserRejection } from "../utils/errors";
-import { DualCountdown } from "../components/ui/DotMatrixCountdown";
+import { SequentialCountdown } from "../components/ui/SequentialCountdown";
 import { trackEvent, trackError } from "../utils/analytics";
 import { CircleMembersDisplay } from "../components/markets/CircleMembersDisplay";
 import { useMarketTimers } from "../hooks/useMarketTimers";
@@ -1057,7 +1057,7 @@ export default function MarketDetail() {
                           </motion.div>
                         )}
 
-                        <div className="max-w-sm sm:max-w-md">
+                        <div className="max-w-xs">
                           <motion.div
                             whileHover={{ scale: 1.02 }}
                             className="p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--sand))] to-white rounded-2xl border border-[hsl(var(--border))] hover:shadow-lg transition-all duration-300"
@@ -1123,7 +1123,7 @@ export default function MarketDetail() {
                         </div>
 
                         {marketData.state === KuriState.ACTIVE && (
-                          <DualCountdown
+                          <SequentialCountdown
                             raffleTimestamp={
                               Number(marketData.nexRaffleTime) * 1000
                             }
