@@ -36,6 +36,7 @@ export const CreateMarketForm = ({
   onSuccess,
   onClose,
 }: CreateMarketFormProps) => {
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     totalAmount: "",
     participantCount: "",
@@ -144,6 +145,64 @@ export const CreateMarketForm = ({
     return true;
   };
 
+  // Step-specific validation
+  const validateCurrentStep = (): boolean => {
+    setError("");
+    
+    switch (currentStep) {
+      case 1: // Circle Basics
+        if (!formData.totalAmount || Number(formData.totalAmount) <= 0) {
+          setError("Please enter a valid total amount");
+          return false;
+        }
+        if (!formData.participantCount || Number(formData.participantCount) <= 0) {
+          setError("Please enter the number of participants");
+          return false;
+        }
+        if (Number(formData.participantCount) > 500) {
+          setError("Maximum 500 participants allowed per circle");
+          return false;
+        }
+        return true;
+      
+      case 2: // Your Participation - no validation needed
+        return true;
+      
+      case 3: // Circle Details
+        if (!formData.shortDescription.trim()) {
+          setError("Please add a short description for your circle");
+          return false;
+        }
+        return true;
+      
+      case 4: // Image & Review
+        if (!formData.image) {
+          setError("Please add a circle image to continue");
+          return false;
+        }
+        if (hasInvalidImage) {
+          setError("Your image is too large or wrong format. Please choose a smaller image (under 5MB)");
+          return false;
+        }
+        return true;
+      
+      default:
+        return true;
+    }
+  };
+
+  // Navigation functions
+  const nextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    }
+  };
+
+  const prevStep = () => {
+    setError("");
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -218,16 +277,45 @@ export const CreateMarketForm = ({
     }
   };
 
-  return (
-    <>
-      {showConfetti && <Confetti />}
-      <div className="w-full max-w-md mx-auto bg-white rounded-lg md:rounded-2xl shadow-xl p-4 md:p-8 space-y-8 max-h-[90vh] overflow-y-auto mt-2 md:mt-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-[#E8DED1] scrollbar-track-[#f5f5f5]">
-        <h2 className="text-2xl font-bold text-center mb-4">
-          Create New Circle
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Amount & Participants Section */}
-          <div className="flex flex-col gap-6">
+  // Step indicator component
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-6 px-2">
+      {[1, 2, 3, 4].map((step) => (
+        <div key={step} className="flex items-center">
+          <div
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold ${
+              step === currentStep
+                ? "bg-[#8B6F47] text-white"
+                : step < currentStep
+                ? "bg-[#E8DED1] text-[#8B6F47]"
+                : "bg-gray-200 text-gray-400"
+            }`}
+          >
+            {step < currentStep ? "✓" : step}
+          </div>
+          {step < 4 && (
+            <div
+              className={`w-8 sm:w-12 h-1 mx-1 sm:mx-2 ${
+                step < currentStep ? "bg-[#E8DED1]" : "bg-gray-200"
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  // Render current step content
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Circle Basics</h3>
+              <p className="text-gray-600 text-sm px-2">Set up the foundation of your savings circle</p>
+            </div>
+            
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Total Kuri Amount (USDC)
@@ -246,6 +334,7 @@ export const CreateMarketForm = ({
                 This is the total amount anyone can win on each cycle.
               </p>
             </div>
+            
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Number of Participants
@@ -264,6 +353,7 @@ export const CreateMarketForm = ({
                 Min: 2, Max: 500 participants
               </p>
             </div>
+            
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Monthly Deposit per Participant (USDC)
@@ -275,6 +365,7 @@ export const CreateMarketForm = ({
                 className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-gray-100 focus:outline-none cursor-not-allowed text-gray-700"
               />
             </div>
+            
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Contribution Interval
@@ -292,13 +383,22 @@ export const CreateMarketForm = ({
                 How often participants will contribute
               </p>
             </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Your Participation</h3>
+              <p className="text-gray-600 text-sm px-2">Choose how you want to participate in your circle</p>
+            </div>
             
-            {/* Creator Participation Choice */}
             <div>
               <label className="block font-semibold mb-3 text-[#8B6F47]">
                 Creator Participation
               </label>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-[#E8DED1] bg-[#F9F5F1]">
+              <div className="flex items-center space-x-3 p-4 rounded-lg border border-[#E8DED1] bg-[#F9F5F1]">
                 <input
                   type="checkbox"
                   id="joinAsFirstMember"
@@ -318,10 +418,25 @@ export const CreateMarketForm = ({
                 </label>
               </div>
             </div>
+            
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <h4 className="font-semibold text-orange-800 mb-2">What does this mean?</h4>
+              <ul className="text-sm text-orange-700 space-y-1">
+                <li>• <strong>Join as member:</strong> You contribute {monthlyContribution} USDC monthly and can win the pot</li>
+                <li>• <strong>Admin only:</strong> You manage the circle but don't contribute or win</li>
+              </ul>
+            </div>
           </div>
-          <hr className="my-4 border-[#E8DED1]" />
-          {/* Description Section */}
-          <div className="flex flex-col gap-6">
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Circle Details</h3>
+              <p className="text-gray-600 text-sm px-2">Tell others about your savings circle</p>
+            </div>
+            
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Short Description (1-2 lines)
@@ -335,10 +450,14 @@ export const CreateMarketForm = ({
                 className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent placeholder-gray-400"
                 placeholder="A brief description of your circle"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.shortDescription.length}/120 characters
+              </p>
             </div>
+            
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
-                Full Story
+                Full Story (Optional)
               </label>
               <textarea
                 name="longDescription"
@@ -351,63 +470,149 @@ export const CreateMarketForm = ({
                 }
                 rows={4}
                 className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent placeholder-gray-400"
-                placeholder="Tell the full story of your circle..."
+                placeholder="Tell the full story of your circle... Why are you creating it? What's the goal?"
               />
             </div>
           </div>
-          <hr className="my-4 border-[#E8DED1]" />
-          {/* Image Upload Section */}
-          <div className="flex flex-col gap-4">
-            <label className="block font-semibold mb-1 text-[#8B6F47]">
-              Circle Image
-            </label>
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#E8DED1] file:text-[#8B6F47] hover:file:bg-[#e0d3b8] border border-[#E8DED1] rounded-lg p-2 bg-white"
-              />
-              {formData.imagePreview && (
-                <img
-                  src={formData.imagePreview}
-                  alt="Preview"
-                  className="rounded-lg border border-[#E8DED1] shadow w-32 h-32 object-cover"
+        );
+
+      case 4:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Circle Image & Review</h3>
+              <p className="text-gray-600 text-sm px-2">Add an image and review your circle details</p>
+            </div>
+            
+            <div>
+              <label className="block font-semibold mb-1 text-[#8B6F47]">
+                Circle Image
+              </label>
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#E8DED1] file:text-[#8B6F47] hover:file:bg-[#e0d3b8] border border-[#E8DED1] rounded-lg p-2 bg-white"
                 />
+                {formData.imagePreview && (
+                  <img
+                    src={formData.imagePreview}
+                    alt="Preview"
+                    className="rounded-lg border border-[#E8DED1] shadow w-32 h-32 object-cover"
+                  />
+                )}
+              </div>
+              {(!formData.image || hasInvalidImage) && (
+                <p className="text-red-600 text-sm mt-3 mb-2">
+                  {!formData.image 
+                    ? "Please add a circle image to continue" 
+                    : "Your image is too large or wrong format. Please choose a smaller image (under 5MB)"
+                  }
+                </p>
               )}
             </div>
+            
+            {/* Review Summary */}
+            <div className="bg-[#F9F5F1] border border-[#E8DED1] rounded-lg p-4 mt-8">
+              <h4 className="font-semibold text-[#8B6F47] mb-3">Circle Summary</h4>
+              <div className="space-y-3 text-sm">
+                <p className="text-gray-700">
+                  <span className="font-medium text-[#8B6F47]">{formData.participantCount || "0"} people</span> will join this circle, and the winner of each round takes home <span className="font-medium text-[#8B6F47]">{formData.totalAmount || "0"} USDC</span>.
+                </p>
+                <p className="text-gray-700">
+                  Each person contributes <span className="font-medium text-[#8B6F47]">{monthlyContribution} USDC</span> {formData.intervalType === "0" ? "every week" : "every month"} until everyone has won once.
+                </p>
+                <p className="text-gray-700">
+                  You will {formData.joinAsFirstMember ? (
+                    <>join as a <span className="font-medium text-[#8B6F47]">participant</span>, contributing and eligible to win</>
+                  ) : (
+                    <>act as <span className="font-medium text-[#8B6F47]">admin only</span>, managing the circle without participating</>
+                  )}.
+                </p>
+                {formData.shortDescription && (
+                  <div className="pt-2 border-t border-[#E8DED1]">
+                    <span className="text-gray-600">Description:</span>
+                    <p className="font-medium mt-1">{formData.shortDescription}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-lg text-center font-semibold">
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      {showConfetti && <Confetti />}
+      <div className="w-full max-w-md mx-auto bg-white rounded-lg md:rounded-2xl shadow-xl p-3 sm:p-4 md:p-8 space-y-4 sm:space-y-6 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mt-1 sm:mt-2 md:mt-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-[#E8DED1] scrollbar-track-[#f5f5f5]">
+        <h2 className="text-xl sm:text-2xl font-bold text-center">
+          Create New Circle
+        </h2>
+        
+        <StepIndicator />
+        
+        <form onSubmit={handleSubmit}>
+          {renderStepContent()}
+          
+          {/* Error Message - Only show for steps 1-3, step 4 has inline validation */}
+          {error && currentStep < 4 && (
+            <div className="text-red-600 text-center font-semibold">
               {error}
             </div>
           )}
-          {/* Buttons */}
+          
+          {/* Navigation Buttons */}
           <div className="flex gap-4 pt-6">
-            <DialogClose asChild>
+            {currentStep === 1 ? (
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 border-2 border-[#8B6F47] text-[#8B6F47] hover:bg-[#F9F5F1] hover:text-[#8B6F47] rounded-full py-2 font-semibold"
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+            ) : (
               <Button
                 type="button"
+                onClick={prevStep}
                 variant="outline"
                 className="flex-1 border-2 border-[#8B6F47] text-[#8B6F47] hover:bg-[#F9F5F1] hover:text-[#8B6F47] rounded-full py-2 font-semibold"
               >
-                Cancel
+                Back
               </Button>
-            </DialogClose>
-            <Button
-              type="submit"
-              disabled={isCreating}
-              className="flex-1 bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200 rounded-full py-2 font-semibold text-lg shadow-md"
-            >
-              {isCreating ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
-                  Creating...
-                </div>
-              ) : (
-                "Create Circle"
-              )}
-            </Button>
+            )}
+            
+            {currentStep < 4 ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                className="flex-1 bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200 rounded-full py-2 font-semibold"
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isCreating}
+                className="flex-1 bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200 rounded-full py-2 font-semibold text-lg shadow-md"
+              >
+                {isCreating ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
+                    Creating...
+                  </div>
+                ) : (
+                  "Create Circle"
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </div>
