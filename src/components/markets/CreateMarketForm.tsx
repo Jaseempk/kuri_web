@@ -151,7 +151,7 @@ export const CreateMarketForm = ({
     try {
       setError("");
       const result = await initialiseKuriMarket(
-        parseUnits(monthlyContribution, 6), // USDC has 6 decimal places
+        parseUnits(formData.totalAmount, 6), // USDC has 6 decimal places - pass total kuri amount
         Number(formData.participantCount),
         Number(formData.intervalType) as 0 | 1,
         formData.joinAsFirstMember, // V1: creator participation choice

@@ -57,13 +57,13 @@ export const PostCreationShare = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md backdrop-blur-xl bg-[#F5F5DC]/90 border border-[#B8860B]/20 shadow-2xl">
+      <DialogContent className="max-w-[90vw] w-full sm:max-w-md mx-4 backdrop-blur-xl bg-[#F5F5DC]/90 border border-[#B8860B]/20 shadow-2xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6"
         >
           <motion.div
             initial={{ scale: 0.9 }}
@@ -71,7 +71,7 @@ export const PostCreationShare = ({
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="text-center space-y-2"
           >
-            <h2 className="text-2xl font-bold text-[#C84E31]">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#C84E31]">
               Circle Created Successfully!
             </h2>
             <p className="text-[#B8860B]">
@@ -85,11 +85,11 @@ export const PostCreationShare = ({
             transition={{ delay: 0.3 }}
             className="flex justify-center"
           >
-            <div className="relative p-4 rounded-2xl bg-[#F5F5DC] border border-[#B8860B]/30 shadow-lg">
+            <div className="relative p-3 sm:p-4 rounded-2xl bg-[#F5F5DC] border border-[#B8860B]/30 shadow-lg">
               <QRCodeSVG
                 value={shareUrl}
-                size={200}
-                className="rounded-xl"
+                size={160}
+                className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl"
                 bgColor="transparent"
               />
               <motion.div

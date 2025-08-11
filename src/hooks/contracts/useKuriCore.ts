@@ -10,7 +10,7 @@ import { ERC20ABI } from "../../contracts/abis/ERC20";
 import { handleContractError } from "../../utils/errors";
 import { config } from "../../config/wagmi";
 import { useTransactionStatus } from "../useTransactionStatus";
-import { parseUnits } from "viem";
+
 import { calculateApprovalAmount } from "../../utils/tokenUtils";
 
 export enum KuriState {
@@ -24,6 +24,23 @@ export enum IntervalType {
   WEEK,
   MONTH,
 }
+
+// Type definition for the contract's kuriData return tuple
+// Based on the actual contract return types
+type KuriDataTuple = readonly [
+  `0x${string}`, // creator
+  bigint, // kuriAmount
+  number, // totalParticipantsCount
+  number, // totalActiveParticipantsCount
+  number, // intervalDuration
+  number, // nexRaffleTime (contract returns as number)
+  number, // nextIntervalDepositTime (contract returns as number)
+  number, // launchPeriod (contract returns as number)
+  number, // startTime (contract returns as number)
+  number, // endTime (contract returns as number)
+  number, // intervalType
+  number // state
+];
 
 interface KuriData {
   creator: `0x${string}`;
@@ -271,20 +288,20 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         functionName: "kuriData",
       });
 
-      const marketArray = data as any[];
+      const marketTuple = data as KuriDataTuple;
       setMarketData({
-        creator: marketArray[0],
-        kuriAmount: BigInt(marketArray[1]),
-        totalParticipantsCount: Number(marketArray[2]),
-        totalActiveParticipantsCount: Number(marketArray[3]),
-        intervalDuration: Number(marketArray[4]),
-        nexRaffleTime: BigInt(marketArray[5]),
-        nextIntervalDepositTime: BigInt(marketArray[6]),
-        launchPeriod: BigInt(marketArray[7]),
-        startTime: BigInt(marketArray[8]),
-        endTime: BigInt(marketArray[9]),
-        intervalType: marketArray[10],
-        state: marketArray[11],
+        creator: marketTuple[0],
+        kuriAmount: marketTuple[1],
+        totalParticipantsCount: marketTuple[2],
+        totalActiveParticipantsCount: marketTuple[3],
+        intervalDuration: marketTuple[4],
+        nexRaffleTime: BigInt(marketTuple[5]),
+        nextIntervalDepositTime: BigInt(marketTuple[6]),
+        launchPeriod: BigInt(marketTuple[7]),
+        startTime: BigInt(marketTuple[8]),
+        endTime: BigInt(marketTuple[9]),
+        intervalType: marketTuple[10],
+        state: marketTuple[11],
       });
     } catch (err) {
       setError(handleContractError(err).message);
@@ -296,7 +313,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   // Check payment status and balance when market becomes active or user changes
   useEffect(() => {
     // Only check balance for active markets with connected users
-    // 🔥 REMOVED: Automatic payment status check (now lazy/explicit)
     if (marketData?.state === 2 && account.address) {
       checkUserBalance(); // Keep this - safe for all users
       // checkUserPaymentStatus(); ← REMOVED: Now explicit only
@@ -342,21 +358,24 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
     try {
       const kuriAmount = marketData.kuriAmount;
-      
+
       // Check if this is a first deposit (interval 1) that requires 1% fee
-      const isFirstDeposit = currentInterval === 1 && userPaymentStatus === false;
-      
+      const isFirstDeposit =
+        currentInterval === 1 && userPaymentStatus === false;
+
       // Calculate required amount including fee for first deposit
-      const requiredAmount = isFirstDeposit 
-        ? kuriAmount + (kuriAmount / BigInt(100)) // Add 1% fee
+      const requiredAmount = isFirstDeposit
+        ? kuriAmount + kuriAmount / BigInt(100) // Add 1% fee
         : kuriAmount;
-      
+
       const requiredApproval = calculateApprovalAmount(requiredAmount);
       const currentAllowance = await checkAllowance();
 
       if (currentAllowance < requiredAmount) {
         console.log(
-          `Insufficient allowance. Current: ${currentAllowance}, Required: ${requiredAmount}${isFirstDeposit ? ' (includes 1% fee)' : ''}`
+          `Insufficient allowance. Current: ${currentAllowance}, Required: ${requiredAmount}${
+            isFirstDeposit ? " (includes 1% fee)" : ""
+          }`
         );
 
         await approveTokens(requiredApproval);
@@ -549,9 +568,10 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   // Accept multiple members (V1 batch operation)
   const acceptMultipleMembers = useCallback(
     async (addresses: `0x${string}`[]) => {
-      if (!kuriAddress || !account.address) throw new Error("Invalid parameters");
+      if (!kuriAddress || !account.address)
+        throw new Error("Invalid parameters");
       if (addresses.length === 0) throw new Error("No addresses provided");
-      
+
       try {
         const { request } = await simulateContract(config, {
           address: kuriAddress,
