@@ -15,6 +15,7 @@ import { trackMarketCreation, trackError } from "../../utils/analytics";
 import { apiClient } from "../../lib/apiClient";
 import { formatErrorForUser } from "../../utils/apiErrors";
 import { useAccount } from "wagmi";
+import { ChevronDown, Check, X } from "lucide-react";
 
 interface FormData {
   totalAmount: string;
@@ -40,7 +41,7 @@ export const CreateMarketForm = ({
   const [formData, setFormData] = useState<FormData>({
     totalAmount: "",
     participantCount: "",
-    intervalType: "1", // Default to Monthly
+    intervalType: "0", // Default to Weekly
     shortDescription: "",
     longDescription: "",
     image: null,
@@ -50,11 +51,11 @@ export const CreateMarketForm = ({
   const [error, setError] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasInvalidImage, setHasInvalidImage] = useState(false);
+  const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
 
   // const navigate = useNavigate();
   const { address } = useAccount();
   const { initialiseKuriMarket, isCreating } = useKuriFactory();
-
 
   // Calculate monthly contribution per participant
   const monthlyContribution = useMemo(() => {
@@ -69,7 +70,7 @@ export const CreateMarketForm = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    
+
     // Handle checkbox inputs
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
@@ -87,10 +88,10 @@ export const CreateMarketForm = ({
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
+
     // Clear any previous errors first
     setError("");
-    
+
     if (!file) {
       // Clear image if no file selected
       setFormData((prev) => ({ ...prev, image: null, imagePreview: null }));
@@ -104,7 +105,11 @@ export const CreateMarketForm = ({
       setError(validation.error || "Invalid file");
       setHasInvalidImage(true);
       // Don't clear the file input - let user see their invalid selection
-      setFormData((prev) => ({ ...prev, image: file, imagePreview: URL.createObjectURL(file) }));
+      setFormData((prev) => ({
+        ...prev,
+        image: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
       return;
     }
 
@@ -136,9 +141,11 @@ export const CreateMarketForm = ({
       setError("Please add a circle image to continue");
       return false;
     }
-    
+
     if (hasInvalidImage) {
-      setError("Your image is too large or wrong format. Please choose a smaller image (under 5MB)");
+      setError(
+        "Your image is too large or wrong format. Please choose a smaller image (under 5MB)"
+      );
       return false;
     }
 
@@ -148,14 +155,17 @@ export const CreateMarketForm = ({
   // Step-specific validation
   const validateCurrentStep = (): boolean => {
     setError("");
-    
+
     switch (currentStep) {
       case 1: // Circle Basics
         if (!formData.totalAmount || Number(formData.totalAmount) <= 0) {
           setError("Please enter a valid total amount");
           return false;
         }
-        if (!formData.participantCount || Number(formData.participantCount) <= 0) {
+        if (
+          !formData.participantCount ||
+          Number(formData.participantCount) <= 0
+        ) {
           setError("Please enter the number of participants");
           return false;
         }
@@ -164,28 +174,30 @@ export const CreateMarketForm = ({
           return false;
         }
         return true;
-      
+
       case 2: // Your Participation - no validation needed
         return true;
-      
+
       case 3: // Circle Details
         if (!formData.shortDescription.trim()) {
           setError("Please add a short description for your circle");
           return false;
         }
         return true;
-      
+
       case 4: // Image & Review
         if (!formData.image) {
           setError("Please add a circle image to continue");
           return false;
         }
         if (hasInvalidImage) {
-          setError("Your image is too large or wrong format. Please choose a smaller image (under 5MB)");
+          setError(
+            "Your image is too large or wrong format. Please choose a smaller image (under 5MB)"
+          );
           return false;
         }
         return true;
-      
+
       default:
         return true;
     }
@@ -194,13 +206,13 @@ export const CreateMarketForm = ({
   // Navigation functions
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep(prev => Math.min(prev + 1, 4));
+      setCurrentStep((prev) => Math.min(prev + 1, 4));
     }
   };
 
   const prevStep = () => {
     setError("");
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -220,7 +232,7 @@ export const CreateMarketForm = ({
       const { marketAddress, txHash } = result;
 
       // Small delay to ensure transaction is propagated to all RPC nodes
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Call backend API for metadata creation using transaction hash
       const marketData = await apiClient.createCircleMetadata({
@@ -239,7 +251,6 @@ export const CreateMarketForm = ({
         Number(formData.participantCount),
         monthlyContribution
       );
-
 
       // Show success state
       setShowConfetti(true);
@@ -312,10 +323,14 @@ export const CreateMarketForm = ({
         return (
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center mb-4 sm:mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Circle Basics</h3>
-              <p className="text-gray-600 text-sm px-2">Set up the foundation of your savings circle</p>
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">
+                Circle Basics
+              </h3>
+              <p className="text-gray-600 text-sm px-2">
+                Set up the foundation of your savings circle
+              </p>
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Total Kuri Amount (USDC)
@@ -334,7 +349,7 @@ export const CreateMarketForm = ({
                 This is the total amount anyone can win on each cycle.
               </p>
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Number of Participants
@@ -353,7 +368,7 @@ export const CreateMarketForm = ({
                 Min: 2, Max: 500 participants
               </p>
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Monthly Deposit per Participant (USDC)
@@ -365,22 +380,64 @@ export const CreateMarketForm = ({
                 className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-gray-100 focus:outline-none cursor-not-allowed text-gray-700"
               />
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Contribution Interval
               </label>
-              <select
-                name="intervalType"
-                value={formData.intervalType}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent appearance-none cursor-pointer"
-              >
-                <option value="1">Monthly</option>
-                <option value="0">Weekly</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setIsIntervalDropdownOpen(!isIntervalDropdownOpen)
+                  }
+                  className="w-full px-4 py-2 rounded-lg border border-[#E8DED1] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent cursor-pointer flex items-center justify-between text-left"
+                >
+                  <span>
+                    {formData.intervalType === "0" ? "Weekly" : "Monthly"}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform ${
+                      isIntervalDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isIntervalDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-full bg-white border border-[#E8DED1] rounded-lg shadow-lg z-10 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, intervalType: "1" }));
+                        setIsIntervalDropdownOpen(false);
+                        setError("");
+                      }}
+                      className="w-full px-4 py-2 text-left hover:bg-[#F9F5F1] flex items-center justify-between transition-colors"
+                    >
+                      <span className="text-sm">Monthly</span>
+                      {formData.intervalType === "1" && (
+                        <Check className="h-4 w-4 text-[#8B6F47]" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, intervalType: "0" }));
+                        setIsIntervalDropdownOpen(false);
+                        setError("");
+                      }}
+                      className="w-full px-4 py-2 text-left hover:bg-[#F9F5F1] flex items-center justify-between transition-colors"
+                    >
+                      <span className="text-sm">Weekly</span>
+                      {formData.intervalType === "0" && (
+                        <Check className="h-4 w-4 text-[#8B6F47]" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-gray-500 mt-1">
-                How often participants will contribute
+                How often raffles will happen
               </p>
             </div>
           </div>
@@ -390,10 +447,14 @@ export const CreateMarketForm = ({
         return (
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center mb-4 sm:mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Your Participation</h3>
-              <p className="text-gray-600 text-sm px-2">Choose how you want to participate in your circle</p>
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">
+                Your Participation
+              </h3>
+              <p className="text-gray-600 text-sm px-2">
+                Choose how you want to participate in your circle
+              </p>
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-3 text-[#8B6F47]">
                 Creator Participation
@@ -407,23 +468,35 @@ export const CreateMarketForm = ({
                   onChange={handleChange}
                   className="w-4 h-4 text-[#8B6F47] bg-white border-[#E8DED1] rounded focus:ring-[#8B6F47] focus:ring-2"
                 />
-                <label htmlFor="joinAsFirstMember" className="text-sm text-gray-700 cursor-pointer">
-                  <span className="font-medium">Join your own circle as the first member</span>
+                <label
+                  htmlFor="joinAsFirstMember"
+                  className="text-sm text-gray-700 cursor-pointer"
+                >
+                  <span className="font-medium">
+                    Join your own circle as the first member
+                  </span>
                   <p className="text-xs text-gray-500 mt-1">
-                    {formData.joinAsFirstMember 
-                      ? "You'll participate in deposits and be eligible to win" 
-                      : "You'll only manage the circle as an administrator"
-                    }
+                    {formData.joinAsFirstMember
+                      ? "You'll participate in deposits and be eligible to win"
+                      : "You'll only manage the circle as an administrator"}
                   </p>
                 </label>
               </div>
             </div>
-            
+
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <h4 className="font-semibold text-orange-800 mb-2">What does this mean?</h4>
+              <h4 className="font-semibold text-orange-800 mb-2">
+                What does this mean?
+              </h4>
               <ul className="text-sm text-orange-700 space-y-1">
-                <li>• <strong>Join as member:</strong> You contribute {monthlyContribution} USDC monthly and can win the pot</li>
-                <li>• <strong>Admin only:</strong> You manage the circle but don't contribute or win</li>
+                <li>
+                  • <strong>Join as member:</strong> You contribute{" "}
+                  {monthlyContribution} USDC monthly and can win the pot
+                </li>
+                <li>
+                  • <strong>Admin only:</strong> You manage the circle but don't
+                  contribute or win
+                </li>
               </ul>
             </div>
           </div>
@@ -433,10 +506,14 @@ export const CreateMarketForm = ({
         return (
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center mb-4 sm:mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Circle Details</h3>
-              <p className="text-gray-600 text-sm px-2">Tell others about your savings circle</p>
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">
+                Circle Details
+              </h3>
+              <p className="text-gray-600 text-sm px-2">
+                Tell others about your savings circle
+              </p>
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Short Description (1-2 lines)
@@ -454,7 +531,7 @@ export const CreateMarketForm = ({
                 {formData.shortDescription.length}/120 characters
               </p>
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Full Story (Optional)
@@ -480,10 +557,14 @@ export const CreateMarketForm = ({
         return (
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center mb-4 sm:mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">Circle Image & Review</h3>
-              <p className="text-gray-600 text-sm px-2">Add an image and review your circle details</p>
+              <h3 className="text-lg sm:text-xl font-bold text-[#8B6F47] mb-2">
+                Circle Image & Review
+              </h3>
+              <p className="text-gray-600 text-sm px-2">
+                Add an image and review your circle details
+              </p>
             </div>
-            
+
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47]">
                 Circle Image
@@ -505,35 +586,64 @@ export const CreateMarketForm = ({
               </div>
               {(!formData.image || hasInvalidImage) && (
                 <p className="text-red-600 text-sm mt-3 mb-2">
-                  {!formData.image 
-                    ? "Please add a circle image to continue" 
-                    : "Your image is too large or wrong format. Please choose a smaller image (under 5MB)"
-                  }
+                  {!formData.image
+                    ? "Please add a circle image to continue"
+                    : "Your image is too large or wrong format. Please choose a smaller image (under 5MB)"}
                 </p>
               )}
             </div>
-            
+
             {/* Review Summary */}
             <div className="bg-[#F9F5F1] border border-[#E8DED1] rounded-lg p-4 mt-8">
-              <h4 className="font-semibold text-[#8B6F47] mb-3">Circle Summary</h4>
+              <h4 className="font-semibold text-[#8B6F47] mb-3">
+                Circle Summary
+              </h4>
               <div className="space-y-3 text-sm">
                 <p className="text-gray-700">
-                  <span className="font-medium text-[#8B6F47]">{formData.participantCount || "0"} people</span> will join this circle, and the winner of each round takes home <span className="font-medium text-[#8B6F47]">{formData.totalAmount || "0"} USDC</span>.
+                  <span className="font-medium text-[#8B6F47]">
+                    {formData.participantCount || "0"} people
+                  </span>{" "}
+                  will join this circle, and the winner of each round takes home{" "}
+                  <span className="font-medium text-[#8B6F47]">
+                    {formData.totalAmount || "0"} USDC
+                  </span>
+                  .
                 </p>
                 <p className="text-gray-700">
-                  Each person contributes <span className="font-medium text-[#8B6F47]">{monthlyContribution} USDC</span> {formData.intervalType === "0" ? "every week" : "every month"} until everyone has won once.
+                  Each person contributes{" "}
+                  <span className="font-medium text-[#8B6F47]">
+                    {monthlyContribution} USDC
+                  </span>{" "}
+                  {formData.intervalType === "0" ? "every week" : "every month"}{" "}
+                  until everyone has won once.
                 </p>
                 <p className="text-gray-700">
-                  You will {formData.joinAsFirstMember ? (
-                    <>join as a <span className="font-medium text-[#8B6F47]">participant</span>, contributing and eligible to win</>
+                  You will{" "}
+                  {formData.joinAsFirstMember ? (
+                    <>
+                      join as a{" "}
+                      <span className="font-medium text-[#8B6F47]">
+                        participant
+                      </span>
+                      , contributing and eligible to win
+                    </>
                   ) : (
-                    <>act as <span className="font-medium text-[#8B6F47]">admin only</span>, managing the circle without participating</>
-                  )}.
+                    <>
+                      act as{" "}
+                      <span className="font-medium text-[#8B6F47]">
+                        admin only
+                      </span>
+                      , managing the circle without participating
+                    </>
+                  )}
+                  .
                 </p>
                 {formData.shortDescription && (
                   <div className="pt-2 border-t border-[#E8DED1]">
                     <span className="text-gray-600">Description:</span>
-                    <p className="font-medium mt-1">{formData.shortDescription}</p>
+                    <p className="font-medium mt-1">
+                      {formData.shortDescription}
+                    </p>
                   </div>
                 )}
               </div>
@@ -549,23 +659,34 @@ export const CreateMarketForm = ({
   return (
     <>
       {showConfetti && <Confetti />}
-      <div className="w-full max-w-md mx-auto bg-white rounded-lg md:rounded-2xl shadow-xl p-3 sm:p-4 md:p-8 space-y-4 sm:space-y-6 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mt-1 sm:mt-2 md:mt-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-[#E8DED1] scrollbar-track-[#f5f5f5]">
+      <div className="w-full max-w-md mx-auto bg-white rounded-lg md:rounded-2xl shadow-xl p-3 sm:p-4 md:p-8 space-y-4 sm:space-y-6 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mt-1 sm:mt-2 md:mt-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-[#E8DED1] scrollbar-track-[#f5f5f5] relative">
+        {/* Close button */}
+        <DialogClose asChild>
+          <button
+            type="button"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 p-1 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+          </button>
+        </DialogClose>
+        
         <h2 className="text-xl sm:text-2xl font-bold text-center">
           Create New Circle
         </h2>
-        
+
         <StepIndicator />
-        
+
         <form onSubmit={handleSubmit}>
           {renderStepContent()}
-          
+
           {/* Error Message - Only show for steps 1-3, step 4 has inline validation */}
           {error && currentStep < 4 && (
             <div className="text-red-600 text-center font-semibold">
               {error}
             </div>
           )}
-          
+
           {/* Navigation Buttons */}
           <div className="flex gap-4 pt-6">
             {currentStep === 1 ? (
@@ -588,7 +709,7 @@ export const CreateMarketForm = ({
                 Back
               </Button>
             )}
-            
+
             {currentStep < 4 ? (
               <Button
                 type="button"
