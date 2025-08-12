@@ -4,7 +4,7 @@ import { Card } from "../components/ui/card";
 import { useOptimizedMarkets } from "../hooks/useOptimizedMarkets";
 import { IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "../components/ui/dialog";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
 import { OptimizedMarketCard } from "../components/markets/OptimizedMarketCard";
@@ -485,7 +485,11 @@ export default function MarketList() {
                   Start a Circle
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
+              <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
+                <DialogTitle className="sr-only">Create New Circle</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Create a new savings circle by setting up the basic details, participation options, and circle information.
+                </DialogDescription>
                 <CreateMarketForm
                   onSuccess={handleMarketCreated}
                   onClose={() => setShowCreateForm(false)}
@@ -526,7 +530,11 @@ export default function MarketList() {
                   Start a Circle
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
+              <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
+                <DialogTitle className="sr-only">Create New Circle</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Create a new savings circle by setting up the basic details, participation options, and circle information.
+                </DialogDescription>
                 <CreateMarketForm
                   onSuccess={handleMarketCreated}
                   onClose={() => setShowCreateForm(false)}
