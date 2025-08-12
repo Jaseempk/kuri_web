@@ -65,8 +65,12 @@ const CIRCLE_IMAGES = [
   "/images/circle5.jpg",
 ];
 
-const getIntervalTypeText = (intervalType: number): string => {
-  return intervalType === 0 ? "weekly" : "monthly";
+const getIntervalTypeText = (intervalType: number | string): string => {
+  // Convert to number to handle both string and number inputs  
+  const numericIntervalType = Number(intervalType);
+  
+  // Convert to number to handle both string and number inputs from GraphQL
+  return numericIntervalType === 0 ? "weekly" : "monthly";
 };
 
 // Metadata fetching function using backend API

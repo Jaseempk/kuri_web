@@ -105,6 +105,9 @@ export const useKuriMarkets = () => {
         ? transformV1KuriInitialised(initializedData)
         : null;
 
+      // Convert interval type to number to handle string values from GraphQL
+      const finalIntervalType = transformedData?._kuriData_intervalType || deployed.intervalType;
+
       return {
         address: deployed.marketAddress,
         creator: transformedData?._kuriData_creator || deployed.caller,
@@ -120,8 +123,7 @@ export const useKuriMarkets = () => {
           transformedData?._kuriData_totalActiveParticipantsCount ||
           kuriData?.totalActiveParticipantsCount ||
           0,
-        intervalType:
-          transformedData?._kuriData_intervalType || deployed.intervalType,
+        intervalType: Number(finalIntervalType), // Convert string to number for consistent typing
         state: (transformedData?._kuriData_state ??
           kuriData?.state ??
           0) as KuriState,

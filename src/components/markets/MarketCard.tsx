@@ -65,8 +65,13 @@ const CIRCLE_IMAGES = [
   "/images/zeroInterest.jpg",
 ];
 
-const getIntervalTypeText = (intervalType: number): string => {
-  switch (intervalType) {
+const getIntervalTypeText = (intervalType: number | string): string => {
+  // Convert to number to handle both string and number inputs
+  const numericIntervalType = Number(intervalType);
+  
+  // Convert to number to handle both string and number inputs from GraphQL
+  
+  switch (numericIntervalType) {
     case INTERVAL_TYPE.WEEKLY:
       return "weekly";
     case INTERVAL_TYPE.MONTHLY:
@@ -138,6 +143,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   } = useKuriCore(
     shouldUseCore ? (market.address as `0x${string}`) : undefined
   );
+
 
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);

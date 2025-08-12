@@ -28,14 +28,14 @@ const INTERVAL_TYPE = {
 // Market categories with tab values
 const marketSections = [
   {
-    title: "Launching Markets",
-    description: "Recently created markets pending activation",
+    title: "Launching Circles",
+    description: "Recently created circles pending activation",
     filter: (market: OptimizedKuriMarket) => market.state === 0, // KuriState.INLAUNCH
     value: "created",
   },
   {
-    title: "Active Markets",
-    description: "Currently active markets accepting deposits",
+    title: "Active Circles",
+    description: "Currently active circles accepting deposits",
     filter: (market: OptimizedKuriMarket) => market.state === 2, // KuriState.ACTIVE
     value: "active",
   },
@@ -116,19 +116,20 @@ const IntervalTypeFilter = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 xs:px-4 py-2 xs:py-2.5 bg-white text-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] hover:text-white border border-[hsl(var(--terracotta))] rounded-full transition-all duration-200"
+        className="flex items-center gap-1 xs:gap-2 px-2 xs:px-3 py-2 xs:py-2.5 bg-white text-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] hover:text-white border border-[hsl(var(--terracotta))] rounded-full transition-all duration-200 min-w-0 whitespace-nowrap"
       >
-        <SlidersHorizontal className="h-4 w-4" />
-        <span className="text-sm font-medium">{selectedOption?.label}</span>
+        <SlidersHorizontal className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
+        <span className="text-xs xs:text-sm font-medium truncate hidden xs:inline">{selectedOption?.label}</span>
+        <span className="text-xs font-medium truncate xs:hidden">Filter</span>
         <ChevronDown
-          className={`h-4 w-4 transition-transform ${
+          className={`h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-[hsl(var(--terracotta))] rounded-2xl shadow-lg z-10 overflow-hidden">
+        <div className="absolute top-full right-0 xs:left-auto xs:right-0 mt-1 w-36 xs:w-full bg-white border border-[hsl(var(--terracotta))] rounded-2xl shadow-lg z-10 overflow-hidden">
           {options.map((option) => (
             <button
               key={option.value}
@@ -136,12 +137,18 @@ const IntervalTypeFilter = ({
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className="w-full px-4 py-2 text-left hover:bg-[hsl(var(--terracotta))]/10 flex items-center justify-between transition-colors"
+              className={`w-full px-3 xs:px-4 py-2 xs:py-2 text-left transition-colors text-sm xs:text-sm ${
+                value === option.value 
+                  ? "bg-[hsl(var(--terracotta))] text-white" 
+                  : "hover:bg-[hsl(var(--terracotta))]/10"
+              }`}
             >
-              <span className="text-sm">{option.label}</span>
-              {value === option.value && (
-                <Check className="h-4 w-4 text-[hsl(var(--terracotta))]" />
-              )}
+              <span className="block xs:inline">{option.label}</span>
+              <span className="hidden xs:inline">
+                {value === option.value && (
+                  <Check className="h-4 w-4 text-white ml-2 inline" />
+                )}
+              </span>
             </button>
           ))}
         </div>
@@ -407,7 +414,37 @@ export default function MarketList() {
       {/* Stats Banner */}
       <div className="bg-[#F9F5F1] border-b border-[#E8DED1]">
         <div className="container mx-auto px-3 xs:px-4 py-4 xs:py-5 sm:py-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
+          {/* Mobile: Horizontal scroll, Desktop: Grid */}
+          <div className="sm:hidden">
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+              <div className="min-w-[280px] snap-start">
+                <StatsCard
+                  title="Total Participants"
+                  value={totalParticipants.toString()}
+                  change={participantsChange}
+                />
+              </div>
+              <div className="min-w-[280px] snap-start">
+                <StatsCard
+                  title="Active Circles"
+                  value={activeCircles.toString()}
+                  change={circlesChange}
+                />
+              </div>
+              <div className="min-w-[280px] snap-start">
+                <StatsCard
+                  title="Total Value Locked"
+                  value={`$${Number(
+                    formatUnits(totalValueLocked, 6)
+                  ).toLocaleString()}`}
+                  change={tvlChange}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Desktop: Grid layout */}
+          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
             <StatsCard
               title="Total Value Locked"
               value={`$${Number(
@@ -432,35 +469,71 @@ export default function MarketList() {
       {/* Main Content */}
       <div className="container mx-auto px-3 xs:px-4 py-6 xs:py-8">
         {/* Enhanced Header Section */}
-        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 mb-6 xs:mb-8">
-          <div className="text-left">
-            <h1 className="text-2xl xs:text-3xl font-bold text-[#8B6F47]">
-              Explore Circles
-            </h1>
-            <p className="text-sm xs:text-base text-muted-foreground mt-1 xs:mt-2">
-              Join trusted savings circles and achieve your goals together
-            </p>
+        <div className="mb-6 xs:mb-8">
+          {/* Mobile: Button first, then title */}
+          <div className="xs:hidden space-y-4">
+            <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={(e) => {
+                    if (!handleCreateMarket()) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-4 transition-all duration-200"
+                >
+                  Start a Circle
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
+                <CreateMarketForm
+                  onSuccess={handleMarketCreated}
+                  onClose={() => setShowCreateForm(false)}
+                />
+              </DialogContent>
+            </Dialog>
+            
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-[#8B6F47]">
+                Explore Circles
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Join trusted savings circles and achieve your goals together
+              </p>
+            </div>
           </div>
-          <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={(e) => {
-                  if (!handleCreateMarket()) {
-                    e.preventDefault();
-                  }
-                }}
-                className="w-full xs:w-auto bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-4 xs:px-6 transition-all duration-200"
-              >
-                Start a Circle
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
-              <CreateMarketForm
-                onSuccess={handleMarketCreated}
-                onClose={() => setShowCreateForm(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          
+          {/* Desktop: Original layout */}
+          <div className="hidden xs:flex xs:flex-row justify-between items-start xs:items-center gap-4">
+            <div className="text-left">
+              <h1 className="text-2xl xs:text-3xl font-bold text-[#8B6F47]">
+                Explore Circles
+              </h1>
+              <p className="text-sm xs:text-base text-muted-foreground mt-1 xs:mt-2">
+                Join trusted savings circles and achieve your goals together
+              </p>
+            </div>
+            <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={(e) => {
+                    if (!handleCreateMarket()) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-auto bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-6 transition-all duration-200"
+                >
+                  Start a Circle
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px] mx-4 sm:mx-auto">
+                <CreateMarketForm
+                  onSuccess={handleMarketCreated}
+                  onClose={() => setShowCreateForm(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {showShareModal && createdMarket && (
@@ -480,15 +553,33 @@ export default function MarketList() {
 
         {/* Filter Bar - Sticky */}
         <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E8DED1]/50 -mx-3 xs:-mx-4 px-3 xs:px-4 py-3 xs:py-4 mb-6 xs:mb-8 z-10 rounded-2xl">
-          <div className="flex flex-col xs:flex-row gap-3 xs:gap-4 items-start xs:items-center">
-            <div className="flex-1 w-full xs:w-auto">
+          {/* Mobile: Horizontal layout with different proportions */}
+          <div className="flex xs:hidden gap-3 items-center">
+            <div className="flex-1">
+              <MarketSearch
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search circles..."
+              />
+            </div>
+            <div className="flex-shrink-0">
+              <IntervalTypeFilter
+                value={activeFilter}
+                onChange={setActiveFilter}
+              />
+            </div>
+          </div>
+          
+          {/* Desktop: Original layout */}
+          <div className="hidden xs:flex xs:flex-row gap-4 items-center">
+            <div className="flex-1">
               <MarketSearch
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder="Search by market name or address..."
               />
             </div>
-            <div className="flex items-center gap-2 xs:gap-3 w-full xs:w-auto">
+            <div className="flex items-center gap-3">
               <IntervalTypeFilter
                 value={activeFilter}
                 onChange={setActiveFilter}
