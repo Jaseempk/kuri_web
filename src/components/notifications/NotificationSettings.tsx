@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Bell, BellOff } from 'lucide-react';
+import { Bell, BellOff, TestTube } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Label } from '../ui/label';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-
-export interface NotificationPreferences {
-  joinRequests: boolean;
-  depositReminders: boolean;
-  raffleResults: boolean;
-  deadlineWarnings: boolean;
-}
+import { NotificationPreferences } from '../../services/oneSignalService';
 
 // Custom Switch component using existing UI patterns
 const Switch = ({ 
@@ -42,54 +36,71 @@ const Switch = ({
 );
 
 export const NotificationSettings = () => {
-  const [preferences, setPreferences] = useState<NotificationPreferences>({
-    joinRequests: true,
-    depositReminders: true,
-    raffleResults: true,
-    deadlineWarnings: true,
-  });
-  
-  const { permissionGranted, requestPermission, isSupported, isLoading } = usePushNotifications();
+  const { 
+    isSupported,
+    isInitialized,
+    permission,
+    isSubscribed,
+    preferences,
+    loading,
+    requestPermission,
+    updatePreferences,
+    sendTestNotification,
+  } = usePushNotifications();
+
+  const [localPreferences, setLocalPreferences] = useState(preferences);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
-    loadPreferences();
-  }, []);
+    setLocalPreferences(preferences);
+  }, [preferences]);
 
-  const loadPreferences = () => {
-    const saved = localStorage.getItem('notification-preferences');
-    if (saved) {
-      try {
-        const parsedPreferences = JSON.parse(saved);
-        setPreferences(parsedPreferences);
-      } catch (error) {
-        console.error('Failed to parse notification preferences:', error);
+  const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
+    const newPreferences = { ...localPreferences, [key]: value };
+    setLocalPreferences(newPreferences);
+
+    try {
+      setSaving(true);
+      const success = await updatePreferences(newPreferences);
+      
+      if (!success) {
+        // Revert on failure
+        setLocalPreferences(preferences);
       }
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+      setLocalPreferences(preferences);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const updatePreferences = (newPreferences: NotificationPreferences) => {
-    setPreferences(newPreferences);
-    localStorage.setItem('notification-preferences', JSON.stringify(newPreferences));
+  const handleTestNotification = async () => {
+    try {
+      setTesting(true);
+      await sendTestNotification();
+    } catch (error) {
+      console.error('Failed to send test notification:', error);
+    } finally {
+      setTesting(false);
+    }
   };
 
-  const toggleNotifications = async () => {
-    if (!permissionGranted && isSupported) {
-      await requestPermission();
-    }
+  const enableNotifications = async () => {
+    await requestPermission();
   };
 
   if (!isSupported) {
     return (
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <BellOff className="h-5 w-5 text-gray-400 mr-2" />
-            <h3 className="text-lg font-semibold text-gray-500">Push Notifications</h3>
-          </div>
+        <div className="text-center">
+          <BellOff className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+          <h3 className="text-lg font-semibold mb-2">Push Notifications Not Supported</h3>
+          <p className="text-sm text-gray-500">
+            Your browser doesn't support push notifications.
+          </p>
         </div>
-        <p className="text-sm text-gray-500 text-center py-4">
-          Push notifications are not supported in this browser. Please use Chrome, Firefox, or Safari for notification support.
-        </p>
       </Card>
     );
   }
@@ -101,105 +112,112 @@ export const NotificationSettings = () => {
           <Bell className="h-5 w-5 text-[hsl(var(--terracotta))] mr-2" />
           <h3 className="text-lg font-semibold">Push Notifications</h3>
         </div>
-        {!permissionGranted && (
+        
+        {!isSubscribed && permission !== 'denied' && (
           <Button 
-            onClick={toggleNotifications} 
-            disabled={isLoading}
+            onClick={enableNotifications} 
+            disabled={loading || !isInitialized}
             className="bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))]/90"
           >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
-                Enabling...
-              </div>
-            ) : (
-              'Enable'
-            )}
+            Enable
           </Button>
         )}
       </div>
 
-      {permissionGranted ? (
+      {permission === 'denied' && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">
+            Push notifications are blocked. To enable them, click the lock icon in your browser's address bar and allow notifications.
+          </p>
+        </div>
+      )}
+
+      {isSubscribed ? (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="join-requests" className="flex flex-col cursor-pointer">
-              <span className="text-base font-medium">Join Requests</span>
-              <span className="text-sm text-gray-500 font-normal">When someone wants to join your circle</span>
-            </Label>
-            <Switch
-              checked={preferences.joinRequests}
-              onCheckedChange={(checked) => 
-                updatePreferences({ ...preferences, joinRequests: checked })
-              }
-            />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="join-requests" className="flex flex-col cursor-pointer">
+                <span className="font-medium">Join Requests</span>
+                <span className="text-sm text-gray-500">When someone wants to join your circle</span>
+              </Label>
+              <Switch
+                checked={localPreferences.joinRequests || false}
+                disabled={saving}
+                onCheckedChange={(checked) => handlePreferenceChange('joinRequests', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="deposit-reminders" className="flex flex-col cursor-pointer">
+                <span className="font-medium">Deposit Reminders</span>
+                <span className="text-sm text-gray-500">When it's time to make your contribution</span>
+              </Label>
+              <Switch
+                checked={localPreferences.depositReminders || false}
+                disabled={saving}
+                onCheckedChange={(checked) => handlePreferenceChange('depositReminders', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="raffle-results" className="flex flex-col cursor-pointer">
+                <span className="font-medium">Raffle Results</span>
+                <span className="text-sm text-gray-500">When winners are selected</span>
+              </Label>
+              <Switch
+                checked={localPreferences.raffleResults || false}
+                disabled={saving}
+                onCheckedChange={(checked) => handlePreferenceChange('raffleResults', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="deadline-warnings" className="flex flex-col cursor-pointer">
+                <span className="font-medium">Deadline Warnings</span>
+                <span className="text-sm text-gray-500">Before deposit deadlines</span>
+              </Label>
+              <Switch
+                checked={localPreferences.deadlineWarnings || false}
+                disabled={saving}
+                onCheckedChange={(checked) => handlePreferenceChange('deadlineWarnings', checked)}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="deposit-reminders" className="flex flex-col cursor-pointer">
-              <span className="text-base font-medium">Deposit Reminders</span>
-              <span className="text-sm text-gray-500 font-normal">When it's time to make your contribution</span>
-            </Label>
-            <Switch
-              checked={preferences.depositReminders}
-              onCheckedChange={(checked) => 
-                updatePreferences({ ...preferences, depositReminders: checked })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="raffle-results" className="flex flex-col cursor-pointer">
-              <span className="text-base font-medium">Raffle Results</span>
-              <span className="text-sm text-gray-500 font-normal">When winners are selected</span>
-            </Label>
-            <Switch
-              checked={preferences.raffleResults}
-              onCheckedChange={(checked) => 
-                updatePreferences({ ...preferences, raffleResults: checked })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="deadline-warnings" className="flex flex-col cursor-pointer">
-              <span className="text-base font-medium">Deadline Warnings</span>
-              <span className="text-sm text-gray-500 font-normal">Before deposit deadlines</span>
-            </Label>
-            <Switch
-              checked={preferences.deadlineWarnings}
-              onCheckedChange={(checked) => 
-                updatePreferences({ ...preferences, deadlineWarnings: checked })
-              }
-            />
-          </div>
-
-          <div className="pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Preferences are saved locally and will be respected when the backend sends notifications.
-            </p>
+          <div className="border-t border-gray-200 pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium">Test Notifications</h4>
+                <p className="text-sm text-gray-500">Send a test notification to verify it's working</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTestNotification}
+                disabled={testing || loading}
+              >
+                <TestTube className="h-4 w-4 mr-2" />
+                {testing ? 'Sending...' : 'Test'}
+              </Button>
+            </div>
           </div>
         </div>
       ) : (
         <div className="text-center py-8">
-          <BellOff className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <BellOff className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+          <h4 className="font-medium mb-2">Notifications Disabled</h4>
           <p className="text-sm text-gray-500 mb-4">
-            Enable push notifications to customize your preferences and stay updated with your circles.
+            Enable push notifications to customize your preferences and stay updated.
           </p>
-          <Button 
-            onClick={toggleNotifications}
-            disabled={isLoading}
-            variant="outline"
-            className="border-[hsl(var(--terracotta))] text-[hsl(var(--terracotta))] hover:bg-[hsl(var(--sand))]"
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border border-[hsl(var(--terracotta))]/30 border-t-[hsl(var(--terracotta))] rounded-full animate-spin" />
-                Enabling...
-              </div>
-            ) : (
-              'Enable Notifications'
-            )}
-          </Button>
+          {permission !== 'denied' && (
+            <Button 
+              onClick={enableNotifications} 
+              disabled={loading || !isInitialized}
+              className="bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))]/90"
+            >
+              Enable Notifications
+            </Button>
+          )}
         </div>
       )}
     </Card>

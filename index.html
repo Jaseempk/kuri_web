@@ -17,17 +17,18 @@
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json">
 
-    <!-- OneSignal SDK -->
+    <!-- OneSignal SDK v16 -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.init({
-          appId: "%VITE_ONESIGNAL_APP_ID%",
-          safari_web_id: "%VITE_ONESIGNAL_SAFARI_WEB_ID%",
+          appId: "5ad950da-8f42-4194-bbe0-b2b7d64c79c1",
+          safari_web_id: "web.onesignal.auto.1f7edc6b-077e-4a04-b244-6d0a0c671761",
           notifyButton: {
             enable: false, // Using custom UI instead
           },
+          allowLocalhostAsSecureOrigin: true,
         });
       });
     </script>

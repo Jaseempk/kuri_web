@@ -10,15 +10,15 @@ export const PushPermissionPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const { address } = useAccount();
   const { profile } = useUserProfile();
-  const { isInitialized, permissionGranted, requestPermission, isSupported, isLoading } = usePushNotifications();
+  const { isInitialized, permission, isSubscribed, requestPermission, isSupported, loading } = usePushNotifications();
 
   useEffect(() => {
     checkShouldShowPrompt();
-  }, [address, profile, isInitialized, permissionGranted, isSupported]);
+  }, [address, profile, isInitialized, permission, isSubscribed, isSupported]);
 
   const checkShouldShowPrompt = () => {
     // Don't show if no wallet, no profile, not initialized, or already granted permission
-    if (!address || !profile || !isInitialized || permissionGranted || !isSupported) {
+    if (!address || !profile || !isInitialized || permission === 'granted' || isSubscribed || !isSupported) {
       setShowPrompt(false);
       return;
     }
@@ -87,10 +87,10 @@ export const PushPermissionPrompt = () => {
           <Button 
             size="sm" 
             onClick={handleEnableNotifications}
-            disabled={isLoading}
+            disabled={loading}
             className="flex-1 bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))]/90 text-white"
           >
-            {isLoading ? (
+            {loading ? (
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
                 <span className="text-xs">Enabling...</span>

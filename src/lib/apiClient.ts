@@ -405,6 +405,113 @@ class KuriApiClient {
   }
 
   /**
+   * Update push notification preferences
+   */
+  async updatePushPreferences(data: {
+    userAddress: string;
+    platform?: string;
+    preferences: {
+      joinRequests?: boolean;
+      depositReminders?: boolean;
+      raffleResults?: boolean;
+      deadlineWarnings?: boolean;
+    };
+  }): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/users/push-preferences`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to update push preferences');
+      }
+      
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to backend server. Please check your connection.');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Send test notification
+   */
+  async sendTestNotification(data: {
+    userAddress: string;
+    message?: string;
+  }): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/notifications/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to send test notification');
+      }
+      
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to backend server. Please check your connection.');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get push subscription status
+   */
+  async getPushStatus(userAddress: string, platform: string = 'web'): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/users/push-status?userAddress=${encodeURIComponent(userAddress)}&platform=${encodeURIComponent(platform)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to get push status');
+      }
+      
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to backend server. Please check your connection.');
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Health check endpoint
    */
   async healthCheck(): Promise<boolean> {
