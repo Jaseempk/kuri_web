@@ -38,44 +38,48 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
       <Button
         variant="outline"
         size="sm"
-        className="flex items-center gap-2"
+        className="flex items-center justify-center gap-1 sm:gap-2 min-h-[40px] text-xs sm:text-sm"
         onClick={() => handleShare("TWITTER")}
         disabled={isSharing}
       >
-        <Twitter className="h-4 w-4" />
+        <Twitter className="h-4 w-4 flex-shrink-0" />
+        <span className="hidden xs:inline sm:hidden">X</span>
         <span className="hidden sm:inline">Twitter</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
-        className="flex items-center gap-2"
+        className="flex items-center justify-center gap-1 sm:gap-2 min-h-[40px] text-xs sm:text-sm"
         onClick={() => handleShare("TELEGRAM")}
         disabled={isSharing}
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-4 w-4 flex-shrink-0" />
+        <span className="hidden xs:inline sm:hidden">TG</span>
         <span className="hidden sm:inline">Telegram</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
-        className="flex items-center gap-2"
+        className="flex items-center justify-center gap-1 sm:gap-2 min-h-[40px] text-xs sm:text-sm"
         onClick={() => handleShare("WHATSAPP")}
         disabled={isSharing}
       >
-        <Share2 className="h-4 w-4" />
+        <Share2 className="h-4 w-4 flex-shrink-0" />
+        <span className="hidden xs:inline sm:hidden">WA</span>
         <span className="hidden sm:inline">WhatsApp</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
-        className="flex items-center gap-2"
+        className="flex items-center justify-center gap-1 sm:gap-2 min-h-[40px] text-xs sm:text-sm"
         onClick={() => handleShare("EMAIL")}
         disabled={isSharing}
       >
-        <Mail className="h-4 w-4" />
+        <Mail className="h-4 w-4 flex-shrink-0" />
+        <span className="hidden xs:inline sm:hidden">Mail</span>
         <span className="hidden sm:inline">Email</span>
       </Button>
     </div>

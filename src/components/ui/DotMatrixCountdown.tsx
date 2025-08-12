@@ -524,7 +524,7 @@ export function DualCountdown({
     />,
     <CountdownCard
       key="deposit"
-      title="Next Deposit Due"
+      title="Next Update In"
       targetTimestamp={depositTimestamp}
       icon={<Calendar className="w-5 h-5" />}
       accentColor="ochre"
