@@ -23,9 +23,11 @@ declare global {
 }
 
 export const OneSignalHelper = {
-  // Check if OneSignal is available
+  // Check if OneSignal is available and properly initialized
   isAvailable(): boolean {
-    const available = typeof window !== 'undefined' && !!window.OneSignal;
+    const available = typeof window !== 'undefined' && 
+                     !!window.OneSignal && 
+                     typeof window.OneSignal.init === 'function';
     console.log('🔔 OneSignalHelper.isAvailable():', available);
     return available;
   },
@@ -85,11 +87,16 @@ export const OneSignalHelper = {
     }
 
     try {
+      // Check if User and PushSubscription are available
+      if (!window.OneSignal.User || !window.OneSignal.User.PushSubscription) {
+        return null;
+      }
+
       return {
         id: window.OneSignal.User.PushSubscription.id || null,
         token: window.OneSignal.User.PushSubscription.token || null,
         optedIn: window.OneSignal.User.PushSubscription.optedIn || false,
-        permission: window.OneSignal.Notifications.permission || false,
+        permission: window.OneSignal.Notifications?.permission || false,
       };
     } catch (error) {
       console.error('Failed to get subscription state:', error);
@@ -130,7 +137,16 @@ export const OneSignalHelper = {
       return null;
     }
 
-    return window.OneSignal.User.onesignalId || null;
+    try {
+      // Check if User is available
+      if (!window.OneSignal.User) {
+        return null;
+      }
+      return window.OneSignal.User.onesignalId || null;
+    } catch (error) {
+      console.warn('OneSignal User not fully initialized yet:', error);
+      return null;
+    }
   },
 
   // Get current external ID
@@ -139,7 +155,16 @@ export const OneSignalHelper = {
       return null;
     }
 
-    return window.OneSignal.User.externalId || null;
+    try {
+      // Check if User and the identity model are available
+      if (!window.OneSignal.User || !window.OneSignal.User.externalId) {
+        return null;
+      }
+      return window.OneSignal.User.externalId || null;
+    } catch (error) {
+      console.warn('OneSignal User not fully initialized yet:', error);
+      return null;
+    }
   },
 
   // Check if push notifications are supported
