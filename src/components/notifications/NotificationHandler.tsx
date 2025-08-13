@@ -1,17 +1,34 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OneSignalService, NotificationData } from '../../services/oneSignalService';
+import { OneSignalHelper } from '../../services/oneSignalSimple';
+
+export interface NotificationData {
+  type: string;
+  circleAddress?: string;
+  userAddress?: string;
+  metadata?: any;
+}
 
 export const NotificationHandler = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const service = OneSignalService.getInstance();
-    
+    if (!OneSignalHelper.isAvailable()) {
+      console.log('OneSignal not available for click handler');
+      return;
+    }
+
     // Set up notification click handler
-    service.onNotificationClick((data: NotificationData) => {
-      handleNotificationClick(data);
+    const cleanup = OneSignalHelper.addNotificationClickListener((event: any) => {
+      console.log('OneSignal notification clicked:', event);
+      
+      const data = event.notification?.additionalData;
+      if (data) {
+        handleNotificationClick(data);
+      }
     });
+
+    return cleanup || undefined;
   }, []);
 
   const handleNotificationClick = (data: NotificationData) => {

@@ -17,23 +17,30 @@
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json">
 
-    <!-- OneSignal SDK v16 -->
+    <!-- OneSignal SDK v16 - Official Dashboard Code -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
+      console.log('🔔 OneSignal: Setting up with official dashboard code');
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "5ad950da-8f42-4194-bbe0-b2b7d64c79c1",
-          safari_web_id: "web.onesignal.auto.1f7edc6b-077e-4a04-b244-6d0a0c671761",
-          serviceWorkerParam: { 
-            scope: '/OneSignalSDKWorker.js' 
-          },
-          serviceWorkerPath: 'OneSignalSDKWorker.js',
-          notifyButton: {
-            enable: false, // Using custom UI instead
-          },
-          allowLocalhostAsSecureOrigin: true,
-        });
+        console.log('🔔 OneSignal: SDK callback executing...');
+        try {
+          await OneSignal.init({
+            appId: "5ad950da-8f42-4194-bbe0-b2b7d64c79c1",
+            safari_web_id: "web.onesignal.auto.1f7edc6b-077e-4a04-b244-6d0a0c671761",
+            notifyButton: {
+              enable: true,
+            },
+          });
+          console.log('✅ OneSignal: Initialization successful');
+          
+          // Make OneSignal globally accessible for debugging
+          window._OneSignalDebug = OneSignal;
+          window.OneSignal = OneSignal;
+          
+        } catch (error) {
+          console.error('❌ OneSignal: Initialization failed:', error);
+        }
       });
     </script>
 

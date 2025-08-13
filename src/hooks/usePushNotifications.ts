@@ -1,15 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
-import { OneSignalService, NotificationPreferences } from '../services/oneSignalService';
-import { useUserProfile } from './useUserProfile';
+import { OneSignalHelper, NotificationPreferences, SubscriptionState } from '../services/oneSignalSimple';
 
 export interface PushNotificationState {
   isInitialized: boolean;
   isSupported: boolean;
-  permission: NotificationPermission | 'default';
-  isSubscribed: boolean;
-  playerId?: string;
-  externalId?: string;
+  subscriptionState: SubscriptionState | null;
   preferences: NotificationPreferences;
   loading: boolean;
   error?: string;
@@ -18,9 +14,8 @@ export interface PushNotificationState {
 export const usePushNotifications = () => {
   const [state, setState] = useState<PushNotificationState>({
     isInitialized: false,
-    isSupported: OneSignalService.isSupported(),
-    permission: 'default',
-    isSubscribed: false,
+    isSupported: OneSignalHelper.isSupported(),
+    subscriptionState: null,
     preferences: {
       joinRequests: true,
       depositReminders: true,
@@ -31,179 +26,126 @@ export const usePushNotifications = () => {
   });
 
   const { address } = useAccount();
-  const { profile } = useUserProfile();
 
-  // Initialize OneSignal service
+  // Wait for OneSignal to initialize
   useEffect(() => {
-    initializeNotifications();
+    console.log('🔔 usePushNotifications: Starting initialization check');
+    let attempts = 0;
+    const maxAttempts = 100; // 10 seconds
+    
+    const checkInit = () => {
+      attempts++;
+      console.log(`🔔 usePushNotifications: Check attempt ${attempts}/${maxAttempts}`);
+      
+      if (OneSignalHelper.isAvailable()) {
+        console.log('✅ usePushNotifications: OneSignal is available, initializing hook');
+        setState(prev => ({
+          ...prev,
+          isInitialized: true,
+          subscriptionState: OneSignalHelper.getSubscriptionState(),
+          loading: false,
+        }));
+      } else if (attempts < maxAttempts) {
+        setTimeout(checkInit, 100);
+      } else {
+        console.error('❌ usePushNotifications: OneSignal failed to initialize after 10 seconds');
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: 'OneSignal failed to initialize',
+        }));
+      }
+    };
+    checkInit();
   }, []);
 
-  // Update subscription when user connects/disconnects
+  // Handle user login/logout based on wallet connection
   useEffect(() => {
-    if (address && state.isInitialized) {
-      updateSubscriptionForUser(address);
-    } else if (!address && state.isInitialized) {
-      handleUserDisconnect();
-    }
-  }, [address, state.isInitialized]);
+    if (!state.isInitialized) return;
 
-  const initializeNotifications = async () => {
-    try {
-      if (!state.isSupported) {
-        setState(prev => ({
-          ...prev,
-          loading: false,
-          error: 'Push notifications not supported in this browser',
-        }));
-        return;
+    if (address) {
+      console.log('Wallet connected, logging in to OneSignal:', address);
+      OneSignalHelper.login(address);
+    } else {
+      console.log('Wallet disconnected, logging out from OneSignal');
+      OneSignalHelper.logout();
+    }
+  }, [state.isInitialized, address]);
+
+  // Set up subscription change listener
+  useEffect(() => {
+    if (!state.isInitialized) return;
+
+    const handleSubscriptionChange = (event: any) => {
+      console.log('Subscription changed:', event);
+      const newState = OneSignalHelper.getSubscriptionState();
+      setState(prev => ({ ...prev, subscriptionState: newState }));
+      
+      // If user gets a token and we have their address, login again to ensure linking
+      if (event.current.token && address) {
+        console.log('Token received, ensuring user is logged in');
+        OneSignalHelper.login(address);
       }
+    };
 
-      const service = OneSignalService.getInstance();
-      await service.initialize();
+    const cleanup = OneSignalHelper.addSubscriptionChangeListener(handleSubscriptionChange);
 
-      const subscriptionState = await service.getSubscriptionState();
-      
-      setState(prev => ({
-        ...prev,
-        isInitialized: true,
-        permission: subscriptionState.permission as NotificationPermission,
-        isSubscribed: subscriptionState.isSubscribed,
-        playerId: subscriptionState.playerId,
-        externalId: subscriptionState.externalId,
-        loading: false,
-      }));
+    // Initial state update
+    setState(prev => ({ 
+      ...prev, 
+      subscriptionState: OneSignalHelper.getSubscriptionState() 
+    }));
 
-      // Set up notification click handler
-      service.onNotificationClick(handleNotificationClick);
-
-    } catch (error) {
-      console.error('Failed to initialize notifications:', error);
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Failed to initialize push notifications',
-      }));
-    }
-  };
-
-  const updateSubscriptionForUser = async (userAddress: string) => {
-    try {
-      setState(prev => ({ ...prev, loading: true }));
-
-      const service = OneSignalService.getInstance();
-      
-      // Get user preferences
-      const preferences = await service.getUserPreferences(userAddress);
-      
-      // Subscribe user with external_id
-      const playerId = await service.subscribeUser(userAddress);
-      
-      // Get updated subscription state
-      const subscriptionState = await service.getSubscriptionState();
-
-      setState(prev => ({
-        ...prev,
-        isSubscribed: subscriptionState.isSubscribed,
-        playerId: subscriptionState.playerId,
-        externalId: subscriptionState.externalId,
-        preferences,
-        loading: false,
-        error: undefined,
-      }));
-
-      console.log(`Push notifications updated for user: ${userAddress}`);
-    } catch (error) {
-      console.error('Failed to update user subscription:', error);
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Failed to update push notification subscription',
-      }));
-    }
-  };
-
-  const handleUserDisconnect = async () => {
-    try {
-      const service = OneSignalService.getInstance();
-      await service.logoutUser();
-
-      setState(prev => ({
-        ...prev,
-        isSubscribed: false,
-        playerId: undefined,
-        externalId: undefined,
-        preferences: {
-          joinRequests: true,
-          depositReminders: true,
-          raffleResults: true,
-          deadlineWarnings: true,
-        },
-      }));
-
-      console.log('Push notifications cleared for disconnected user');
-    } catch (error) {
-      console.error('Failed to handle user disconnect:', error);
-    }
-  };
+    return cleanup || undefined;
+  }, [state.isInitialized, address]);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
+    if (!state.isSupported) {
+      setState(prev => ({ ...prev, error: 'Push notifications not supported' }));
+      return false;
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: undefined }));
+    
     try {
-      setState(prev => ({ ...prev, loading: true }));
-
-      const service = OneSignalService.getInstance();
-      const granted = await service.requestPermission();
-
-      if (granted && address) {
-        await updateSubscriptionForUser(address);
-      } else {
-        setState(prev => ({
-          ...prev,
-          permission: granted ? 'granted' : 'denied',
-          loading: false,
-        }));
-      }
+      const granted = await OneSignalHelper.requestPermission();
+      
+      setState(prev => ({
+        ...prev,
+        subscriptionState: OneSignalHelper.getSubscriptionState(),
+        loading: false,
+      }));
 
       return granted;
     } catch (error) {
-      console.error('Failed to request push permission:', error);
+      console.error('Failed to request permission:', error);
       setState(prev => ({
         ...prev,
         loading: false,
-        error: 'Failed to request push permission',
+        error: 'Failed to request push notification permission',
       }));
       return false;
     }
-  }, [address]);
+  }, [state.isSupported]);
 
   const updatePreferences = useCallback(async (
     newPreferences: NotificationPreferences
   ): Promise<boolean> => {
-    if (!address) {
-      console.warn('No user address available for preference update');
+    if (!state.isInitialized) {
+      console.warn('OneSignal not initialized');
       return false;
     }
 
+    setState(prev => ({ ...prev, loading: true, error: undefined }));
+
     try {
-      setState(prev => ({ ...prev, loading: true }));
-
-      const service = OneSignalService.getInstance();
-      const success = await service.updateUserPreferences(address, newPreferences);
-
-      if (success) {
-        setState(prev => ({
-          ...prev,
-          preferences: newPreferences,
-          loading: false,
-        }));
-      } else {
-        setState(prev => ({
-          ...prev,
-          loading: false,
-          error: 'Failed to update notification preferences',
-        }));
-      }
-
-      return success;
+      await OneSignalHelper.setPreferences(newPreferences);
+      setState(prev => ({
+        ...prev,
+        preferences: newPreferences,
+        loading: false,
+      }));
+      return true;
     } catch (error) {
       console.error('Failed to update preferences:', error);
       setState(prev => ({
@@ -213,35 +155,47 @@ export const usePushNotifications = () => {
       }));
       return false;
     }
-  }, [address]);
+  }, [state.isInitialized]);
 
   const sendTestNotification = useCallback(async (): Promise<boolean> => {
     if (!address) {
-      console.warn('No user address available for test notification');
+      console.warn('No wallet address available for test notification');
       return false;
     }
 
     try {
-      const service = OneSignalService.getInstance();
-      return await service.sendTestNotification(address);
+      // This would need to call the backend API to send a test notification
+      const response = await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userAddress: address,
+          message: 'Test notification from Kuri frontend!'
+        }),
+      });
+
+      return response.ok;
     } catch (error) {
       console.error('Failed to send test notification:', error);
       return false;
     }
   }, [address]);
 
-  const handleNotificationClick = (data: any) => {
-    console.log('Notification clicked in hook:', data);
-    // Navigation will be handled by NotificationHandler component
-  };
-
   // Clear error function
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: undefined }));
   }, []);
 
+  // Computed properties
+  const isSubscribed = state.subscriptionState?.optedIn && !!state.subscriptionState?.token;
+  const permission = state.subscriptionState?.permission || false;
+
   return {
     ...state,
+    isSubscribed,
+    permission,
+    playerId: state.subscriptionState?.id,
+    externalId: OneSignalHelper.getExternalId(),
     requestPermission,
     updatePreferences,
     sendTestNotification,

@@ -18,7 +18,7 @@ export const PushPermissionPrompt = () => {
 
   const checkShouldShowPrompt = () => {
     // Don't show if no wallet, no profile, not initialized, or already granted permission
-    if (!address || !profile || !isInitialized || permission === 'granted' || isSubscribed || !isSupported) {
+    if (!address || !profile || !isInitialized || permission || isSubscribed || !isSupported) {
       setShowPrompt(false);
       return;
     }
