@@ -25,17 +25,18 @@ declare global {
 export const OneSignalHelper = {
   // Check if OneSignal is available and properly initialized
   isAvailable(): boolean {
-    const available = typeof window !== 'undefined' && 
-                     !!window.OneSignal && 
-                     typeof window.OneSignal.init === 'function';
-    console.log('🔔 OneSignalHelper.isAvailable():', available);
+    const available =
+      typeof window !== "undefined" &&
+      !!window.OneSignal &&
+      typeof window.OneSignal.init === "function";
+
     return available;
   },
 
   // Login user with external ID (wallet address)
   async login(userAddress: string): Promise<void> {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available for login');
+      console.warn("OneSignal not available for login");
       return;
     }
 
@@ -43,28 +44,28 @@ export const OneSignalHelper = {
       await window.OneSignal.login(userAddress.toLowerCase());
       console.log(`OneSignal user logged in: ${userAddress}`);
     } catch (error) {
-      console.error('OneSignal login failed:', error);
+      console.error("OneSignal login failed:", error);
     }
   },
 
   // Logout user
   async logout(): Promise<void> {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available for logout');
+      console.warn("OneSignal not available for logout");
       return;
     }
 
     try {
       // Check if User model is available before logout
       if (!window.OneSignal.User) {
-        console.warn('OneSignal User model not ready for logout');
+        console.warn("OneSignal User model not ready for logout");
         return;
       }
-      
+
       await window.OneSignal.logout();
-      console.log('OneSignal user logged out');
+      console.log("OneSignal user logged out");
     } catch (error) {
-      console.warn('OneSignal logout failed (User model not ready):', error);
+      console.warn("OneSignal logout failed (User model not ready):", error);
       // Don't treat this as a critical error - just log it
     }
   },
@@ -72,17 +73,17 @@ export const OneSignalHelper = {
   // Request push notification permission
   async requestPermission(): Promise<boolean> {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available for permission request');
+      console.warn("OneSignal not available for permission request");
       return false;
     }
 
     try {
       await window.OneSignal.Notifications.requestPermission();
       const permission = window.OneSignal.Notifications.permission;
-      console.log('Push permission granted:', permission);
+      console.log("Push permission granted:", permission);
       return permission;
     } catch (error) {
-      console.error('Permission request failed:', error);
+      console.error("Permission request failed:", error);
       return false;
     }
   },
@@ -106,7 +107,7 @@ export const OneSignalHelper = {
         permission: window.OneSignal.Notifications?.permission || false,
       };
     } catch (error) {
-      console.error('Failed to get subscription state:', error);
+      console.error("Failed to get subscription state:", error);
       return null;
     }
   },
@@ -114,15 +115,15 @@ export const OneSignalHelper = {
   // Add tags (for user preferences)
   async addTags(tags: Record<string, string>): Promise<void> {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available for adding tags');
+      console.warn("OneSignal not available for adding tags");
       return;
     }
 
     try {
       window.OneSignal.User.addTags(tags);
-      console.log('OneSignal tags added:', tags);
+      console.log("OneSignal tags added:", tags);
     } catch (error) {
-      console.error('Failed to add tags:', error);
+      console.error("Failed to add tags:", error);
     }
   },
 
@@ -151,7 +152,7 @@ export const OneSignalHelper = {
       }
       return window.OneSignal.User.onesignalId || null;
     } catch (error) {
-      console.warn('OneSignal User not fully initialized yet:', error);
+      console.warn("OneSignal User not fully initialized yet:", error);
       return null;
     }
   },
@@ -169,7 +170,7 @@ export const OneSignalHelper = {
       }
       return window.OneSignal.User.externalId || null;
     } catch (error) {
-      console.warn('OneSignal User not fully initialized yet:', error);
+      console.warn("OneSignal User not fully initialized yet:", error);
       return null;
     }
   },
@@ -184,41 +185,51 @@ export const OneSignalHelper = {
   },
 
   // Add subscription change listener
-  addSubscriptionChangeListener(callback: (event: any) => void): (() => void) | null {
+  addSubscriptionChangeListener(
+    callback: (event: any) => void
+  ): (() => void) | null {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available for subscription listener');
+      console.warn("OneSignal not available for subscription listener");
       return null;
     }
 
     try {
-      window.OneSignal.User.PushSubscription.addEventListener('change', callback);
-      
+      window.OneSignal.User.PushSubscription.addEventListener(
+        "change",
+        callback
+      );
+
       // Return cleanup function
       return () => {
-        window.OneSignal.User.PushSubscription.removeEventListener('change', callback);
+        window.OneSignal.User.PushSubscription.removeEventListener(
+          "change",
+          callback
+        );
       };
     } catch (error) {
-      console.error('Failed to add subscription listener:', error);
+      console.error("Failed to add subscription listener:", error);
       return null;
     }
   },
 
   // Add notification click listener
-  addNotificationClickListener(callback: (event: any) => void): (() => void) | null {
+  addNotificationClickListener(
+    callback: (event: any) => void
+  ): (() => void) | null {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available for click listener');
+      console.warn("OneSignal not available for click listener");
       return null;
     }
 
     try {
-      window.OneSignal.Notifications.addEventListener('click', callback);
-      
+      window.OneSignal.Notifications.addEventListener("click", callback);
+
       // Return cleanup function
       return () => {
-        window.OneSignal.Notifications.removeEventListener('click', callback);
+        window.OneSignal.Notifications.removeEventListener("click", callback);
       };
     } catch (error) {
-      console.error('Failed to add click listener:', error);
+      console.error("Failed to add click listener:", error);
       return null;
     }
   },
@@ -226,7 +237,7 @@ export const OneSignalHelper = {
   // Show/Hide the OneSignal notify button
   showNotifyButton(): void {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available to show notify button');
+      console.warn("OneSignal not available to show notify button");
       return;
     }
 
@@ -235,13 +246,13 @@ export const OneSignalHelper = {
         window.OneSignal.notifyButton.launcher.show();
       }
     } catch (error) {
-      console.error('Failed to show notify button:', error);
+      console.error("Failed to show notify button:", error);
     }
   },
 
   hideNotifyButton(): void {
     if (!this.isAvailable()) {
-      console.warn('OneSignal not available to hide notify button');
+      console.warn("OneSignal not available to hide notify button");
       return;
     }
 
@@ -250,7 +261,7 @@ export const OneSignalHelper = {
         window.OneSignal.notifyButton.launcher.hide();
       }
     } catch (error) {
-      console.error('Failed to hide notify button:', error);
+      console.error("Failed to hide notify button:", error);
     }
   },
 };
