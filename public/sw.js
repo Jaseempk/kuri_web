@@ -1,3 +1,6 @@
+// Import OneSignal service worker functionality
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+
 const CACHE_NAME = 'kuri-cache-v1';
 const OFFLINE_URL = '/offline.html';
 

@@ -81,6 +81,15 @@ export const usePushNotifications = () => {
       const newState = OneSignalHelper.getSubscriptionState();
       setState(prev => ({ ...prev, subscriptionState: newState }));
       
+      // Hide/Show notify button based on subscription status
+      if (event.current.token && event.current.optedIn) {
+        console.log('User subscribed, hiding notify button');
+        OneSignalHelper.hideNotifyButton();
+      } else {
+        console.log('User not subscribed, showing notify button');
+        OneSignalHelper.showNotifyButton();
+      }
+      
       // If user gets a token and we have their address, login again to ensure linking
       if (event.current.token && address) {
         console.log('Token received, ensuring user is logged in');
@@ -91,10 +100,18 @@ export const usePushNotifications = () => {
     const cleanup = OneSignalHelper.addSubscriptionChangeListener(handleSubscriptionChange);
 
     // Initial state update
+    const currentState = OneSignalHelper.getSubscriptionState();
     setState(prev => ({ 
       ...prev, 
-      subscriptionState: OneSignalHelper.getSubscriptionState() 
+      subscriptionState: currentState 
     }));
+
+    // Initial button visibility check
+    if (currentState?.optedIn && currentState?.token) {
+      OneSignalHelper.hideNotifyButton();
+    } else {
+      OneSignalHelper.showNotifyButton();
+    }
 
     return cleanup || undefined;
   }, [state.isInitialized, address]);

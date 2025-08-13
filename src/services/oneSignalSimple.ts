@@ -55,10 +55,17 @@ export const OneSignalHelper = {
     }
 
     try {
+      // Check if User model is available before logout
+      if (!window.OneSignal.User) {
+        console.warn('OneSignal User model not ready for logout');
+        return;
+      }
+      
       await window.OneSignal.logout();
       console.log('OneSignal user logged out');
     } catch (error) {
-      console.error('OneSignal logout failed:', error);
+      console.warn('OneSignal logout failed (User model not ready):', error);
+      // Don't treat this as a critical error - just log it
     }
   },
 
@@ -213,6 +220,37 @@ export const OneSignalHelper = {
     } catch (error) {
       console.error('Failed to add click listener:', error);
       return null;
+    }
+  },
+
+  // Show/Hide the OneSignal notify button
+  showNotifyButton(): void {
+    if (!this.isAvailable()) {
+      console.warn('OneSignal not available to show notify button');
+      return;
+    }
+
+    try {
+      if (window.OneSignal.notifyButton) {
+        window.OneSignal.notifyButton.launcher.show();
+      }
+    } catch (error) {
+      console.error('Failed to show notify button:', error);
+    }
+  },
+
+  hideNotifyButton(): void {
+    if (!this.isAvailable()) {
+      console.warn('OneSignal not available to hide notify button');
+      return;
+    }
+
+    try {
+      if (window.OneSignal.notifyButton) {
+        window.OneSignal.notifyButton.launcher.hide();
+      }
+    } catch (error) {
+      console.error('Failed to hide notify button:', error);
     }
   },
 };

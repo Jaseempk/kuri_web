@@ -20,16 +20,57 @@
     <!-- OneSignal SDK v16 - Official Dashboard Code -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-      console.log('🔔 OneSignal: Setting up with official dashboard code');
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
-        console.log('🔔 OneSignal: SDK callback executing...');
         try {
           await OneSignal.init({
             appId: "5ad950da-8f42-4194-bbe0-b2b7d64c79c1",
             safari_web_id: "web.onesignal.auto.1f7edc6b-077e-4a04-b244-6d0a0c671761",
             notifyButton: {
               enable: true,
+              size: 'medium', // 'small', 'medium', 'large'
+              position: 'bottom-right', // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
+              offset: {
+                bottom: '20px',
+                right: '20px'
+              },
+              colors: {
+                'circle.background': '#C84E31', // Match your theme color
+                'circle.foreground': 'white',
+                'badge.background': '#ff6b6b',
+                'badge.foreground': 'white',
+                'badge.bordercolor': 'white',
+                'pulse.color': '#C84E31'
+              },
+              text: {
+                'tip.state.unsubscribed': 'Subscribe to notifications',
+                'tip.state.subscribed': "You're subscribed to notifications",
+                'tip.state.blocked': 'Unblock notifications',
+                'message.prenotify': 'Click to subscribe to notifications',
+                'message.action.subscribed': "Thanks! You'll receive notifications for new updates.",
+                'message.action.resubscribed': "You're subscribed to notifications",
+                'message.action.unsubscribed': "You won't receive notifications again",
+                'dialog.main.title': 'Manage Site Notifications',
+                'dialog.main.button.subscribe': 'SUBSCRIBE',
+                'dialog.main.button.unsubscribe': 'UNSUBSCRIBE'
+              },
+              theme: 'default', // 'default', 'inverse'
+              displayPredicate: function() {
+                // Hide button if user is already subscribed
+                try {
+                  if (window.OneSignal && window.OneSignal.User && window.OneSignal.User.PushSubscription) {
+                    const isSubscribed = window.OneSignal.User.PushSubscription.optedIn;
+                    const hasPermission = window.OneSignal.Notifications && window.OneSignal.Notifications.permission;
+                    
+                    // Only show if user is NOT subscribed or doesn't have permission
+                    return !isSubscribed || !hasPermission;
+                  }
+                  return true; // Show by default if OneSignal not ready
+                } catch (error) {
+                  console.log('OneSignal displayPredicate check failed:', error);
+                  return true; // Show by default on error
+                }
+              }
             },
           });
           console.log('✅ OneSignal: Initialization successful');
