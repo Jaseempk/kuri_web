@@ -10,6 +10,7 @@ import {
   X,
   Check,
   ChevronRight,
+  ChevronLeft,
   Twitter,
   Instagram,
   Github,
@@ -87,6 +88,7 @@ function App() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   // Refs for sections
   const heroRef = useRef(null);
@@ -94,6 +96,7 @@ function App() {
   const howItWorksRef = useRef(null);
   const testimonialsRef = useRef(null);
   const liveCirclesRef = useRef(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Smooth scroll function
   const scrollToSection = (elementId: string) => {
@@ -198,12 +201,12 @@ function App() {
         const activeInLaunch = markets
           .filter((m) => {
             if (m.state !== 0) return false;
-            
+
             // Check if launch period is still active (3 days from creation)
             const creationTime = Number(m.createdAt) * 1000;
             const launchEndTime = creationTime + 3 * 24 * 60 * 60 * 1000; // 3 days
             const now = Date.now();
-            
+
             return now < launchEndTime;
           })
           .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
@@ -215,7 +218,7 @@ function App() {
             .filter((m) => m.state === 2) // ACTIVE state
             .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
             .slice(0, 3);
-          
+
           setInLaunchMarkets(recentlyActive);
           setShowingFallback(true);
         } else {
@@ -235,6 +238,41 @@ function App() {
     isLoading: locationLoading,
     location,
   } = useGeolocation();
+
+  // Carousel navigation functions
+  const scrollToCard = (index: number) => {
+    if (carouselRef.current && inLaunchMarkets.length > 0) {
+      const cardWidth =
+        carouselRef.current.scrollWidth / inLaunchMarkets.length;
+      carouselRef.current.scrollTo({
+        left: cardWidth * index,
+        behavior: "smooth",
+      });
+      setCarouselIndex(index);
+    }
+  };
+
+  const nextCard = () => {
+    const nextIndex = (carouselIndex + 1) % inLaunchMarkets.length;
+    scrollToCard(nextIndex);
+  };
+
+  const prevCard = () => {
+    const prevIndex =
+      carouselIndex === 0 ? inLaunchMarkets.length - 1 : carouselIndex - 1;
+    scrollToCard(prevIndex);
+  };
+
+  // Handle carousel scroll to update active index
+  const handleCarouselScroll = () => {
+    if (carouselRef.current && inLaunchMarkets.length > 0) {
+      const cardWidth =
+        carouselRef.current.scrollWidth / inLaunchMarkets.length;
+      const scrollLeft = carouselRef.current.scrollLeft;
+      const newIndex = Math.round(scrollLeft / cardWidth);
+      setCarouselIndex(newIndex);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
@@ -505,48 +543,108 @@ function App() {
               {showingFallback ? "Recently Active Circles" : "Live Circles"}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {showingFallback 
+              {showingFallback
                 ? "Recently started circles you can still join and contribute to."
-                : "Join one of our active circles or create your own to start your saving journey."
-              }
+                : "Join one of our active circles or create your own to start your saving journey."}
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {isLoading ? (
-              <div className="col-span-3 text-center text-muted-foreground">
-                Loading circles...
+
+          {isLoading ? (
+            <div className="text-center text-muted-foreground">
+              Loading circles...
+            </div>
+          ) : inLaunchMarkets.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground mb-6">
+                <h3 className="text-lg font-medium mb-2 text-foreground">
+                  No Active Circles Right Now
+                </h3>
+                <p className="text-sm max-w-sm mx-auto">
+                  Be the first to create a new circle and start building your
+                  community savings group.
+                </p>
               </div>
-            ) : inLaunchMarkets.length === 0 ? (
-              <div className="col-span-3 text-center py-12">
-                <div className="text-muted-foreground mb-6">
-                  <div className="mx-auto h-12 w-12 mb-4 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center">
-                    <svg className="h-6 w-6 text-[hsl(var(--gold))]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium mb-2 text-foreground">No Active Circles Right Now</h3>
-                  <p className="text-sm max-w-sm mx-auto">
-                    Be the first to create a new circle and start building your community savings group.
-                  </p>
-                </div>
-                <Button 
-                  onClick={() => navigate("/markets")} 
-                  className="bg-[#C84E31] text-white hover:bg-[#b03e24] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+              <Button
+                onClick={() => navigate("/markets")}
+                className="bg-[#C84E31] text-white hover:bg-[#b03e24] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                Create Your Circle
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Grid Layout (md and up) */}
+              <div className="hidden md:grid md:grid-cols-3 gap-8">
+                {inLaunchMarkets.map((market, index) => (
+                  <MarketCard
+                    key={market.address}
+                    market={market}
+                    index={index}
+                  />
+                ))}
+              </div>
+
+              {/* Mobile Carousel Layout (below md) */}
+              <div className="md:hidden relative">
+                {/* Navigation Buttons */}
+                {inLaunchMarkets.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevCard}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#C84E31] rounded-full p-2 shadow-lg border border-white/20 transition-all duration-200"
+                      aria-label="Previous circle"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={nextCard}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#C84E31] rounded-full p-2 shadow-lg border border-white/20 transition-all duration-200"
+                      aria-label="Next circle"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
+
+                {/* Carousel Container */}
+                <div
+                  ref={carouselRef}
+                  onScroll={handleCarouselScroll}
+                  className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory gap-4 px-8"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
-                  Create Your Circle
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                  {inLaunchMarkets.map((market, index) => (
+                    <div
+                      key={market.address}
+                      className="flex-none w-[280px] snap-center"
+                    >
+                      <MarketCard market={market} index={index} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Carousel Indicators */}
+                {inLaunchMarkets.length > 1 && (
+                  <div className="flex justify-center mt-6 space-x-2">
+                    {inLaunchMarkets.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => scrollToCard(index)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                          carouselIndex === index
+                            ? "bg-[#C84E31] w-4"
+                            : "bg-[#C84E31]/30"
+                        }`}
+                        aria-label={`Go to circle ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : (
-              inLaunchMarkets.map((market, index) => (
-                <MarketCard
-                  key={market.address}
-                  market={market}
-                  index={index}
-                />
-              ))
-            )}
-          </div>
+            </>
+          )}
+
           {inLaunchMarkets.length > 0 && (
             <div className="text-center mt-12">
               <Button

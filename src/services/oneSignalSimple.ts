@@ -1,6 +1,3 @@
-// Simplified OneSignal helper service
-// Follows OneSignal SDK v16 best practices from official documentation
-
 export interface NotificationPreferences {
   joinRequests: boolean;
   depositReminders: boolean;
