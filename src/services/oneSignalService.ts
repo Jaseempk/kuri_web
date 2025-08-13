@@ -89,7 +89,7 @@ export class OneSignalService {
       
       const granted = await window.OneSignal.Notifications.requestPermission();
       console.log('Push permission granted:', granted);
-      return granted;
+      return granted === true;
     } catch (error) {
       console.error('Failed to request push permission:', error);
       return false;
@@ -106,11 +106,19 @@ export class OneSignalService {
       const externalId = userAddress.toLowerCase();
       await window.OneSignal.login(externalId);
 
-      const user = await window.OneSignal.User.getUser();
-      const playerId = user?.onesignalId;
+      // Wait for the OneSignal subscription to be ready
+      let playerId = null;
+      let attempts = 0;
+      const maxAttempts = 10; // 5 seconds total
+      
+      while (!playerId && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        playerId = window.OneSignal.User.onesignalId;
+        attempts++;
+      }
 
       if (!playerId) {
-        console.warn('No OneSignal player ID available');
+        console.warn('No OneSignal player ID available after waiting');
         return null;
       }
 
@@ -120,7 +128,12 @@ export class OneSignalService {
             userAddress: externalId,
             playerId,
             platform: 'web',
-            enabled: true,
+            preferences: {
+              joinRequests: true,
+              depositReminders: true,
+              raffleResults: true,
+              deadlineWarnings: true,
+            },
           });
           
           console.log(`Backend subscription stored for ${userAddress} with external_id: ${externalId}`);
@@ -247,13 +260,15 @@ export class OneSignalService {
       }
 
       const permission = await window.OneSignal.Notifications.permission;
-      const user = await window.OneSignal.User.getUser();
+      const playerId = window.OneSignal.User.onesignalId;
+      const externalId = window.OneSignal.User.externalId;
+      const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
       
       return {
-        isSubscribed: permission === 'granted' && !!user?.onesignalId,
+        isSubscribed: permission === 'granted' && !!playerId && isOptedIn,
         permission,
-        playerId: user?.onesignalId,
-        externalId: user?.externalId,
+        playerId,
+        externalId,
       };
     } catch (error) {
       console.error('Failed to get subscription state:', error);

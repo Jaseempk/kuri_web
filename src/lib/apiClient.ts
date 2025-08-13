@@ -374,7 +374,12 @@ class KuriApiClient {
     userAddress: string;
     playerId: string;
     platform: string;
-    enabled: boolean;
+    preferences?: {
+      joinRequests?: boolean;
+      depositReminders?: boolean;
+      raffleResults?: boolean;
+      deadlineWarnings?: boolean;
+    };
   }): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/api/users/push-subscription`, {
