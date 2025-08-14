@@ -14,7 +14,10 @@ import { trackMarketCreation, trackError } from "../../utils/analytics";
 import { apiClient } from "../../lib/apiClient";
 import { formatErrorForUser } from "../../utils/apiErrors";
 import { useAccount } from "wagmi";
+import { useUserProfile } from "../../hooks/useUserProfile";
 import { ChevronDown, Check } from "lucide-react";
+import { EnhancedShareModal } from "../modals/EnhancedShareModal";
+import { ShareTemplateData } from "../../utils/simpleTemplateUtils";
 
 interface FormData {
   totalAmount: string;
@@ -51,10 +54,13 @@ export const CreateMarketForm = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasInvalidImage, setHasInvalidImage] = useState(false);
   const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [createdMarket, setCreatedMarket] = useState<any | null>(null);
 
   // const navigate = useNavigate();
   const { address } = useAccount();
   const { initialiseKuriMarket, isCreating } = useKuriFactory();
+  const { profile: userProfile } = useUserProfile();
 
   // Calculate monthly contribution per participant
   const monthlyContribution = useMemo(() => {
@@ -266,11 +272,16 @@ export const CreateMarketForm = ({
         ...marketData,
       };
 
+      // Store created market for sharing
+      setCreatedMarket(newMarket);
+
       // Call success callback with market data
       onSuccess?.(newMarket);
 
-      // Close the form
-      onClose?.();
+      // Show share modal after a short delay
+      setTimeout(() => {
+        setShowShareModal(true);
+      }, 1500);
     } catch (err) {
       // Track market creation failure
       trackError(
@@ -655,9 +666,40 @@ export const CreateMarketForm = ({
     }
   };
 
+  // Build template data for sharing
+  const shareTemplateData: ShareTemplateData = {
+    username: userProfile?.display_name || userProfile?.username || `${address?.slice(0,6)}...${address?.slice(-4)}` || 'Anonymous',
+    userAvatar: userProfile?.profile_image_url || undefined,
+    circleData: {
+      name: formData.shortDescription,
+      totalAmount: formData.totalAmount,
+      participants: Number(formData.participantCount),
+      contribution: monthlyContribution,
+      interval: formData.intervalType === "0" ? "weekly" : "monthly",
+    },
+    marketAddress: createdMarket?.address || "",
+    templateType: 'celebration',
+  };
+
   return (
     <>
       {showConfetti && <Confetti />}
+      
+      {/* Enhanced Share Modal */}
+      {showShareModal && createdMarket && (
+        <EnhancedShareModal
+          market={createdMarket}
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            onClose?.(); // Close the main form after sharing
+          }}
+          templateData={shareTemplateData}
+          showTemplateTab={true}
+          defaultTab="template"
+        />
+      )}
+      
       <div className="w-full bg-white rounded-2xl md:rounded-3xl shadow-xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 max-h-[90vh] sm:max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-[#E8DED1] scrollbar-track-[#f5f5f5]">
         
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center pt-2">
