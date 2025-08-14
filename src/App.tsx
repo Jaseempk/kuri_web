@@ -13,7 +13,7 @@ import { ApolloProvider } from "./providers/ApolloProvider";
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { NetworkStatus } from "./components/NetworkStatus";
-import { PushPermissionPrompt } from "./components/notifications/PushPermissionPrompt";
+import { FloatingNotificationPrompt } from "./components/notifications/FloatingNotificationPrompt";
 import { NotificationHandler } from "./components/notifications/NotificationHandler";
 import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
@@ -64,7 +64,7 @@ function App() {
             <RoutesWithAnalytics />
           </Router>
           <InstallPrompt />
-          <PushPermissionPrompt />
+          <FloatingNotificationPrompt />
         </FarcasterProvider>
       </ApolloProvider>
     </Web3Provider>

@@ -158,9 +158,6 @@ export const KURI_MARKET_DETAIL_QUERY = gql`
       winnerTimestamp
       requestId
       contractAddress
-      blockNumber
-      blockTimestamp
-      transactionHash
     }
     membershipRequesteds: KuriCore_MembershipRequested(
       where: { contractAddress: { _eq: $marketAddress } }
