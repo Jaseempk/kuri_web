@@ -1489,10 +1489,99 @@ function App() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[hsl(var(--ochre))/20] py-8 bg-[hsl(var(--terracotta))] relative text-white">
+      <footer className="border-t border-[hsl(var(--ochre))/20] py-6 md:py-8 bg-[hsl(var(--terracotta))] relative text-white">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1513759565286-20e9c5fad06b?auto=format&fit=crop&w=2000&q=80')] bg-fixed bg-center bg-no-repeat bg-cover opacity-5" />
-        <div className="container mx-auto px-4 py-4 relative">
-          <div className="grid md:grid-cols-4 gap-8">
+        <div className="container mx-auto px-4 py-2 md:py-4 relative">
+          {/* Mobile: Logo and Social Icons */}
+          <div className="md:hidden text-center mb-6">
+            <div className="flex justify-center items-center mb-4">
+              <Logo variant="landing" />
+            </div>
+            <p className="text-white/80 text-sm mb-4 px-4">
+              Empowering communities through collaborative finance.
+            </p>
+            <div className="flex justify-center space-x-6">
+              <a
+                href="https://x.com/Kuriorg"
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a
+                href="#"
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a
+                href="#"
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <Github className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Mobile: Links in 2 columns */}
+          <div className="grid grid-cols-2 gap-6 md:hidden mb-6">
+            <div className="text-center">
+              <h3 className="font-sans font-semibold mb-3 text-white text-sm">
+                Platform
+              </h3>
+              <ul className="space-y-2 text-white/80 text-sm">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    How it Works
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Security
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Circles
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    FAQ
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <h3 className="font-sans font-semibold mb-3 text-white text-sm">
+                Company
+              </h3>
+              <ul className="space-y-2 text-white/80 text-sm">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Careers
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Desktop: Original 4-column layout */}
+          <div className="hidden md:grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center mb-6">
                 <Logo variant="landing" />
@@ -1577,29 +1666,61 @@ function App() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-[hsl(var(--ochre))/20] mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-white/80">
-              &copy; 2025 Kuri. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-2 md:mt-0">
-              <a
-                href="#"
-                className="text-sm text-white/80 hover:text-white transition-colors"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="#"
-                className="text-sm text-white/80 hover:text-white transition-colors"
-              >
-                Terms of Service
-              </a>
-              <a
-                href="#"
-                className="text-sm text-white/80 hover:text-white transition-colors"
-              >
-                Cookie Policy
-              </a>
+
+          {/* Bottom section - responsive */}
+          <div className="border-t border-[hsl(var(--ochre))/20] mt-6 md:mt-8 pt-4 md:pt-6">
+            {/* Mobile: Stack vertically with smaller text */}
+            <div className="md:hidden text-center space-y-3">
+              <p className="text-xs text-white/80">
+                &copy; 2025 Kuri. All rights reserved.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 text-xs">
+                <a
+                  href="#"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </a>
+                <a
+                  href="#"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  Terms of Service
+                </a>
+                <a
+                  href="#"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  Cookie Policy
+                </a>
+              </div>
+            </div>
+            
+            {/* Desktop: Original horizontal layout */}
+            <div className="hidden md:flex md:flex-row justify-between items-center">
+              <p className="text-sm text-white/80">
+                &copy; 2025 Kuri. All rights reserved.
+              </p>
+              <div className="flex space-x-6">
+                <a
+                  href="#"
+                  className="text-sm text-white/80 hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </a>
+                <a
+                  href="#"
+                  className="text-sm text-white/80 hover:text-white transition-colors"
+                >
+                  Terms of Service
+                </a>
+                <a
+                  href="#"
+                  className="text-sm text-white/80 hover:text-white transition-colors"
+                >
+                  Cookie Policy
+                </a>
+              </div>
             </div>
           </div>
         </div>
