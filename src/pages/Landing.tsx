@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
 import { ConnectButton } from "../components/ui/ConnectButton";
@@ -78,6 +78,46 @@ const testimonials = [
   },
 ];
 
+// Features data for Why It's Special section
+const FEATURES_DATA = [
+  {
+    id: 1,
+    image: "/images/zeroInterest.jpg",
+    alt: "Zero interest",
+    title: "Zero-interest,\nZero-shame",
+    description: "No predatory fees or interest rates. Just people helping people achieve financial goals together.",
+    bgColor: "bg-[hsl(var(--sand))]",
+    borderColor: "border-[hsl(var(--gold))]",
+  },
+  {
+    id: 2,
+    image: "/images/trustvibe.jpg",
+    alt: "Trust based",
+    title: "Trust-based\nwith optional privacy",
+    description: "Built on community trust with flexible privacy options to suit your comfort level.",
+    bgColor: "bg-[hsl(var(--sand))]",
+    borderColor: "border-[hsl(var(--gold))]",
+  },
+  {
+    id: 3,
+    image: "/images/communityvibe.jpg",
+    alt: "Community owned",
+    title: "Community-\nowned vibe",
+    description: "Created by and for communities, with decisions made collectively by members.",
+    bgColor: "bg-[hsl(var(--sand))]",
+    borderColor: "border-[hsl(var(--gold))]",
+  },
+  {
+    id: 4,
+    image: "/images/fairplay.jpg",
+    alt: "Fair raffles",
+    title: "Fair, verifiable\nraffles",
+    description: "Transparent selection process ensures everyone gets their turn, verified on blockchains trustless.",
+    bgColor: "bg-[hsl(var(--terracotta))]",
+    borderColor: "border-[hsl(var(--terracotta))]",
+  },
+];
+
 function App() {
   const navigate = useNavigate();
   const { markets, loading: isLoading, error } = useKuriMarkets();
@@ -89,6 +129,8 @@ function App() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [featuresIndex, setFeaturesIndex] = useState(0);
+  const featuresScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Refs for sections
   const heroRef = useRef(null);
@@ -97,6 +139,7 @@ function App() {
   const testimonialsRef = useRef(null);
   const liveCirclesRef = useRef(null);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const featuresCarouselRef = useRef<HTMLDivElement>(null);
 
   // Smooth scroll function
   const scrollToSection = (elementId: string) => {
@@ -273,6 +316,87 @@ function App() {
       setCarouselIndex(newIndex);
     }
   };
+
+  // Helper function for features carousel calculations
+  const getFeatureCardWidth = () => {
+    return featuresCarouselRef.current ? featuresCarouselRef.current.scrollWidth / 6 : 0;
+  };
+
+  // Optimized features carousel navigation
+  const scrollToFeature = (index: number) => {
+    if (featuresCarouselRef.current) {
+      const actualIndex = index + 1; // Account for duplicate at start
+      featuresCarouselRef.current.scrollTo({
+        left: getFeatureCardWidth() * actualIndex,
+        behavior: 'smooth'
+      });
+      setFeaturesIndex(index);
+    }
+  };
+
+  const nextFeature = () => scrollToFeature((featuresIndex + 1) % 4);
+  const prevFeature = () => scrollToFeature(featuresIndex === 0 ? 3 : featuresIndex - 1);
+
+  // Streamlined scroll handler with boundary management
+  const handleFeaturesScroll = useCallback(() => {
+    if (!featuresCarouselRef.current) return;
+    
+    const cardWidth = getFeatureCardWidth();
+    const scrollLeft = featuresCarouselRef.current.scrollLeft;
+    const currentSlide = Math.round(scrollLeft / cardWidth);
+    
+    // Clear existing timeout
+    if (featuresScrollTimeoutRef.current) {
+      clearTimeout(featuresScrollTimeoutRef.current);
+    }
+    
+    // Update index for normal slides
+    if (currentSlide > 0 && currentSlide < 5) {
+      setFeaturesIndex(currentSlide - 1);
+    }
+    
+    // Handle boundary transitions on scroll end
+    featuresScrollTimeoutRef.current = setTimeout(() => {
+      if (!featuresCarouselRef.current) return;
+      
+      const finalSlide = Math.round(featuresCarouselRef.current.scrollLeft / cardWidth);
+      
+      if (finalSlide === 0) {
+        // Jump from duplicate last to real last
+        featuresCarouselRef.current.scrollTo({
+          left: cardWidth * 4,
+          behavior: 'auto'
+        });
+        setFeaturesIndex(3);
+      } else if (finalSlide === 5) {
+        // Jump from duplicate first to real first
+        featuresCarouselRef.current.scrollTo({
+          left: cardWidth * 1,
+          behavior: 'auto'
+        });
+        setFeaturesIndex(0);
+      }
+    }, 150);
+  }, []);
+
+  // Initialize and cleanup features carousel
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (featuresCarouselRef.current) {
+        featuresCarouselRef.current.scrollTo({
+          left: getFeatureCardWidth() * 1,
+          behavior: 'auto'
+        });
+      }
+    }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      if (featuresScrollTimeoutRef.current) {
+        clearTimeout(featuresScrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background font-sans overflow-x-hidden">
@@ -695,110 +819,120 @@ function App() {
             </motion.div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 max-w-6xl mx-auto">
-            {/* Feature 1 */}
-            <motion.div
-              className="flex flex-col items-center text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              viewport={{ once: true }}
-            >
-              <div className="w-28 h-28 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
-                <img
-                  src="/images/zeroInterest.jpg"
-                  alt="Zero interest"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-2xl font-sans font-medium mb-3">
-                Zero-interest,
-                <br />
-                Zero-shame
-              </h3>
-              <p className="text-muted-foreground">
-                No predatory fees or interest rates. Just people helping people
-                achieve financial goals together.
-              </p>
-            </motion.div>
+          {/* Desktop Grid Layout (md and up) */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-10 max-w-6xl mx-auto">
+            {FEATURES_DATA.map((feature, index) => (
+              <motion.div
+                key={feature.id}
+                className="flex flex-col items-center text-center"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 * (index + 1) }}
+                viewport={{ once: true }}
+              >
+                <div className={`w-28 h-28 rounded-full ${feature.bgColor} border-2 ${feature.borderColor} flex items-center justify-center mb-6 shadow-md overflow-hidden`}>
+                  <img
+                    src={feature.image}
+                    alt={feature.alt}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h3 className="text-2xl font-sans font-medium mb-3">
+                  {feature.title.split('\n').map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < feature.title.split('\n').length - 1 && <br />}
+                    </span>
+                  ))}
+                </h3>
+                <p className="text-muted-foreground">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
 
-            {/* Feature 2 */}
-            <motion.div
-              className="flex flex-col items-center text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
+          {/* Mobile Carousel Layout (below md) */}
+          <div className="md:hidden relative max-w-sm mx-auto">
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevFeature}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#C84E31] rounded-full p-2 shadow-lg border border-white/20 transition-all duration-200"
+              aria-label="Previous feature"
             >
-              <div className="w-28 h-28 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
-                <img
-                  src="/images/trustvibe.jpg"
-                  alt="Trust based"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-2xl font-sans font-medium mb-3">
-                Trust-based
-                <br />
-                with optional privacy
-              </h3>
-              <p className="text-muted-foreground">
-                Built on community trust with flexible privacy options to suit
-                your comfort level.
-              </p>
-            </motion.div>
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={nextFeature}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#C84E31] rounded-full p-2 shadow-lg border border-white/20 transition-all duration-200"
+              aria-label="Next feature"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
 
-            {/* Feature 3 */}
-            <motion.div
-              className="flex flex-col items-center text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              viewport={{ once: true }}
+            {/* Carousel Container */}
+            <div 
+              ref={featuresCarouselRef}
+              onScroll={handleFeaturesScroll}
+              className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory gap-4 px-8"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              <div className="w-28 h-28 rounded-full bg-[hsl(var(--sand))] border-2 border-[hsl(var(--gold))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
-                <img
-                  src="/images/communityvibe.jpg"
-                  alt="Community owned"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-2xl font-sans font-medium mb-3">
-                Community-
-                <br />
-                owned vibe
-              </h3>
-              <p className="text-muted-foreground">
-                Created by and for communities, with decisions made collectively
-                by members.
-              </p>
-            </motion.div>
+              {/* Create circular carousel with duplicates: [last, ...features, first] */}
+              {[
+                FEATURES_DATA[3], // Duplicate of last slide at beginning
+                ...FEATURES_DATA,  // All original slides
+                FEATURES_DATA[0]   // Duplicate of first slide at end
+              ].map((feature, slideIndex) => {
+                // Determine if this is a duplicate slide for animation purposes
+                const isDuplicate = slideIndex === 0 || slideIndex === 5;
+                
+                return (
+                  <motion.div
+                    key={`${feature.id}-${slideIndex}`}
+                    className="flex-none w-[280px] snap-center flex flex-col items-center text-center py-4"
+                    initial={isDuplicate ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: isDuplicate ? 0 : 0.6, delay: isDuplicate ? 0 : 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <div className={`w-24 h-24 rounded-full ${feature.bgColor} border-2 ${feature.borderColor} flex items-center justify-center mb-4 shadow-md overflow-hidden`}>
+                      <img
+                        src={feature.image}
+                        alt={feature.alt}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="text-xl font-sans font-medium mb-3 px-2">
+                      {feature.title.split('\n').map((line, i) => (
+                        <span key={i}>
+                          {line}
+                          {i < feature.title.split('\n').length - 1 && <br />}
+                        </span>
+                      ))}
+                    </h3>
+                    <p className="text-muted-foreground text-sm px-2 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
 
-            {/* Feature 4 */}
-            <motion.div
-              className="flex flex-col items-center text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              viewport={{ once: true }}
-            >
-              <div className="w-28 h-28 rounded-full bg-[hsl(var(--terracotta))] flex items-center justify-center mb-6 shadow-md overflow-hidden">
-                <img
-                  src="/images/fairplay.jpg"
-                  alt="Fair raffles"
-                  className="w-full h-full object-cover"
+            {/* Carousel Indicators */}
+            <div className="flex justify-center mt-6 space-x-2">
+              {FEATURES_DATA.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => scrollToFeature(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    featuresIndex === index
+                      ? "bg-[#C84E31] w-4"
+                      : "bg-[#C84E31]/30"
+                  }`}
+                  aria-label={`Go to feature ${index + 1}`}
                 />
-              </div>
-              <h3 className="text-2xl font-sans font-medium mb-3">
-                Fair, verifiable
-                <br />
-                raffles
-              </h3>
-              <p className="text-muted-foreground">
-                Transparent selection process ensures everyone gets their turn,
-                verified on blockchains trustless.
-              </p>
-            </motion.div>
+              ))}
+            </div>
           </div>
 
           <motion.div
