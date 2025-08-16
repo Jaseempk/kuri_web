@@ -16,13 +16,52 @@ export interface AnalyticsEvents {
   };
   market_shared: {
     market_address: string;
-    platform: "twitter" | "telegram" | "whatsapp" | "copy" | "native";
+    platform: "twitter" | "telegram" | "whatsapp" | "copy" | "native" | "download" | "clipboard";
     source: "card" | "detail" | "post_creation";
   };
   market_initialized: {
     market_address: string;
     participants: number;
     amount: string;
+  };
+
+  // Celebration image events
+  celebration_image_generated: {
+    template: string;
+    market_address: string;
+    participant_count: number;
+    interval_type: "weekly" | "monthly";
+    generation_time: number;
+    source: string;
+  };
+  celebration_image_downloaded: {
+    template: string;
+    market_address: string;
+    participant_count: number;
+    interval_type: "weekly" | "monthly";
+    generation_time: number;
+    source: string;
+  };
+  celebration_image_shared: {
+    template: string;
+    method: "native_share" | "clipboard";
+    market_address: string;
+    participant_count: number;
+    interval_type: "weekly" | "monthly";
+    source: string;
+  };
+  celebration_image_generation_failed: {
+    template: string;
+    error_message: string;
+    market_address: string;
+    user_agent: string;
+    source: string;
+  };
+  celebration_image_share_failed: {
+    template: string;
+    error_message: string;
+    market_address: string;
+    source: string;
   };
 
   // User interaction events

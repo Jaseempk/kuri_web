@@ -43,6 +43,13 @@
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
     overflow-x: hidden;
   }
+
+  /* Allow overflow for modals on mobile */
+  @media (max-width: 768px) {
+    body:has([role="dialog"]) {
+      overflow-x: visible;
+    }
+  }
 }
 
 /* Custom scrollbar */

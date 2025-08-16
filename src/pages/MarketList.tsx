@@ -410,284 +410,287 @@ export default function MarketList() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Stats Banner */}
-      <div className="bg-[#F9F5F1] border-b border-[#E8DED1]">
-        <div className="container mx-auto px-3 xs:px-4 py-4 xs:py-5 sm:py-6">
-          {/* Mobile: Horizontal scroll, Desktop: Grid */}
-          <div className="sm:hidden">
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
-              <div className="min-w-[280px] snap-start">
-                <StatsCard
-                  title="Total Participants"
-                  value={totalParticipants.toString()}
-                  change={participantsChange}
-                />
-              </div>
-              <div className="min-w-[280px] snap-start">
-                <StatsCard
-                  title="Active Circles"
-                  value={activeCircles.toString()}
-                  change={circlesChange}
-                />
-              </div>
-              <div className="min-w-[280px] snap-start">
-                <StatsCard
-                  title="Total Value Locked"
-                  value={`$${Number(
-                    formatUnits(totalValueLocked, 6)
-                  ).toLocaleString()}`}
-                  change={tvlChange}
-                />
+    <>
+      <div className="min-h-screen bg-background">
+        {/* Stats Banner */}
+        <div className="bg-[#F9F5F1] border-b border-[#E8DED1]">
+          <div className="container mx-auto px-3 xs:px-4 py-4 xs:py-5 sm:py-6">
+            {/* Mobile: Horizontal scroll, Desktop: Grid */}
+            <div className="sm:hidden">
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+                <div className="min-w-[280px] snap-start">
+                  <StatsCard
+                    title="Total Participants"
+                    value={totalParticipants.toString()}
+                    change={participantsChange}
+                  />
+                </div>
+                <div className="min-w-[280px] snap-start">
+                  <StatsCard
+                    title="Active Circles"
+                    value={activeCircles.toString()}
+                    change={circlesChange}
+                  />
+                </div>
+                <div className="min-w-[280px] snap-start">
+                  <StatsCard
+                    title="Total Value Locked"
+                    value={`$${Number(
+                      formatUnits(totalValueLocked, 6)
+                    ).toLocaleString()}`}
+                    change={tvlChange}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          
-          {/* Desktop: Grid layout */}
-          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
-            <StatsCard
-              title="Total Value Locked"
-              value={`$${Number(
-                formatUnits(totalValueLocked, 6)
-              ).toLocaleString()}`}
-              change={tvlChange}
-            />
-            <StatsCard
-              title="Active Circles"
-              value={activeCircles.toString()}
-              change={circlesChange}
-            />
-            <StatsCard
-              title="Total Participants"
-              value={totalParticipants.toString()}
-              change={participantsChange}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-3 xs:px-4 py-6 xs:py-8">
-        {/* Enhanced Header Section */}
-        <div className="mb-6 xs:mb-8">
-          {/* Mobile: Button first, then title */}
-          <div className="xs:hidden space-y-4">
-            <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-              <DialogTrigger asChild>
-                <Button
-                  onClick={(e) => {
-                    if (!handleCreateMarket()) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="w-full bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-4 transition-all duration-200"
-                >
-                  Start a Circle
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
-                <DialogTitle className="sr-only">Create New Circle</DialogTitle>
-                <DialogDescription className="sr-only">
-                  Create a new savings circle by setting up the basic details, participation options, and circle information.
-                </DialogDescription>
-                <CreateMarketForm
-                  onSuccess={handleMarketCreated}
-                  onClose={() => setShowCreateForm(false)}
-                />
-              </DialogContent>
-            </Dialog>
             
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-[#8B6F47]">
-                Explore Circles
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Join trusted savings circles and achieve your goals together
-              </p>
+            {/* Desktop: Grid layout */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
+              <StatsCard
+                title="Total Value Locked"
+                value={`$${Number(
+                  formatUnits(totalValueLocked, 6)
+                ).toLocaleString()}`}
+                change={tvlChange}
+              />
+              <StatsCard
+                title="Active Circles"
+                value={activeCircles.toString()}
+                change={circlesChange}
+              />
+              <StatsCard
+                title="Total Participants"
+                value={totalParticipants.toString()}
+                change={participantsChange}
+              />
             </div>
           </div>
-          
-          {/* Desktop: Original layout */}
-          <div className="hidden xs:flex xs:flex-row justify-between items-start xs:items-center gap-4">
-            <div className="text-left">
-              <h1 className="text-2xl xs:text-3xl font-bold text-[#8B6F47]">
-                Explore Circles
-              </h1>
-              <p className="text-sm xs:text-base text-muted-foreground mt-1 xs:mt-2">
-                Join trusted savings circles and achieve your goals together
-              </p>
+        </div>
+
+        {/* Main Content */}
+        <div className="container mx-auto px-3 xs:px-4 py-6 xs:py-8">
+          {/* Enhanced Header Section */}
+          <div className="mb-6 xs:mb-8">
+            {/* Mobile: Button first, then title */}
+            <div className="xs:hidden space-y-4">
+              <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+                <DialogTrigger asChild>
+                  <Button
+                    onClick={(e) => {
+                      if (!handleCreateMarket()) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="w-full bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-4 transition-all duration-200"
+                  >
+                    Start a Circle
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
+                  <DialogTitle className="sr-only">Create New Circle</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Create a new savings circle by setting up the basic details, participation options, and circle information.
+                  </DialogDescription>
+                  <CreateMarketForm
+                    onSuccess={handleMarketCreated}
+                    onClose={() => setShowCreateForm(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+              
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-[#8B6F47]">
+                  Explore Circles
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Join trusted savings circles and achieve your goals together
+                </p>
+              </div>
             </div>
-            <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-              <DialogTrigger asChild>
-                <Button
-                  onClick={(e) => {
-                    if (!handleCreateMarket()) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="w-auto bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-6 transition-all duration-200"
-                >
-                  Start a Circle
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
-                <DialogTitle className="sr-only">Create New Circle</DialogTitle>
-                <DialogDescription className="sr-only">
-                  Create a new savings circle by setting up the basic details, participation options, and circle information.
-                </DialogDescription>
-                <CreateMarketForm
-                  onSuccess={handleMarketCreated}
-                  onClose={() => setShowCreateForm(false)}
+            
+            {/* Desktop: Original layout */}
+            <div className="hidden xs:flex xs:flex-row justify-between items-start xs:items-center gap-4">
+              <div className="text-left">
+                <h1 className="text-2xl xs:text-3xl font-bold text-[#8B6F47]">
+                  Explore Circles
+                </h1>
+                <p className="text-sm xs:text-base text-muted-foreground mt-1 xs:mt-2">
+                  Join trusted savings circles and achieve your goals together
+                </p>
+              </div>
+              <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+                <DialogTrigger asChild>
+                  <Button
+                    onClick={(e) => {
+                      if (!handleCreateMarket()) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="w-auto bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-6 transition-all duration-200"
+                  >
+                    Start a Circle
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
+                  <DialogTitle className="sr-only">Create New Circle</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Create a new savings circle by setting up the basic details, participation options, and circle information.
+                  </DialogDescription>
+                  <CreateMarketForm
+                    onSuccess={handleMarketCreated}
+                    onClose={() => setShowCreateForm(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          {/* Filter Bar - Sticky */}
+          <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E8DED1]/50 -mx-3 xs:-mx-4 px-3 xs:px-4 py-3 xs:py-4 mb-6 xs:mb-8 z-10 rounded-2xl">
+            {/* Mobile: Horizontal layout with different proportions */}
+            <div className="flex xs:hidden gap-3 items-center">
+              <div className="flex-1">
+                <MarketSearch
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search circles..."
                 />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
-        {showShareModal && createdMarket && (
-          <PostCreationShare
-            market={createdMarket}
-            onClose={() => {
-              setShowShareModal(false);
-              refetch(); // Refresh market data after modal closes
-            }}
-            onViewMarket={() => {
-              setShowShareModal(false);
-              refetch(); // Refresh market data before navigation
-              navigate(`/markets/${createdMarket.address}`);
-            }}
-          />
-        )}
-
-        {/* Filter Bar - Sticky */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E8DED1]/50 -mx-3 xs:-mx-4 px-3 xs:px-4 py-3 xs:py-4 mb-6 xs:mb-8 z-10 rounded-2xl">
-          {/* Mobile: Horizontal layout with different proportions */}
-          <div className="flex xs:hidden gap-3 items-center">
-            <div className="flex-1">
-              <MarketSearch
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search circles..."
-              />
+              </div>
+              <div className="flex-shrink-0">
+                <IntervalTypeFilter
+                  value={activeFilter}
+                  onChange={setActiveFilter}
+                />
+              </div>
             </div>
-            <div className="flex-shrink-0">
-              <IntervalTypeFilter
-                value={activeFilter}
-                onChange={setActiveFilter}
-              />
+            
+            {/* Desktop: Original layout */}
+            <div className="hidden xs:flex xs:flex-row gap-4 items-center">
+              <div className="flex-1">
+                <MarketSearch
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search by market name or address..."
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <IntervalTypeFilter
+                  value={activeFilter}
+                  onChange={setActiveFilter}
+                />
+              </div>
             </div>
           </div>
-          
-          {/* Desktop: Original layout */}
-          <div className="hidden xs:flex xs:flex-row gap-4 items-center">
-            <div className="flex-1">
-              <MarketSearch
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search by market name or address..."
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <IntervalTypeFilter
-                value={activeFilter}
-                onChange={setActiveFilter}
-              />
-            </div>
-          </div>
-        </div>
 
-        {/* Markets Content */}
-        <div className="w-full">
-          <div className="mb-6 xs:mb-8 bg-white/80 backdrop-blur-sm border border-[#E8DED1]/50 p-1.5 rounded-xl w-fit mr-auto overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent gap-1 shadow-sm flex">
-            {marketSections.map(({ title, value, filter }) => {
+          {/* Markets Content */}
+          <div className="w-full">
+            <div className="mb-6 xs:mb-8 bg-white/80 backdrop-blur-sm border border-[#E8DED1]/50 p-1.5 rounded-xl w-fit mr-auto overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent gap-1 shadow-sm flex">
+              {marketSections.map(({ title, value, filter }) => {
+                const sectionMarkets = filteredMarkets.filter(filter);
+                const isActive = activeTab === value;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      // Only update if different to prevent unnecessary re-renders
+                      if (activeTab !== value) {
+                        setUserSelectedTab(value);
+                      }
+                    }}
+                    className={`${
+                      isActive
+                        ? "bg-[hsl(var(--terracotta))] text-white shadow-md"
+                        : "text-gray-700 hover:bg-[hsl(var(--terracotta))]/10 hover:shadow-sm bg-transparent"
+                    } rounded-lg transition-all duration-300 text-xs xs:text-sm px-3 py-2 xs:px-4 xs:py-2.5 flex-shrink-0 border-0 font-medium relative group`}
+                  >
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      {title}
+                      <span
+                        className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 py-0.5 text-xs font-bold rounded-full transition-all duration-300 ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {sectionMarkets.length}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {marketSections.map(({ title, filter, value }) => {
               const sectionMarkets = filteredMarkets.filter(filter);
               const isActive = activeTab === value;
+
               return (
-                <button
-                  key={value}
-                  onClick={() => {
-                    // Only update if different to prevent unnecessary re-renders
-                    if (activeTab !== value) {
-                      setUserSelectedTab(value);
-                    }
-                  }}
-                  className={`${
-                    isActive
-                      ? "bg-[hsl(var(--terracotta))] text-white shadow-md"
-                      : "text-gray-700 hover:bg-[hsl(var(--terracotta))]/10 hover:shadow-sm bg-transparent"
-                  } rounded-lg transition-all duration-300 text-xs xs:text-sm px-3 py-2 xs:px-4 xs:py-2.5 flex-shrink-0 border-0 font-medium relative group`}
-                >
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    {title}
-                    <span
-                      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 py-0.5 text-xs font-bold rounded-full transition-all duration-300 ${
-                        isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      {sectionMarkets.length}
-                    </span>
-                  </span>
-                </button>
+                <div key={value} className={isActive ? "block" : "hidden"}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {/* Section Header */}
+                    <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-4 xs:mb-6">
+                      {sectionMarkets.length > 6 && (
+                        <Button
+                          variant="outline"
+                          className="hidden xs:inline-flex text-[#8B6F47] border-[#E8DED1] hover:bg-[#F9F5F1]"
+                        >
+                          View All
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Markets Grid */}
+                    {sectionMarkets.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-muted-foreground text-lg mb-2">
+                          No {title.toLowerCase()} found
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {value === "created" &&
+                            "No markets are currently in launch"}
+                          {value === "active" &&
+                            "No markets are currently active"}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
+                        {sectionMarkets.map((market, index) => (
+                          <OptimizedMarketCard
+                            key={market.address}
+                            market={market}
+                            index={index}
+                            onJoinClick={handleUserAction}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                </div>
               );
             })}
           </div>
-
-          {marketSections.map(({ title, filter, value }) => {
-            const sectionMarkets = filteredMarkets.filter(filter);
-            const isActive = activeTab === value;
-
-            return (
-              <div key={value} className={isActive ? "block" : "hidden"}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {/* Section Header */}
-                  <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-4 xs:mb-6">
-                    {sectionMarkets.length > 6 && (
-                      <Button
-                        variant="outline"
-                        className="hidden xs:inline-flex text-[#8B6F47] border-[#E8DED1] hover:bg-[#F9F5F1]"
-                      >
-                        View All
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Markets Grid */}
-                  {sectionMarkets.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-muted-foreground text-lg mb-2">
-                        No {title.toLowerCase()} found
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {value === "created" &&
-                          "No markets are currently in launch"}
-                        {value === "active" &&
-                          "No markets are currently active"}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
-                      {sectionMarkets.map((market, index) => (
-                        <OptimizedMarketCard
-                          key={market.address}
-                          market={market}
-                          index={index}
-                          onJoinClick={handleUserAction}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              </div>
-            );
-          })}
         </div>
       </div>
-    </div>
+
+      {/* Modal rendered outside the main container */}
+      {showShareModal && createdMarket && (
+        <PostCreationShare
+          market={createdMarket}
+          onClose={() => {
+            setShowShareModal(false);
+            refetch(); // Refresh market data after modal closes
+          }}
+          onViewMarket={() => {
+            setShowShareModal(false);
+            refetch(); // Refresh market data before navigation
+            navigate(`/markets/${createdMarket.address}`);
+          }}
+        />
+      )}
+    </>
   );
 }
