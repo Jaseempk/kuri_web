@@ -682,10 +682,12 @@ export default function MarketList() {
           market={createdMarket}
           onClose={() => {
             setShowShareModal(false);
+            setCreatedMarket(null);
             refetch(); // Refresh market data after modal closes
           }}
           onViewMarket={() => {
             setShowShareModal(false);
+            setCreatedMarket(null);
             refetch(); // Refresh market data before navigation
             navigate(`/markets/${createdMarket.address}`);
           }}

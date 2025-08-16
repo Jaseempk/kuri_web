@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,39 +22,109 @@ export const PostCreationShare = ({
   onClose,
   onViewMarket,
 }: PostCreationShareProps) => {
-  // Cleanup function for memory management
-  const cleanup = () => {
-    if (downloadUrl) {
-      revokeDownloadUrl(downloadUrl);
-      setDownloadUrl('');
-    }
-    if (generatedImage) {
-      setGeneratedImage('');
-    }
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return cleanup;
-  }, []);
-
-  // Cleanup when new image is generated
-  const handleNewImageGeneration = (imageData: string, newDownloadUrl: string, generationTime?: number) => {
-    // Clean up previous URLs
-    if (downloadUrl) {
-      revokeDownloadUrl(downloadUrl);
-    }
-    
-    setGeneratedImage(imageData);
-    setDownloadUrl(newDownloadUrl);
-    setImageGenerationTime(generationTime || 0);
-  };
+  // Component lifecycle management
+  const isMountedRef = useRef(true);
+  
+  // State declarations first
   const [customMessage, setCustomMessage] = useState("");
   const [isSharing, setIsSharing] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<'hero' | 'stats' | 'minimal'>('hero');
   const [generatedImage, setGeneratedImage] = useState<string>('');
   const [downloadUrl, setDownloadUrl] = useState<string>('');
   const [imageGenerationTime, setImageGenerationTime] = useState<number>(0);
+
+  // Component unmount cleanup
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Enhanced onClose handler with cleanup protection
+  const handleClose = () => {
+    // Prevent operations if component is already unmounting
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    // Mark component as unmounting to prevent further operations
+    isMountedRef.current = false;
+    
+    // Manual cleanup for immediate closure (not unmount)
+    if (downloadUrl) {
+      try {
+        revokeDownloadUrl(downloadUrl);
+        if (isMountedRef.current) {
+          setDownloadUrl('');
+        }
+      } catch (error) {
+        console.warn('URL cleanup failed during close:', error);
+      }
+    }
+    if (generatedImage && isMountedRef.current) {
+      setGeneratedImage('');
+    }
+    
+    onClose();
+  };
+
+  // Separate handler for backdrop clicks with enhanced safety
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    // Prevent if component is already unmounting
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    // Only close if clicking directly on the backdrop (not bubbled from modal content)
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+
+  // Enhanced cleanup management with component lifecycle protection
+  useEffect(() => {
+    return () => {
+      // Only cleanup if component was properly mounted
+      if (isMountedRef.current && downloadUrl) {
+        try {
+          revokeDownloadUrl(downloadUrl);
+        } catch (error) {
+          console.warn('Download URL cleanup failed:', error);
+        }
+      }
+    };
+  }, [downloadUrl]);
+
+  // Image state cleanup with component lifecycle protection
+  useEffect(() => {
+    return () => {
+      if (isMountedRef.current && generatedImage) {
+        setGeneratedImage('');
+      }
+    };
+  }, [generatedImage]);
+
+  // Cleanup when new image is generated
+  const handleNewImageGeneration = (imageData: string, newDownloadUrl: string, generationTime?: number) => {
+    // Don't process if component is unmounting
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    // Clean up previous URLs
+    if (downloadUrl) {
+      try {
+        revokeDownloadUrl(downloadUrl);
+      } catch (error) {
+        console.warn('Previous URL cleanup failed:', error);
+      }
+    }
+    
+    setGeneratedImage(imageData);
+    setDownloadUrl(newDownloadUrl);
+    setImageGenerationTime(generationTime || 0);
+  };
   const { copyToClipboard } = useClipboard();
   const { address } = useAccount();
 
@@ -70,29 +140,79 @@ export const PostCreationShare = ({
   };
 
   const handleDownloadImage = () => {
-    if (!downloadUrl) {
-      toast.error('No image available to download');
+    // Check component state before proceeding
+    if (!isMountedRef.current || !downloadUrl) {
+      if (!downloadUrl) {
+        toast.error('No image available to download');
+      }
       return;
     }
     
+    // Use safer download approach with enhanced error protection
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = `kuri-circle-${market.address.slice(0,8)}-${selectedTemplate}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    link.style.display = 'none';
+    link.style.position = 'absolute';
+    link.style.left = '-9999px';
     
-    toast.success('Celebration image downloaded!');
+    // Enhanced DOM manipulation with multiple safety checks
+    try {
+      // Double-check component is still mounted before DOM operations
+      if (!isMountedRef.current) {
+        return;
+      }
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // Use multiple cleanup strategies with extended delay
+      const cleanupLink = () => {
+        try {
+          // Check if component is still mounted and link still exists
+          if (isMountedRef.current && link && link.parentNode === document.body) {
+            document.body.removeChild(link);
+          }
+        } catch (cleanupError) {
+          console.warn('Link cleanup failed:', cleanupError);
+          // Additional cleanup attempt
+          try {
+            if (link && link.remove) {
+              link.remove();
+            }
+          } catch (removeError) {
+            console.warn('Link remove failed:', removeError);
+          }
+        }
+      };
+      
+      // Use requestAnimationFrame for better timing
+      requestAnimationFrame(() => {
+        setTimeout(cleanupLink, 150);
+      });
+      
+    } catch (error) {
+      console.warn('Download link creation failed:', error);
+      // Fallback: try direct download
+      if (isMountedRef.current) {
+        window.open(downloadUrl, '_blank');
+      }
+    }
     
-    // Enhanced analytics tracking
-    trackEvent('celebration_image_downloaded', {
-      template: selectedTemplate,
-      market_address: market.address,
-      participant_count: market.totalParticipants,
-      interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
-      generation_time: imageGenerationTime,
-      source: 'post_creation'
-    });
+    // Only show success if component is still mounted
+    if (isMountedRef.current) {
+      toast.success('Celebration image downloaded!');
+      
+      // Enhanced analytics tracking
+      trackEvent('celebration_image_downloaded', {
+        template: selectedTemplate,
+        market_address: market.address,
+        participant_count: market.totalParticipants,
+        interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
+        generation_time: imageGenerationTime,
+        source: 'post_creation'
+      });
+    }
   };
 
   const handleShareImage = async () => {
@@ -166,38 +286,39 @@ export const PostCreationShare = ({
 
 
   const modalContent = (
-    <>
-      {/* Overlay */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 999999
-        }}
-        onClick={onClose}
-      />
-      
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 999999999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(4px)',
+        padding: '16px'
+      }}
+      onClick={handleBackdropClick}
+    >
       {/* Modal Content */}
       <div 
-        className="fixed inset-4 flex items-center justify-center z-[9999999]"
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '400px',
+          maxHeight: '90vh',
+          backgroundColor: 'rgba(245, 245, 220, 0.95)',
+          border: '1px solid rgba(184, 134, 11, 0.2)',
+          borderRadius: '12px',
+          padding: '12px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          overflowY: 'auto'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className="w-[calc(100vw-32px)] xs:w-[calc(100vw-48px)] sm:w-[90%] sm:max-w-[400px] max-h-[calc(100vh-32px)] overflow-y-auto"
-          style={{
-            backgroundColor: 'rgba(245, 245, 220, 0.95)',
-            border: '1px solid rgba(184, 134, 11, 0.2)',
-            borderRadius: '12px',
-            padding: '12px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
           <div className="flex flex-col gap-2 text-center mb-4">
             <h2 className="text-lg xs:text-xl sm:text-2xl font-extrabold text-[#C84E31] leading-tight">
               Circle Created Successfully!
@@ -395,10 +516,14 @@ export const PostCreationShare = ({
             View Circle
           </Button>
         </motion.div>
-        </div>
       </div>
-    </>
+    </div>
   );
 
-  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
+  // Simple portal rendering to document.body
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(modalContent, document.body);
 };
