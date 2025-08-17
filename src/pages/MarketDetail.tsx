@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useKuriCore, KuriState } from "../hooks/contracts/useKuriCore";
 import { KuriState as GraphQLKuriState } from "../graphql/types";
@@ -160,6 +160,7 @@ export default function MarketDetail() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [hasUserClaimed, setHasUserClaimed] = useState<boolean | null>(null);
 
   const { requireProfile } = useProfileRequired({
     strict: false,
@@ -188,6 +189,7 @@ export default function MarketDetail() {
     getMemberStatus,
     fetchMarketData,
     checkPaymentStatusIfMember, // 🔥 NEW: Explicit payment status check
+    checkHasClaimed,
   } = useKuriCore(address as `0x${string}`);
 
   // Fetch creator's profile
@@ -268,6 +270,44 @@ export default function MarketDetail() {
     checkPaymentStatus();
   }, [account.address, marketData?.state, checkPaymentStatusIfMember]);
 
+  // Check claim status when user is a winner
+  useEffect(() => {
+    const checkUserClaimStatus = async () => {
+      if (!account.address || !currentWinner || !address) {
+        setHasUserClaimed(null);
+        return;
+      }
+
+      // Only check if the current user is the winner
+      const isWinner = currentWinner.winner.toLowerCase() === account.address.toLowerCase();
+      if (!isWinner) {
+        setHasUserClaimed(null);
+        return;
+      }
+
+      try {
+        const claimed = await checkHasClaimed(account.address);
+        setHasUserClaimed(claimed);
+      } catch (err) {
+        console.error("Error checking claim status:", err);
+        setHasUserClaimed(null);
+      }
+    };
+
+    checkUserClaimStatus();
+  }, [account.address, currentWinner, checkHasClaimed, address]);
+
+  // Callback to refresh claim status after successful claim
+  const handleClaimSuccess = useCallback(async () => {
+    if (!account.address) return;
+    
+    try {
+      const claimed = await checkHasClaimed(account.address);
+      setHasUserClaimed(claimed);
+    } catch (err) {
+      console.error("Error refreshing claim status:", err);
+    }
+  }, [account.address, checkHasClaimed]);
 
   // Check if user is creator
   const isCreator = useMemo(() => {
@@ -299,6 +339,25 @@ export default function MarketDetail() {
     if (launchPeriodEnded) return "Launch period completed";
     return "Waiting for more members or launch period end";
   }, [marketData]);
+
+  // Determine if claim card should be visible
+  const shouldShowClaimCard = useMemo(() => {
+    if (!currentWinner || !account.address) return false;
+    
+    // Check if the current user is the winner
+    const isWinner = currentWinner.winner.toLowerCase() === account.address.toLowerCase();
+    if (!isWinner) return false;
+
+    // Check if market is active and raffle time has passed
+    if (marketData?.state !== KuriState.ACTIVE) return false;
+    const nextRaffleTime = new Date(Number(marketData?.nexRaffleTime) * 1000);
+    const now = new Date();
+    const isRaffleDue = nextRaffleTime <= now;
+    if (!isRaffleDue) return false;
+
+    // Only show if user hasn't claimed yet
+    return hasUserClaimed === false;
+  }, [currentWinner, account.address, marketData?.state, marketData?.nexRaffleTime, hasUserClaimed]);
 
   // Check if market is full
   const isMarketFull = useMemo(() => {
@@ -1378,8 +1437,8 @@ export default function MarketDetail() {
                       </div>
                     </div>
 
-                    {/* Action Cards Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Action Cards Grid - Dynamic layout based on visible cards */}
+                    <div className={`grid grid-cols-1 ${shouldShowClaimCard ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} gap-4 sm:gap-6`}>
                       {/* Deposit Card */}
                       <motion.div
                         initial={{ opacity: 0, x: -20 }}
@@ -1396,21 +1455,24 @@ export default function MarketDetail() {
                         </div>
                       </motion.div>
 
-                      {/* Claim Card */}
-                      <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1.4 }}
-                        className="group relative"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--forest))]/10 to-[hsl(var(--gold))]/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-                        <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-4 sm:p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
-                          <ClaimInterface
-                            marketData={marketData}
-                            kuriAddress={address as `0x${string}`}
-                          />
-                        </div>
-                      </motion.div>
+                      {/* Claim Card - Only show to winners who haven't claimed */}
+                      {shouldShowClaimCard && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.4 }}
+                          className="group relative"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--forest))]/10 to-[hsl(var(--gold))]/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-4 sm:p-6 shadow-lg border border-[hsl(var(--border))]/30 hover:shadow-xl transition-all duration-300">
+                            <ClaimInterface
+                              marketData={marketData}
+                              kuriAddress={address as `0x${string}`}
+                              onClaimSuccess={handleClaimSuccess}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   </motion.div>
                 )}

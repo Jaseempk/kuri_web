@@ -25,11 +25,13 @@ interface KuriData {
 interface ClaimInterfaceProps {
   marketData: KuriData;
   kuriAddress: `0x${string}`;
+  onClaimSuccess?: () => void;
 }
 
 export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
   marketData,
   kuriAddress,
+  onClaimSuccess,
 }) => {
   const { claimKuriAmount, isLoading, error, checkPaymentStatusIfMember } =
     useKuriCore(kuriAddress);
@@ -55,6 +57,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
 
     try {
       await claimKuriAmount(currentInterval);
+      onClaimSuccess?.();
     } catch (err) {
       console.error("Claim failed:", err);
     }

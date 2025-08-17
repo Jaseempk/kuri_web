@@ -618,6 +618,27 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     [kuriAddress]
   );
 
+  // Check if user has claimed for their winnings
+  const checkHasClaimed = useCallback(
+    async (userAddress: `0x${string}`) => {
+      if (!kuriAddress) return false;
+
+      try {
+        const claimed = (await readContract(config, {
+          address: kuriAddress,
+          abi: KuriCoreABI,
+          functionName: "hasClaimed",
+          args: [userAddress],
+        })) as boolean;
+        return claimed;
+      } catch (error) {
+        console.error("Failed to check claim status:", error);
+        return false;
+      }
+    },
+    [kuriAddress]
+  );
+
   return {
     // Market data
     marketData,
@@ -648,6 +669,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     checkUserBalance,
     refreshUserData,
     checkPaymentStatusIfMember, // Add the new method to the return object
+    checkHasClaimed,
 
     // Loading states
     isRequesting,
