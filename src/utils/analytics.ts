@@ -64,6 +64,12 @@ export interface AnalyticsEvents {
     source: string;
   };
 
+  // Post creation modal events
+  post_creation_link_copied: {
+    market_address: string;
+    source: string;
+  };
+
   // User interaction events
   wallet_connected: {
     wallet_type: string;

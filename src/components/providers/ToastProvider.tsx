@@ -9,6 +9,7 @@ export function ToastProvider() {
           background: "hsl(var(--background))",
           color: "hsl(var(--foreground))",
           border: "1px solid hsl(var(--border))",
+          zIndex: 9999,
         },
       }}
     />

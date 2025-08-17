@@ -1,6 +1,3 @@
-// Export main components
-export { CelebrationImageGenerator } from './CelebrationImageGenerator';
-
 // Export types
 export type {
   ProcessedMarketData,

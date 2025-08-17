@@ -9,6 +9,7 @@ import { Web3Provider } from "./providers/Web3Provider";
 import { ToastProvider } from "./components/providers/ToastProvider";
 import { FarcasterProvider } from "./contexts/FarcasterContext";
 import { FarcasterAwareLayout } from "./components/layouts/FarcasterAwareLayout";
+import { PostCreationModalProvider } from "./components/modals/PostCreationModalProvider";
 import { ApolloProvider } from "./providers/ApolloProvider";
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { InstallPrompt } from "./components/InstallPrompt";
@@ -60,8 +61,10 @@ function App() {
           <Analytics debug={false} />
           <NetworkStatus />
           <Router future={{ v7_relativeSplatPath: true }}>
-            <NotificationHandler />
-            <RoutesWithAnalytics />
+            <PostCreationModalProvider>
+              <NotificationHandler />
+              <RoutesWithAnalytics />
+            </PostCreationModalProvider>
           </Router>
           <InstallPrompt />
           <FloatingNotificationPrompt />

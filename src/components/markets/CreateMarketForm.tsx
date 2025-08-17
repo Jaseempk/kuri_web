@@ -8,8 +8,6 @@ import { toast } from "sonner";
 import { sanitizeInput } from "../../utils/sanitize";
 import { validateImageFile } from "../../utils/fileValidation";
 import { Confetti } from "../ui/Confetti";
-// import { PostCreationShare } from "./PostCreationShare";
-// import { useNavigate } from "react-router-dom";
 import { trackMarketCreation, trackError } from "../../utils/analytics";
 import { apiClient } from "../../lib/apiClient";
 import { formatErrorForUser } from "../../utils/apiErrors";
@@ -269,8 +267,9 @@ export const CreateMarketForm = ({
       // Call success callback with market data
       onSuccess?.(newMarket);
 
-      // Close the form
-      onClose?.();
+      // NOTE: Removed onClose() call to fix circular dependency
+      // Let parent component (MarketList) handle modal lifecycle
+      // Modal will close naturally through user interaction
     } catch (err) {
       // Track market creation failure
       trackError(

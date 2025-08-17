@@ -15,7 +15,7 @@ import { apiClient } from "../lib/apiClient";
 import { MarketMetadata } from "../components/markets/MarketCard";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useNavigate } from "react-router-dom";
-import { PostCreationShare } from "../components/markets/PostCreationShare";
+import { usePostCreationShareReplacement } from "../components/modals/PostCreationModalProvider";
 import { useUSDCBalances } from "../hooks/useUSDCBalances";
 import { getAccount } from "@wagmi/core";
 import { config } from "../config/wagmi";
@@ -188,8 +188,13 @@ export default function MarketList() {
     totalParticipants: 0,
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [createdMarket, setCreatedMarket] = useState<any>(null);
+  const { 
+    showShareModal, 
+    onSuccess, 
+    onClose, 
+    onViewMarket,
+    setShowShareModal 
+  } = usePostCreationShareReplacement();
   const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { requireProfile } = useProfileRequired({
@@ -393,14 +398,14 @@ export default function MarketList() {
   };
 
   const handleMarketCreated = (market: any) => {
-    // Set the created market and close the create form
-    setCreatedMarket(market);
+    // The new system handles everything automatically
+    onSuccess(market);
+    
+    // Close the create form (since CreateMarketForm no longer closes itself)
     setShowCreateForm(false);
-
-    // Show share modal
-    setShowShareModal(true);
-
-    // Refresh will happen when share modal closes
+    
+    // Refresh market data (keep existing refetch logic)
+    refetch();
   };
 
   // Handle user actions that require data refresh
@@ -676,23 +681,7 @@ export default function MarketList() {
         </div>
       </div>
 
-      {/* Modal rendered outside the main container */}
-      {showShareModal && createdMarket && (
-        <PostCreationShare
-          market={createdMarket}
-          onClose={() => {
-            setShowShareModal(false);
-            setCreatedMarket(null);
-            refetch(); // Refresh market data after modal closes
-          }}
-          onViewMarket={() => {
-            setShowShareModal(false);
-            setCreatedMarket(null);
-            refetch(); // Refresh market data before navigation
-            navigate(`/markets/${createdMarket.address}`);
-          }}
-        />
-      )}
+      {/* New modal renders automatically through PostCreationModalProvider */}
     </>
   );
 }
