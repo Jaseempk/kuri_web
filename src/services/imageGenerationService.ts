@@ -48,7 +48,7 @@ export class ImageGenerationService {
     try {
       // Create worker with correct path for Vite build system
       this.worker = new Worker(
-        new URL('../../workers/imageGenerator.worker.ts', import.meta.url),
+        new URL('../workers/imageGenerator.worker.ts', import.meta.url),
         { type: 'module' }
       );
 
