@@ -233,44 +233,111 @@ export class ImageGenerationService {
     template: TemplateType,
     userAddress: string
   ): Promise<ImageGenerationResult> {
-    // Import fabric.js and run generation on main thread
-    const fabric = await import('fabric');
+    const startTime = Date.now();
     
     trackEvent('celebration_image_fallback_used', {
       template,
       market_address: market.address,
-      reason: 'worker_not_supported',
+      reason: 'worker_fallback_requested',
       source: 'post_creation_service',
     });
 
-    // This would contain the same logic as the worker but running on main thread
-    // For now, return a simple placeholder
+    // Emit progress events to match worker behavior
+    eventBus.emit('image:generate-progress', {
+      progress: 20,
+      stage: 'Initializing fallback generation...',
+    });
+
+    // Small delay to show progress
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    eventBus.emit('image:generate-progress', {
+      progress: 50,
+      stage: 'Creating canvas...',
+    });
+
+    // Create canvas with template-specific styling
     const canvas = document.createElement('canvas');
     canvas.width = 800;
     canvas.height = 500;
     const ctx = canvas.getContext('2d')!;
     
-    // Simple fallback rendering
-    ctx.fillStyle = '#8B6F47';
-    ctx.fillRect(0, 0, 800, 500);
-    ctx.fillStyle = '#F9F5F1';
-    ctx.font = '48px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🎉 Circle Created!', 400, 150);
-    ctx.font = '24px Inter, sans-serif';
-    ctx.fillText(market.name || 'New Savings Circle', 400, 250);
-    ctx.fillText(`${market.totalParticipants} Participants`, 400, 300);
+    // Template-specific rendering
+    switch (template) {
+      case 'hero':
+        // Hero template - party style
+        ctx.fillStyle = '#8B6F47'; // Terracotta background
+        ctx.fillRect(0, 0, 800, 500);
+        ctx.fillStyle = '#F9F5F1';
+        ctx.font = 'bold 48px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎉 Circle Created!', 400, 150);
+        ctx.font = '32px Inter, sans-serif';
+        ctx.fillText(market.name || 'New Savings Circle', 400, 220);
+        ctx.font = '24px Inter, sans-serif';
+        ctx.fillText(`${market.totalParticipants} Members • ${market.intervalType === 0 ? 'Weekly' : 'Monthly'}`, 400, 280);
+        ctx.fillText(`${market.kuriAmount} USDC Pool`, 400, 320);
+        break;
+        
+      case 'stats':
+        // Stats template - data focused
+        ctx.fillStyle = '#F9F5F1'; // Light background
+        ctx.fillRect(0, 0, 800, 500);
+        ctx.fillStyle = '#8B6F47';
+        ctx.font = 'bold 36px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('📊 Circle Statistics', 400, 100);
+        ctx.font = '24px Inter, sans-serif';
+        ctx.fillText(market.name || 'New Savings Circle', 400, 180);
+        ctx.font = '20px Inter, sans-serif';
+        ctx.fillText(`Members: ${market.totalParticipants}`, 400, 240);
+        ctx.fillText(`Pool: ${market.kuriAmount} USDC`, 400, 280);
+        ctx.fillText(`Frequency: ${market.intervalType === 0 ? 'Weekly' : 'Monthly'}`, 400, 320);
+        break;
+        
+      case 'minimal':
+        // Minimal template - clean design
+        ctx.fillStyle = '#FFFFFF'; // White background
+        ctx.fillRect(0, 0, 800, 500);
+        ctx.fillStyle = '#8B6F47';
+        ctx.font = '32px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('✨ Circle Created', 400, 200);
+        ctx.font = '20px Inter, sans-serif';
+        ctx.fillText(market.name || 'New Savings Circle', 400, 260);
+        ctx.font = '16px Inter, sans-serif';
+        ctx.fillStyle = '#666';
+        ctx.fillText(`${market.totalParticipants} members • ${market.kuriAmount} USDC`, 400, 300);
+        break;
+    }
+
+    eventBus.emit('image:generate-progress', {
+      progress: 90,
+      stage: 'Finalizing image...',
+    });
 
     const imageData = canvas.toDataURL('image/png');
-    const blob = new Blob([canvas.toDataURL('image/png').split(',')[1]], { 
-      type: 'image/png' 
+    
+    // Convert canvas to blob for download URL
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob!);
+      }, 'image/png');
     });
+    
     const downloadUrl = URL.createObjectURL(blob);
+
+    eventBus.emit('image:generate-progress', {
+      progress: 100,
+      stage: 'Complete',
+    });
+
+    const generationTime = Date.now() - startTime;
 
     return {
       imageData,
       downloadUrl,
-      generationTime: 100, // Fallback is typically faster
+      generationTime,
     };
   }
 }

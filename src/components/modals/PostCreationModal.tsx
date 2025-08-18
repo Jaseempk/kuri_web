@@ -28,6 +28,8 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const generationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Zustand store state
   const {
@@ -70,8 +72,28 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      // Cancel any ongoing generation
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (generationTimeoutRef.current) {
+        clearTimeout(generationTimeoutRef.current);
+      }
     };
   }, []);
+
+  // Helper function to cancel ongoing generation
+  const cancelCurrentGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    if (generationTimeoutRef.current) {
+      clearTimeout(generationTimeoutRef.current);
+      generationTimeoutRef.current = null;
+    }
+    setIsGeneratingImage(false);
+  };
 
   // Event bus subscriptions
   useEffect(() => {
@@ -103,12 +125,26 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
     };
   }, [on, setGeneratedImage]);
 
-  // Auto-generate image when modal opens or template changes
+  // Auto-generate image when modal opens or template changes (with debouncing)
   useEffect(() => {
-    if (isVisible && market && !generatedImage && !isGeneratingImage) {
-      handleGenerateImage();
+    if (isVisible && market && !generatedImage) {
+      // Cancel any existing generation
+      cancelCurrentGeneration();
+      
+      // Debounce template changes
+      generationTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current && !isGeneratingImage) {
+          handleGenerateImage();
+        }
+      }, 300); // 300ms debounce for template changes
+      
+      return () => {
+        if (generationTimeoutRef.current) {
+          clearTimeout(generationTimeoutRef.current);
+        }
+      };
     }
-  }, [isVisible, market, selectedTemplate, generatedImage, isGeneratingImage]);
+  }, [isVisible, market, selectedTemplate, generatedImage]);
 
   // Create portal container
   useEffect(() => {
@@ -126,6 +162,10 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
   const handleGenerateImage = async () => {
     if (!market || isGeneratingImage) return;
 
+    // Create new abort controller for this generation
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
     setIsGeneratingImage(true);
     setGenerationProgress(0);
     setGenerationStage('Initializing...');
@@ -134,17 +174,43 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
       const userAddress = '0x' + '1'.repeat(40); // Placeholder - get from actual wallet
       
       let result;
-      if (isWorkerSupported()) {
-        result = await generateImage(market, selectedTemplate, userAddress);
-      } else {
-        result = await generateImageFallback(market, selectedTemplate, userAddress);
+      
+      // Check if request was cancelled before proceeding
+      if (signal.aborted) return;
+      
+      // Skip worker entirely since it always fails - go directly to fallback
+      // This eliminates the confusing error notifications
+      result = await generateImageFallback(market, selectedTemplate, userAddress);
+
+      // Check if request was cancelled during generation
+      if (signal.aborted || !isMountedRef.current) {
+        return;
       }
 
-      // Success is handled by event bus subscription
+      // Handle success
+      if (result && result.imageData) {
+        setGeneratedImage(result.imageData, result.downloadUrl, result.generationTime);
+        setIsGeneratingImage(false);
+        
+        // Emit success event for consistency
+        emit('image:generate-complete', {
+          imageData: result.imageData,
+          downloadUrl: result.downloadUrl,
+          generationTime: result.generationTime,
+        });
+      }
     } catch (error) {
-      console.error('Image generation failed:', error);
-      toast.error('Failed to generate celebration image');
-      setIsGeneratingImage(false);
+      // Only show error if request wasn't cancelled
+      if (!signal.aborted && isMountedRef.current) {
+        console.error('Image generation failed:', error);
+        toast.error('Failed to generate celebration image');
+        setIsGeneratingImage(false);
+      }
+    } finally {
+      // Clean up abort controller
+      if (abortControllerRef.current === abortControllerRef.current) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -154,12 +220,17 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
   const handleTemplateChange = (template: TemplateType) => {
     if (template === selectedTemplate) return;
     
+    // Cancel any ongoing generation immediately
+    cancelCurrentGeneration();
+    
     setTemplate(template);
     
     // Clear existing image to trigger regeneration
     if (generatedImage) {
       setGeneratedImage('', '', 0);
     }
+    
+    // The useEffect will handle the debounced regeneration
   };
 
   /**
@@ -354,17 +425,6 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
           ref={containerRef}
           className="flex flex-col gap-2 text-center relative"
         >
-      {/* Close Button */}
-      <button
-        onClick={handleClose}
-        className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors group"
-        aria-label="Close modal"
-      >
-        <svg className="w-4 h-4 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
       {/* Header */}
       <div className="mb-4">
         <h2 className="text-lg xs:text-xl sm:text-2xl font-extrabold text-[#C84E31] leading-tight">

@@ -85,7 +85,8 @@ const FEATURES_DATA = [
     image: "/images/zeroInterest.jpg",
     alt: "Zero interest",
     title: "Zero-interest,\nZero-shame",
-    description: "No predatory fees or interest rates. Just people helping people achieve financial goals together.",
+    description:
+      "No predatory fees or interest rates. Just people helping people achieve financial goals together.",
     bgColor: "bg-[hsl(var(--sand))]",
     borderColor: "border-[hsl(var(--gold))]",
   },
@@ -94,7 +95,8 @@ const FEATURES_DATA = [
     image: "/images/trustvibe.jpg",
     alt: "Trust based",
     title: "Trust-based\nwith optional privacy",
-    description: "Built on community trust with flexible privacy options to suit your comfort level.",
+    description:
+      "Built on community trust with flexible privacy options to suit your comfort level.",
     bgColor: "bg-[hsl(var(--sand))]",
     borderColor: "border-[hsl(var(--gold))]",
   },
@@ -103,7 +105,8 @@ const FEATURES_DATA = [
     image: "/images/communityvibe.jpg",
     alt: "Community owned",
     title: "Community-\nowned vibe",
-    description: "Created by and for communities, with decisions made collectively by members.",
+    description:
+      "Created by and for communities, with decisions made collectively by members.",
     bgColor: "bg-[hsl(var(--sand))]",
     borderColor: "border-[hsl(var(--gold))]",
   },
@@ -112,7 +115,8 @@ const FEATURES_DATA = [
     image: "/images/fairplay.jpg",
     alt: "Fair raffles",
     title: "Fair, verifiable\nraffles",
-    description: "Transparent selection process ensures everyone gets their turn, verified on blockchains trustless.",
+    description:
+      "Transparent selection process ensures everyone gets their turn, verified on blockchains trustless.",
     bgColor: "bg-[hsl(var(--terracotta))]",
     borderColor: "border-[hsl(var(--terracotta))]",
   },
@@ -319,7 +323,9 @@ function App() {
 
   // Helper function for features carousel calculations
   const getFeatureCardWidth = () => {
-    return featuresCarouselRef.current ? featuresCarouselRef.current.scrollWidth / 6 : 0;
+    return featuresCarouselRef.current
+      ? featuresCarouselRef.current.scrollWidth / 6
+      : 0;
   };
 
   // Optimized features carousel navigation
@@ -328,51 +334,54 @@ function App() {
       const actualIndex = index + 1; // Account for duplicate at start
       featuresCarouselRef.current.scrollTo({
         left: getFeatureCardWidth() * actualIndex,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
       setFeaturesIndex(index);
     }
   };
 
   const nextFeature = () => scrollToFeature((featuresIndex + 1) % 4);
-  const prevFeature = () => scrollToFeature(featuresIndex === 0 ? 3 : featuresIndex - 1);
+  const prevFeature = () =>
+    scrollToFeature(featuresIndex === 0 ? 3 : featuresIndex - 1);
 
   // Streamlined scroll handler with boundary management
   const handleFeaturesScroll = useCallback(() => {
     if (!featuresCarouselRef.current) return;
-    
+
     const cardWidth = getFeatureCardWidth();
     const scrollLeft = featuresCarouselRef.current.scrollLeft;
     const currentSlide = Math.round(scrollLeft / cardWidth);
-    
+
     // Clear existing timeout
     if (featuresScrollTimeoutRef.current) {
       clearTimeout(featuresScrollTimeoutRef.current);
     }
-    
+
     // Update index for normal slides
     if (currentSlide > 0 && currentSlide < 5) {
       setFeaturesIndex(currentSlide - 1);
     }
-    
+
     // Handle boundary transitions on scroll end
     featuresScrollTimeoutRef.current = setTimeout(() => {
       if (!featuresCarouselRef.current) return;
-      
-      const finalSlide = Math.round(featuresCarouselRef.current.scrollLeft / cardWidth);
-      
+
+      const finalSlide = Math.round(
+        featuresCarouselRef.current.scrollLeft / cardWidth
+      );
+
       if (finalSlide === 0) {
         // Jump from duplicate last to real last
         featuresCarouselRef.current.scrollTo({
           left: cardWidth * 4,
-          behavior: 'auto'
+          behavior: "auto",
         });
         setFeaturesIndex(3);
       } else if (finalSlide === 5) {
         // Jump from duplicate first to real first
         featuresCarouselRef.current.scrollTo({
           left: cardWidth * 1,
-          behavior: 'auto'
+          behavior: "auto",
         });
         setFeaturesIndex(0);
       }
@@ -385,11 +394,11 @@ function App() {
       if (featuresCarouselRef.current) {
         featuresCarouselRef.current.scrollTo({
           left: getFeatureCardWidth() * 1,
-          behavior: 'auto'
+          behavior: "auto",
         });
       }
     }, 100);
-    
+
     return () => {
       clearTimeout(timer);
       if (featuresScrollTimeoutRef.current) {
@@ -579,9 +588,7 @@ function App() {
                 transition={{ duration: 0.6, delay: 0.7 }}
               >
                 {locationLoading ? (
-                  <span className="animate-pulse">
-                    Loading personalized content...
-                  </span>
+                  <span className="animate-pulse">Loading content...</span>
                 ) : (
                   localizedContent.description
                 )}
@@ -830,7 +837,9 @@ function App() {
                 transition={{ duration: 0.6, delay: 0.1 * (index + 1) }}
                 viewport={{ once: true }}
               >
-                <div className={`w-28 h-28 rounded-full ${feature.bgColor} border-2 ${feature.borderColor} flex items-center justify-center mb-6 shadow-md overflow-hidden`}>
+                <div
+                  className={`w-28 h-28 rounded-full ${feature.bgColor} border-2 ${feature.borderColor} flex items-center justify-center mb-6 shadow-md overflow-hidden`}
+                >
                   <img
                     src={feature.image}
                     alt={feature.alt}
@@ -838,16 +847,14 @@ function App() {
                   />
                 </div>
                 <h3 className="text-2xl font-sans font-medium mb-3">
-                  {feature.title.split('\n').map((line, i) => (
+                  {feature.title.split("\n").map((line, i) => (
                     <span key={i}>
                       {line}
-                      {i < feature.title.split('\n').length - 1 && <br />}
+                      {i < feature.title.split("\n").length - 1 && <br />}
                     </span>
                   ))}
                 </h3>
-                <p className="text-muted-foreground">
-                  {feature.description}
-                </p>
+                <p className="text-muted-foreground">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -871,31 +878,38 @@ function App() {
             </button>
 
             {/* Carousel Container */}
-            <div 
+            <div
               ref={featuresCarouselRef}
               onScroll={handleFeaturesScroll}
               className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory gap-4 px-8"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {/* Create circular carousel with duplicates: [last, ...features, first] */}
               {[
                 FEATURES_DATA[3], // Duplicate of last slide at beginning
-                ...FEATURES_DATA,  // All original slides
-                FEATURES_DATA[0]   // Duplicate of first slide at end
+                ...FEATURES_DATA, // All original slides
+                FEATURES_DATA[0], // Duplicate of first slide at end
               ].map((feature, slideIndex) => {
                 // Determine if this is a duplicate slide for animation purposes
                 const isDuplicate = slideIndex === 0 || slideIndex === 5;
-                
+
                 return (
                   <motion.div
                     key={`${feature.id}-${slideIndex}`}
                     className="flex-none w-[280px] snap-center flex flex-col items-center text-center py-4"
-                    initial={isDuplicate ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                    initial={
+                      isDuplicate ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
+                    }
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: isDuplicate ? 0 : 0.6, delay: isDuplicate ? 0 : 0.1 }}
+                    transition={{
+                      duration: isDuplicate ? 0 : 0.6,
+                      delay: isDuplicate ? 0 : 0.1,
+                    }}
                     viewport={{ once: true }}
                   >
-                    <div className={`w-24 h-24 rounded-full ${feature.bgColor} border-2 ${feature.borderColor} flex items-center justify-center mb-4 shadow-md overflow-hidden`}>
+                    <div
+                      className={`w-24 h-24 rounded-full ${feature.bgColor} border-2 ${feature.borderColor} flex items-center justify-center mb-4 shadow-md overflow-hidden`}
+                    >
                       <img
                         src={feature.image}
                         alt={feature.alt}
@@ -903,10 +917,10 @@ function App() {
                       />
                     </div>
                     <h3 className="text-xl font-sans font-medium mb-3 px-2">
-                      {feature.title.split('\n').map((line, i) => (
+                      {feature.title.split("\n").map((line, i) => (
                         <span key={i}>
                           {line}
-                          {i < feature.title.split('\n').length - 1 && <br />}
+                          {i < feature.title.split("\n").length - 1 && <br />}
                         </span>
                       ))}
                     </h3>
@@ -1695,7 +1709,7 @@ function App() {
                 </a>
               </div>
             </div>
-            
+
             {/* Desktop: Original horizontal layout */}
             <div className="hidden md:flex md:flex-row justify-between items-center">
               <p className="text-sm text-white/80">
