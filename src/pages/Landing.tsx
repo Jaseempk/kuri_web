@@ -417,7 +417,7 @@ function App() {
             <div className="hidden md:flex items-center space-x-6">
               <button
                 onClick={() => scrollToSection("circles")}
-                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
+                className="text-white hover:text-black transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Live Circles section"
               >
                 Live Circles
@@ -425,7 +425,7 @@ function App() {
               </button>
               <button
                 onClick={() => scrollToSection("about")}
-                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
+                className="text-white hover:text-black transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to About section"
               >
                 About
@@ -433,7 +433,7 @@ function App() {
               </button>
               <button
                 onClick={() => scrollToSection("how-it-works")}
-                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
+                className="text-white hover:text-black transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to How It Works section"
               >
                 How It Works
@@ -441,7 +441,7 @@ function App() {
               </button>
               <button
                 onClick={() => scrollToSection("why-its-special")}
-                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
+                className="text-white hover:text-black transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Why It's Special section"
               >
                 Why It's Special
@@ -449,7 +449,7 @@ function App() {
               </button>
               <button
                 onClick={() => scrollToSection("testimonials")}
-                className="text-white hover:text-[hsl(var(--gold))] transition-all font-medium drop-shadow-sm cursor-pointer relative group"
+                className="text-white hover:text-black transition-all font-medium drop-shadow-sm cursor-pointer relative group"
                 aria-label="Navigate to Testimonials section"
               >
                 Testimonials
@@ -1509,7 +1509,11 @@ function App() {
           {/* Mobile: Logo and Social Icons */}
           <div className="md:hidden text-center mb-6">
             <div className="flex justify-center items-center mb-4">
-              <Logo variant="landing" />
+              <img
+                src="/images/KuriBlackLogo.png"
+                alt="Kuri"
+                className="h-28 w-28 object-contain"
+              />
             </div>
             <p className="text-white/80 text-sm mb-4 px-4">
               Empowering communities through collaborative finance.
@@ -1598,7 +1602,11 @@ function App() {
           <div className="hidden md:grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center mb-6">
-                <Logo variant="landing" />
+                <img
+                  src="/images/KuriBlackLogo.png"
+                  alt="Kuri"
+                  className="h-28 w-28 object-contain"
+                />
               </div>
               <p className="text-white/80 max-w-md mb-6">
                 Empowering communities through collaborative finance. Join the
