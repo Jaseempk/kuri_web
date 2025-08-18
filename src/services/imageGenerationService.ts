@@ -5,6 +5,7 @@
  * while maintaining integration with existing analytics and error handling.
  */
 
+import { useEffect, useRef } from 'react';
 import { KuriMarket } from '../types/market';
 import { TemplateType } from '../stores/postCreationStore';
 import { eventBus } from '../utils/eventBus';
@@ -16,15 +17,12 @@ interface ImageGenerationResult {
   generationTime: number;
 }
 
-interface ImageGenerationProgress {
-  progress: number;
-  stage: string;
-}
 
 export class ImageGenerationService {
   private static instance: ImageGenerationService;
   private worker: Worker | null = null;
   private isInitialized = false;
+  private activeRequests = new Map<string, AbortController>();
 
   private constructor() {
     // Singleton pattern
@@ -73,115 +71,178 @@ export class ImageGenerationService {
     template: TemplateType,
     userAddress: string
   ): Promise<ImageGenerationResult> {
-    await this.initializeWorker();
+    // Generate unique request ID
+    const requestId = `${market.address}-${template}-${Date.now()}`;
+    const abortController = new AbortController();
+    
+    // Store the abort controller for this request
+    this.activeRequests.set(requestId, abortController);
 
-    if (!this.worker) {
-      throw new Error('Worker not initialized');
-    }
+    try {
+      await this.initializeWorker();
 
-    // Track generation start
-    trackEvent('celebration_image_generation_started', {
-      template,
-      market_address: market.address,
-      participant_count: market.totalParticipants,
-      interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
-      source: 'post_creation_service',
-    });
+      if (!this.worker) {
+        throw new Error('Worker not initialized');
+      }
 
-    // Emit event bus event
-    eventBus.emit('image:generate-start', {
-      market,
-      template,
-      userAddress,
-    });
+      // Check if already aborted
+      if (abortController.signal.aborted) {
+        throw new Error('Request was cancelled');
+      }
 
-    return new Promise((resolve, reject) => {
-      const startTime = Date.now();
-      
-      // Set up one-time message handlers for this specific generation
-      const handleMessage = (e: MessageEvent) => {
-        const { type, data } = e.data;
-
-        switch (type) {
-          case 'IMAGE_GENERATED':
-            this.worker?.removeEventListener('message', handleMessage);
-            
-            // Track successful generation
-            trackEvent('celebration_image_generated', {
-              template,
-              market_address: market.address,
-              participant_count: market.totalParticipants,
-              interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
-              generation_time: data.generationTime,
-              source: 'post_creation_service',
-            });
-
-            // Emit success event
-            eventBus.emit('image:generate-complete', {
-              imageData: data.imageData,
-              downloadUrl: data.downloadUrl,
-              generationTime: data.generationTime,
-            });
-
-            resolve(data);
-            break;
-
-          case 'IMAGE_ERROR':
-            this.worker?.removeEventListener('message', handleMessage);
-            
-            // Track error
-            trackEvent('celebration_image_generation_failed', {
-              template,
-              error_message: data.error,
-              market_address: market.address,
-              generation_time: Date.now() - startTime,
-              source: 'post_creation_service',
-            });
-
-            // Emit error event
-            eventBus.emit('image:generate-error', {
-              error: data.error,
-              template,
-            });
-
-            reject(new Error(data.error));
-            break;
-
-          case 'IMAGE_PROGRESS':
-            // Emit progress event
-            eventBus.emit('image:generate-progress', {
-              progress: data.progress,
-              stage: data.stage,
-            });
-            break;
-        }
-      };
-
-      this.worker?.addEventListener('message', handleMessage);
-
-      // Send generation request to worker
-      this.worker?.postMessage({
-        type: 'GENERATE_IMAGE',
-        data: {
-          market,
+      // Track generation start
+      try {
+        trackEvent('celebration_image_generation_started' as any, {
           template,
-          userAddress,
-          timestamp: Date.now(),
-        },
+          market_address: market.address,
+          participant_count: market.totalParticipants,
+          interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
+          source: 'post_creation_service',
+        });
+      } catch (analyticsError) {
+        console.warn('Analytics tracking failed:', analyticsError);
+      }
+
+      // Emit event bus event
+      eventBus.emit('image:generate-start', {
+        market,
+        template,
+        userAddress,
       });
 
-      // Set timeout to prevent hanging
-      setTimeout(() => {
-        this.worker?.removeEventListener('message', handleMessage);
-        reject(new Error('Image generation timeout'));
-      }, 30000); // 30 second timeout
-    });
+      return new Promise<ImageGenerationResult>((resolve, reject) => {
+        const startTime = Date.now();
+        let messageHandler: ((e: MessageEvent) => void) | null = null;
+        let timeoutId: NodeJS.Timeout | null = null;
+
+        // Cleanup function
+        const cleanup = () => {
+          if (messageHandler && this.worker) {
+            this.worker.removeEventListener('message', messageHandler);
+          }
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+          this.activeRequests.delete(requestId);
+        };
+
+        // Handle abort signal
+        const onAbort = () => {
+          cleanup();
+          reject(new Error('Image generation was cancelled'));
+        };
+
+        if (abortController.signal.aborted) {
+          onAbort();
+          return;
+        }
+
+        abortController.signal.addEventListener('abort', onAbort);
+        
+        // Set up message handler
+        messageHandler = (e: MessageEvent) => {
+          const { type, data, id } = e.data;
+
+          // Only handle messages for this specific request
+          if (id !== requestId) return;
+
+          switch (type) {
+            case 'IMAGE_GENERATED':
+              cleanup();
+              
+              // Track successful generation
+              try {
+                trackEvent('celebration_image_generated' as any, {
+                  template,
+                  market_address: market.address,
+                  participant_count: market.totalParticipants,
+                  interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
+                  generation_time: data.generationTime,
+                  source: 'post_creation_service',
+                });
+              } catch (analyticsError) {
+                console.warn('Analytics tracking failed:', analyticsError);
+              }
+
+              // Emit success event
+              eventBus.emit('image:generate-complete', {
+                imageData: data.imageData,
+                downloadUrl: data.downloadUrl,
+                generationTime: data.generationTime,
+              });
+
+              resolve(data);
+              break;
+
+            case 'IMAGE_ERROR':
+              cleanup();
+              
+              // Track error
+              try {
+                trackEvent('celebration_image_generation_failed' as any, {
+                  template,
+                  error_message: data.error,
+                  market_address: market.address,
+                  generation_time: Date.now() - startTime,
+                  source: 'post_creation_service',
+                });
+              } catch (analyticsError) {
+                console.warn('Analytics tracking failed:', analyticsError);
+              }
+
+              // Emit error event
+              eventBus.emit('image:generate-error', {
+                error: data.error,
+                template,
+              });
+
+              reject(new Error(data.error));
+              break;
+
+            case 'IMAGE_PROGRESS':
+              // Only emit progress for non-aborted requests
+              if (!abortController.signal.aborted) {
+                eventBus.emit('image:generate-progress', {
+                  progress: data.progress,
+                  stage: data.stage,
+                });
+              }
+              break;
+          }
+        };
+
+        // Add message listener
+        this.worker!.addEventListener('message', messageHandler);
+
+        // Send generation request to worker
+        this.worker!.postMessage({
+          type: 'GENERATE_IMAGE',
+          id: requestId,
+          data: {
+            market,
+            template,
+            userAddress,
+            timestamp: Date.now(),
+          },
+        });
+
+        // Set timeout to prevent hanging
+        timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error('Image generation timeout'));
+        }, 30000); // 30 second timeout
+      });
+    } catch (error) {
+      // Clean up on any error
+      this.activeRequests.delete(requestId);
+      throw error;
+    }
   }
 
   /**
    * Handle worker messages
    */
-  private handleWorkerMessage(e: MessageEvent): void {
+  private handleWorkerMessage(_e: MessageEvent): void {
     // This is handled by the specific promise handlers in generateImage
     // This method is for any global worker message handling if needed
   }
@@ -192,12 +253,16 @@ export class ImageGenerationService {
   private handleWorkerError(error: ErrorEvent): void {
     console.error('Image generation worker error:', error);
     
-    trackEvent('image_generation_worker_error', {
-      error_message: error.message,
-      filename: error.filename,
-      line_number: error.lineno,
-      source: 'post_creation_service',
-    });
+    try {
+      trackEvent('image_generation_worker_error' as any, {
+        error_message: error.message,
+        filename: error.filename,
+        line_number: error.lineno,
+        source: 'post_creation_service',
+      });
+    } catch (analyticsError) {
+      console.warn('Analytics tracking failed:', analyticsError);
+    }
 
     // Emit error event
     eventBus.emit('image:generate-error', {
@@ -207,9 +272,35 @@ export class ImageGenerationService {
   }
 
   /**
+   * Cancel all active requests
+   */
+  public cancelAllRequests(): void {
+    for (const [_requestId, controller] of this.activeRequests) {
+      controller.abort();
+    }
+    this.activeRequests.clear();
+  }
+
+  /**
+   * Cancel a specific request
+   */
+  public cancelRequest(market: KuriMarket, template: TemplateType): void {
+    for (const [requestId, controller] of this.activeRequests) {
+      if (requestId.includes(market.address) && requestId.includes(template)) {
+        controller.abort();
+        this.activeRequests.delete(requestId);
+        break;
+      }
+    }
+  }
+
+  /**
    * Terminate the worker (cleanup)
    */
   public terminate(): void {
+    // Cancel all active requests first
+    this.cancelAllRequests();
+    
     if (this.worker) {
       this.worker.terminate();
       this.worker = null;
@@ -231,16 +322,20 @@ export class ImageGenerationService {
   public async generateImageFallback(
     market: KuriMarket,
     template: TemplateType,
-    userAddress: string
+    _userAddress: string
   ): Promise<ImageGenerationResult> {
     const startTime = Date.now();
     
-    trackEvent('celebration_image_fallback_used', {
-      template,
-      market_address: market.address,
-      reason: 'worker_fallback_requested',
-      source: 'post_creation_service',
-    });
+    try {
+      trackEvent('celebration_image_fallback_used' as any, {
+        template,
+        market_address: market.address,
+        reason: 'worker_fallback_requested',
+        source: 'post_creation_service',
+      });
+    } catch (analyticsError) {
+      console.warn('Analytics tracking failed:', analyticsError);
+    }
 
     // Emit progress events to match worker behavior
     eventBus.emit('image:generate-progress', {
@@ -319,9 +414,13 @@ export class ImageGenerationService {
     const imageData = canvas.toDataURL('image/png');
     
     // Convert canvas to blob for download URL
-    const blob = await new Promise<Blob>((resolve) => {
+    const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob((blob) => {
-        resolve(blob!);
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Failed to convert canvas to blob'));
+        }
       }, 'image/png');
     });
     
@@ -348,22 +447,64 @@ export const imageGenerationService = ImageGenerationService.getInstance();
 /**
  * React hook for image generation with automatic cleanup
  */
-import { useEffect, useRef } from 'react';
-
 export function useImageGeneration() {
   const serviceRef = useRef(imageGenerationService);
+  const currentRequestRef = useRef<{ market: KuriMarket; template: TemplateType } | null>(null);
 
   useEffect(() => {
-    // Cleanup on unmount
+    // Cleanup on unmount - cancel any active requests from this component
     return () => {
-      // Don't terminate worker on component unmount since it might be used by other components
-      // Worker termination should be handled at app level if needed
+      if (currentRequestRef.current) {
+        const { market, template } = currentRequestRef.current;
+        serviceRef.current.cancelRequest(market, template);
+      }
     };
   }, []);
 
+  const generateImage = async (
+    market: KuriMarket,
+    template: TemplateType,
+    userAddress: string
+  ): Promise<ImageGenerationResult> => {
+    // Cancel previous request from this component if any
+    if (currentRequestRef.current) {
+      const { market: prevMarket, template: prevTemplate } = currentRequestRef.current;
+      serviceRef.current.cancelRequest(prevMarket, prevTemplate);
+    }
+
+    // Store current request
+    currentRequestRef.current = { market, template };
+
+    try {
+      const result = await serviceRef.current.generateImage(market, template, userAddress);
+      // Clear current request on success
+      currentRequestRef.current = null;
+      return result;
+    } catch (error) {
+      // Clear current request on error
+      currentRequestRef.current = null;
+      throw error;
+    }
+  };
+
+  const generateImageFallback = async (
+    market: KuriMarket,
+    template: TemplateType,
+    userAddress: string
+  ): Promise<ImageGenerationResult> => {
+    return serviceRef.current.generateImageFallback(market, template, userAddress);
+  };
+
   return {
-    generateImage: serviceRef.current.generateImage.bind(serviceRef.current),
+    generateImage,
     isWorkerSupported: serviceRef.current.isWorkerSupported.bind(serviceRef.current),
-    generateImageFallback: serviceRef.current.generateImageFallback.bind(serviceRef.current),
+    generateImageFallback,
+    cancelCurrentRequest: () => {
+      if (currentRequestRef.current) {
+        const { market, template } = currentRequestRef.current;
+        serviceRef.current.cancelRequest(market, template);
+        currentRequestRef.current = null;
+      }
+    },
   };
 }

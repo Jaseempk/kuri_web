@@ -5,7 +5,7 @@
  * while managing all the underlying service coordination.
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostCreationStore } from '../stores/postCreationStore';
 import { KuriMarket } from '../types/market';
@@ -17,14 +17,26 @@ interface UsePostCreationModalOptions {
   autoNavigateToMarket?: boolean;
 }
 
+/**
+ * Safe analytics tracking that won't break the modal functionality
+ */
+const safeTrackEvent = (eventName: string, properties: Record<string, any>) => {
+  try {
+    trackEvent(eventName as any, properties);
+  } catch (error) {
+    console.warn('Analytics tracking failed:', error);
+  }
+};
+
 export function usePostCreationModal(options: UsePostCreationModalOptions = {}) {
   const navigate = useNavigate();
-  const optionsRef = useRef(options);
   
-  // Update options ref when they change
-  useEffect(() => {
-    optionsRef.current = options;
-  }, [options]);
+  // Memoize options to prevent unnecessary re-renders
+  const stableOptions = useMemo(() => options, [
+    options.onClose,
+    options.onViewMarket,
+    options.autoNavigateToMarket,
+  ]);
 
   const {
     showModal,
@@ -38,12 +50,17 @@ export function usePostCreationModal(options: UsePostCreationModalOptions = {}) 
    * Show the post-creation modal for a specific market
    */
   const show = useCallback((market: KuriMarket) => {
+    if (!market?.address) {
+      console.error('Invalid market data provided to show modal');
+      return;
+    }
+
     showModal(market);
     
-    // Track modal display
-    trackEvent('post_creation_modal_shown', {
+    // Track modal display with safe error handling
+    safeTrackEvent('post_creation_modal_shown', {
       market_address: market.address,
-      participant_count: market.totalParticipants,
+      participant_count: market.totalParticipants || 0,
       interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
       source: 'use_post_creation_modal',
     });
@@ -53,23 +70,28 @@ export function usePostCreationModal(options: UsePostCreationModalOptions = {}) 
    * Hide the modal with optional callback
    */
   const hide = useCallback(() => {
-    const currentMarket = usePostCreationStore.getState().market;
+    // Use the current market from the hook's state instead of direct store access
+    const currentMarket = market;
     
     hideModal();
     
     // Call onClose callback if provided
-    if (optionsRef.current.onClose) {
-      optionsRef.current.onClose();
+    if (stableOptions.onClose) {
+      try {
+        stableOptions.onClose();
+      } catch (error) {
+        console.error('onClose callback failed:', error);
+      }
     }
     
-    // Track modal close
-    if (currentMarket) {
-      trackEvent('post_creation_modal_closed', {
+    // Track modal close with safe error handling
+    if (currentMarket?.address) {
+      safeTrackEvent('post_creation_modal_closed', {
         market_address: currentMarket.address,
         source: 'use_post_creation_modal',
       });
     }
-  }, [hideModal]);
+  }, [hideModal, market, stableOptions]);
 
   /**
    * Navigate to market detail page
@@ -77,37 +99,50 @@ export function usePostCreationModal(options: UsePostCreationModalOptions = {}) 
   const viewMarket = useCallback((marketToView?: KuriMarket) => {
     const targetMarket = marketToView || market;
     
-    if (!targetMarket) {
-      console.warn('No market available to view');
+    if (!targetMarket?.address) {
+      console.warn('No valid market available to view');
       return;
     }
 
     // Call custom onViewMarket callback if provided
-    if (optionsRef.current.onViewMarket) {
-      optionsRef.current.onViewMarket(targetMarket);
-    } else if (optionsRef.current.autoNavigateToMarket !== false) {
+    if (stableOptions.onViewMarket) {
+      try {
+        stableOptions.onViewMarket(targetMarket);
+      } catch (error) {
+        console.error('onViewMarket callback failed:', error);
+      }
+    } else if (stableOptions.autoNavigateToMarket !== false) {
       // Default behavior: navigate to market detail page
-      navigate(`/markets/${targetMarket.address}`);
+      try {
+        navigate(`/markets/${targetMarket.address}`);
+      } catch (error) {
+        console.error('Navigation failed:', error);
+      }
     }
 
-    // Track navigation
-    trackEvent('post_creation_view_market_clicked', {
+    // Track navigation with safe error handling
+    safeTrackEvent('post_creation_view_market_clicked', {
       market_address: targetMarket.address,
       source: 'use_post_creation_modal',
     });
 
     // Hide modal after navigation
     hide();
-  }, [market, navigate, hide]);
+  }, [market, navigate, hide, stableOptions]);
 
   /**
    * Complete reset of modal state
    */
   const resetModal = useCallback(() => {
-    reset();
+    try {
+      reset();
+    } catch (error) {
+      console.error('Modal reset failed:', error);
+    }
   }, [reset]);
 
-  return {
+  // Memoize return value to prevent unnecessary re-renders
+  return useMemo(() => ({
     // State
     isVisible,
     market,
@@ -119,8 +154,8 @@ export function usePostCreationModal(options: UsePostCreationModalOptions = {}) 
     reset: resetModal,
     
     // Computed values
-    isReady: market !== null,
-  };
+    isReady: market !== null && market.address !== undefined,
+  }), [isVisible, market, show, hide, viewMarket, resetModal]);
 }
 
 /**
@@ -128,15 +163,21 @@ export function usePostCreationModal(options: UsePostCreationModalOptions = {}) 
  * Provides the exact interface needed to replace PostCreationShare
  */
 export function useMarketListPostCreation() {
-  const { show, hide, viewMarket } = usePostCreationModal({
+  const modalConfig = useMemo(() => ({
     autoNavigateToMarket: true,
-  });
+  }), []);
+
+  const { show, hide, viewMarket } = usePostCreationModal(modalConfig);
 
   /**
    * Handler for successful market creation
    * Matches the interface expected by CreateMarketForm
    */
   const handleMarketCreated = useCallback((market: KuriMarket) => {
+    if (!market) {
+      console.error('handleMarketCreated called with invalid market data');
+      return;
+    }
     show(market);
   }, [show]);
 
@@ -156,7 +197,7 @@ export function useMarketListPostCreation() {
     viewMarket();
   }, [viewMarket]);
 
-  return {
+  return useMemo(() => ({
     handleMarketCreated,
     handleModalClose,
     handleViewMarket,
@@ -164,7 +205,7 @@ export function useMarketListPostCreation() {
     onSuccess: handleMarketCreated,
     onClose: handleModalClose,
     onViewMarket: handleViewMarket,
-  };
+  }), [handleMarketCreated, handleModalClose, handleViewMarket]);
 }
 
 /**
@@ -173,8 +214,9 @@ export function useMarketListPostCreation() {
 export function usePostCreationModalListener() {
   const { isVisible, market } = usePostCreationStore();
   
-  return {
+  return useMemo(() => ({
     isModalVisible: isVisible,
     currentMarket: market,
-  };
+    isValidMarket: market !== null && market.address !== undefined,
+  }), [isVisible, market]);
 }
