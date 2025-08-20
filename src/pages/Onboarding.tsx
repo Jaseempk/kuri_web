@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -13,7 +13,8 @@ import { formatErrorForUser } from "../utils/apiErrors";
 export default function Onboarding() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { profile, updateProfile } = useUserProfile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");

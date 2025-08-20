@@ -4,11 +4,12 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { useUserProfile } from '../../hooks/useUserProfile';
-import { useAccount } from 'wagmi';
+import { useAccount } from '@getpara/react-sdk';
 
 export const PushPermissionPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { profile } = useUserProfile();
   const { isInitialized, permission, isSubscribed, requestPermission, isSupported, loading } = usePushNotifications();
 

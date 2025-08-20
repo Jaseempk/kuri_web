@@ -1,12 +1,19 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from 'vite-plugin-pwa';
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    global: 'globalThis',
+  },
   plugins: [
     react(),
+    nodePolyfills({
+      include: ["buffer", "crypto", "stream", "util"]
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icons/*.png', 'images/*.png', 'images/*.jpg'],
@@ -82,7 +89,12 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    exclude: ["lucide-react"],
+    exclude: ["lucide-react", "@getpara/cosmos-wallet-connectors"],
+  },
+  build: {
+    rollupOptions: {
+      external: ["@getpara/cosmos-wallet-connectors"],
+    },
   },
   resolve: {
     alias: {

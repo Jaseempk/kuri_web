@@ -11,7 +11,7 @@ import { ShareModal } from "../components/modals/ShareModal";
 import { ManageMembersDialog } from "../components/markets/ManageMembersDialog";
 import { DepositForm } from "../components/markets/DepositForm";
 import { ClaimInterface } from "../components/markets/ClaimInterface";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { getAccount } from "@wagmi/core";
 import { config } from "../config/wagmi";
 import { formatUnits } from "viem";
@@ -149,8 +149,9 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
-  const { address: userAddress } = useAccount();
-  const account = getAccount(config);
+  const paraAccount = useAccount();
+  const userAddress = paraAccount.embedded.wallets?.[0]?.address;
+  const wagmiAccount = getAccount(config);
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "activity" | "members"
@@ -239,9 +240,9 @@ export default function MarketDetail() {
   // Fetch membership status
   useEffect(() => {
     const fetchMemberStatus = async () => {
-      if (!account.address || !address) return;
+      if (!userAddress || !address) return;
       try {
-        const status = await getMemberStatus(account.address);
+        const status = await getMemberStatus(userAddress);
         setMembershipStatus(status ?? 0);
       } catch (err) {
         console.error("Error fetching member status:", err);
@@ -250,12 +251,12 @@ export default function MarketDetail() {
     };
 
     fetchMemberStatus();
-  }, [account.address, getMemberStatus, address]);
+  }, [userAddress, getMemberStatus, address]);
 
   // 🔥 NEW: Explicitly check payment status when needed (lazy loading)
   useEffect(() => {
     const checkPaymentStatus = async () => {
-      if (!account.address || !marketData) return;
+      if (!userAddress || !marketData) return;
 
       // Only check for ACTIVE markets
       if (marketData.state === 2) {
@@ -268,25 +269,25 @@ export default function MarketDetail() {
     };
 
     checkPaymentStatus();
-  }, [account.address, marketData?.state, checkPaymentStatusIfMember]);
+  }, [userAddress, marketData?.state, checkPaymentStatusIfMember]);
 
   // Check claim status when user is a winner
   useEffect(() => {
     const checkUserClaimStatus = async () => {
-      if (!account.address || !currentWinner || !address) {
+      if (!userAddress || !currentWinner || !address) {
         setHasUserClaimed(null);
         return;
       }
 
       // Only check if the current user is the winner
-      const isWinner = currentWinner.winner.toLowerCase() === account.address.toLowerCase();
+      const isWinner = currentWinner.winner.toLowerCase() === userAddress.toLowerCase();
       if (!isWinner) {
         setHasUserClaimed(null);
         return;
       }
 
       try {
-        const claimed = await checkHasClaimed(account.address);
+        const claimed = await checkHasClaimed(userAddress);
         setHasUserClaimed(claimed);
       } catch (err) {
         console.error("Error checking claim status:", err);
@@ -295,28 +296,28 @@ export default function MarketDetail() {
     };
 
     checkUserClaimStatus();
-  }, [account.address, currentWinner, checkHasClaimed, address]);
+  }, [userAddress, currentWinner, checkHasClaimed, address]);
 
   // Callback to refresh claim status after successful claim
   const handleClaimSuccess = useCallback(async () => {
-    if (!account.address) return;
+    if (!userAddress) return;
     
     try {
-      const claimed = await checkHasClaimed(account.address);
+      const claimed = await checkHasClaimed(userAddress);
       setHasUserClaimed(claimed);
     } catch (err) {
       console.error("Error refreshing claim status:", err);
     }
-  }, [account.address, checkHasClaimed]);
+  }, [userAddress, checkHasClaimed]);
 
   // Check if user is creator
   const isCreator = useMemo(() => {
     return (
       marketData &&
-      account.address &&
-      marketData.creator.toLowerCase() === account.address.toLowerCase()
+      userAddress &&
+      marketData.creator.toLowerCase() === userAddress.toLowerCase()
     );
-  }, [marketData, account.address]);
+  }, [marketData, userAddress]);
 
   // Check if market can be initialized - V1 Flexible Initialization
   const canInitialize = useMemo(() => {
@@ -342,10 +343,10 @@ export default function MarketDetail() {
 
   // Determine if claim card should be visible
   const shouldShowClaimCard = useMemo(() => {
-    if (!currentWinner || !account.address) return false;
+    if (!currentWinner || !userAddress) return false;
     
     // Check if the current user is the winner
-    const isWinner = currentWinner.winner.toLowerCase() === account.address.toLowerCase();
+    const isWinner = currentWinner.winner.toLowerCase() === userAddress.toLowerCase();
     if (!isWinner) return false;
 
     // Check if market is active and raffle time has passed
@@ -357,7 +358,7 @@ export default function MarketDetail() {
 
     // Only show if user hasn't claimed yet
     return hasUserClaimed === false;
-  }, [currentWinner, account.address, marketData?.state, marketData?.nexRaffleTime, hasUserClaimed]);
+  }, [currentWinner, userAddress, marketData?.state, marketData?.nexRaffleTime, hasUserClaimed]);
 
   // Check if market is full
   const isMarketFull = useMemo(() => {
@@ -370,7 +371,7 @@ export default function MarketDetail() {
 
   // Handle join request
   const handleJoinRequest = async () => {
-    if (!account.address) {
+    if (!userAddress) {
       toast.error("Please connect your wallet first");
       return;
     }
@@ -400,7 +401,7 @@ export default function MarketDetail() {
       }
 
       // Refresh membership status
-      const status = await getMemberStatus(account.address);
+      const status = await getMemberStatus(userAddress);
       setMembershipStatus(status ?? 0);
     } catch (err) {
       // Track join failure
@@ -422,7 +423,7 @@ export default function MarketDetail() {
 
   // Handle initialization
   const handleInitialize = async () => {
-    if (!account.address) {
+    if (!userAddress) {
       toast.error("Please connect your wallet first");
       return;
     }
@@ -460,11 +461,11 @@ export default function MarketDetail() {
 
   // Handle member action completion (refresh data)
   const handleMemberActionComplete = async () => {
-    if (!account.address) return;
+    if (!userAddress) return;
 
     try {
       // Refresh membership status
-      const status = await getMemberStatus(account.address);
+      const status = await getMemberStatus(userAddress);
       setMembershipStatus(status ?? 0);
       // Refresh market data to get updated participant counts
       await fetchMarketData();
@@ -521,7 +522,7 @@ export default function MarketDetail() {
   // Render action button
   const renderActionButton = () => {
     // Don't show action buttons when wallet is not connected
-    if (!account.address) {
+    if (!userAddress) {
       return (
         <motion.div>
           <Button

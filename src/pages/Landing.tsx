@@ -603,7 +603,7 @@ function App() {
                   className="bg-[#C84E31] text-white rounded-xl px-6 py-3 font-medium text-[17px] flex items-center gap-2.5 shadow-sm border-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C84E31]/20 group relative overflow-hidden"
                   onClick={() => navigate("/markets")}
                 >
-                  <span className="relative z-10">Get Started</span>
+                  <span className="relative z-10">Get Started with Email</span>
                   <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 relative z-10" />
                 </Button>
 
@@ -615,6 +615,16 @@ function App() {
                   <span className="relative z-10">Learn More</span>
                 </Button>
               </motion.div>
+              
+              {/* Para Email Authentication Message */}
+              <motion.p
+                className="text-sm text-gray-600 mt-4 max-w-md mx-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.1 }}
+              >
+                Join with just your email - no wallet installation needed. Secure biometric authentication powered by Para.
+              </motion.p>
             </motion.div>
 
             {/* Right image column with circular layers */}

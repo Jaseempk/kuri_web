@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { config } from "../../config/wagmi";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
@@ -124,7 +124,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   className,
 }) => {
   const navigate = useNavigate();
-  const { address } = useAccount();
+  const paraAccount = useAccount();
+  const address = paraAccount.embedded.wallets?.[0]?.address;
 
   // Only use KuriCore for active markets or if user is the creator
   const shouldUseCore = shouldUseKuriCore(market, address);
@@ -152,7 +153,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
-  const account = getAccount(config);
+  const wagmiAccount = getAccount(config);
 
   const { requireProfile } = useProfileRequired({
     strict: false,
@@ -211,9 +212,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   // Fetch membership status on mount and when account changes
   useEffect(() => {
     const fetchMemberStatus = async () => {
-      if (!account.address) return;
+      if (!address) return;
       try {
-        const status = await getMemberStatus(account.address);
+        const status = await getMemberStatus(address as `0x${string}`);
         setMembershipStatus(status ?? 0);
       } catch (err) {
         console.error("Error fetching member status:", err);
@@ -222,7 +223,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     };
 
     fetchMemberStatus();
-  }, [account.address, getMemberStatus]);
+  }, [address, getMemberStatus]);
 
   // Check if market is ready to initialize
   const canInitialize = useMemo(() => {
@@ -261,7 +262,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   // Handle Kuri initialization
   const handleInitialize = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!account.address) return;
+    if (!address) return;
 
     setIsLoading(true);
     try {
@@ -283,7 +284,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const handleJoinRequest = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Stop event from bubbling up to parent
 
-    if (!account.address) {
+    if (!address) {
       setError("Please connect your wallet first");
       return;
     }
@@ -305,7 +306,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
       await requestMembership();
 
       // Refresh membership status from contract to get the actual state
-      const status = await getMemberStatus(account.address);
+      const status = await getMemberStatus(address as `0x${string}`);
       setMembershipStatus(status ?? 4); // Default to APPLIED if unable to fetch
 
       toast.success("Membership requested successfully!");
@@ -323,11 +324,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   // Handle member action completion (refresh data)
   const handleMemberActionComplete = async () => {
-    if (!account.address) return;
+    if (!address) return;
 
     try {
       // Refresh membership status
-      const status = await getMemberStatus(account.address);
+      const status = await getMemberStatus(address as `0x${string}`);
       setMembershipStatus(status ?? 0);
 
       // Refresh market data to update member counts
@@ -385,7 +386,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   };
 
   const isCreator =
-    account.address?.toLowerCase() === market.creator.toLowerCase();
+    address?.toLowerCase() === market.creator.toLowerCase();
 
   // Fallback to hardcoded data if no Supabase metadata
   const fallbackMetadata: MarketMetadata = {

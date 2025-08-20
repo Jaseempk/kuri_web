@@ -1,6 +1,6 @@
 import { type Config, createConfig, http } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
-import { getDefaultConfig } from "connectkit";
+import { injected, walletConnect } from "wagmi/connectors";
 
 const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 const WALLET_CONNECT_PROJECT_ID = import.meta.env
@@ -24,15 +24,19 @@ const transport = http(
   }
 );
 
-const wagmiConfig = getDefaultConfig({
-  appName: "Kuri Finance",
-  walletConnectProjectId: WALLET_CONNECT_PROJECT_ID,
-  chains: [baseSepolia],
+// Standard wagmi config without ConnectKit
+const wagmiConfig = {
+  chains: [baseSepolia] as const,
+  connectors: [
+    injected(),
+    walletConnect({
+      projectId: WALLET_CONNECT_PROJECT_ID,
+    }),
+  ],
   transports: {
     [baseSepolia.id]: transport,
   },
-  // Handle multiple wallet extensions gracefully
   ssr: false, // Disable server-side rendering for wallet detection
-});
+};
 
 export const config: Config = createConfig(wagmiConfig);

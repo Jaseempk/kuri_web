@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { Button } from "../ui/button";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { KuriState } from "../../types/market";
 
 interface MarketDetailsProps {
@@ -9,7 +9,8 @@ interface MarketDetailsProps {
 }
 
 export const MarketDetails = ({ marketAddress }: MarketDetailsProps) => {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const {
     marketData,
     isLoading,

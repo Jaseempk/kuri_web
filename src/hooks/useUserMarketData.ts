@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { KuriMarket } from "./useKuriMarkets";
 import {
   batchUserMarketData,
@@ -31,7 +31,8 @@ export const useUserMarketData = (
   markets: KuriMarket[],
   options: UseUserMarketDataOptions = {}
 ): UseUserMarketDataResult => {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
 
   const {
     enabled = true,
@@ -111,7 +112,8 @@ export const useUserMarketDataForMarket = (
  * Hook to check if user has relevant data for any markets
  */
 export const useHasUserMarketData = (markets: KuriMarket[]): boolean => {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
 
   if (!address) return false;
 
@@ -131,7 +133,8 @@ export const useHasUserMarketData = (markets: KuriMarket[]): boolean => {
  * Hook to invalidate user market data cache
  */
 export const useInvalidateUserMarketData = () => {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
 
   return {
     invalidateAll: () => {

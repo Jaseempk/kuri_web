@@ -38,27 +38,33 @@ class KuriApiClient {
 
   constructor() {
     this.baseUrl = import.meta.env.VITE_BACKEND_URL;
-    
+
     if (!this.baseUrl) {
-      console.error('VITE_BACKEND_URL environment variable is required');
-      this.baseUrl = 'http://localhost:3001'; // fallback for development
+      console.error("VITE_BACKEND_URL environment variable is required");
+      this.baseUrl = "http://localhost:3001"; // fallback for development
     }
-    
+
     // Remove trailing slash
-    this.baseUrl = this.baseUrl.replace(/\/$/, '');
+    this.baseUrl = this.baseUrl.replace(/\/$/, "");
   }
 
   /**
    * Get authentication message from backend
    */
-  async getAuthMessage(action: 'create_profile' | 'create_market', address: string): Promise<AuthMessageResponse> {
+  async getAuthMessage(
+    action: "create_profile" | "create_market",
+    address: string
+  ): Promise<AuthMessageResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/auth/message/${action}/${address}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/auth/message/${action}/${address}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       // Check if response is ok
       if (!response.ok) {
@@ -66,22 +72,26 @@ class KuriApiClient {
       }
 
       // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
-        throw new Error(`Expected JSON but received: ${text.substring(0, 100)}...`);
+        throw new Error(
+          `Expected JSON but received: ${text.substring(0, 100)}...`
+        );
       }
 
       const result: ApiResponse<AuthMessageResponse> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to get auth message');
+        throw new Error(result.error?.message || "Failed to get auth message");
       }
-      
+
       return result.data!;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -95,19 +105,19 @@ class KuriApiClient {
   async createOrUpdateProfile(data: ProfileData): Promise<any> {
     try {
       const formData = new FormData();
-      formData.append('address', data.userAddress);        // ✅ Fixed: 'address' instead of 'userAddress'
-      formData.append('userAddress', data.userAddress);     // Keep for backend controller
-      formData.append('username', data.username);
-      formData.append('displayName', data.displayName);
-      formData.append('message', data.message);
-      formData.append('signature', data.signature);
-      
+      formData.append("address", data.userAddress); // ✅ Fixed: 'address' instead of 'userAddress'
+      formData.append("userAddress", data.userAddress); // Keep for backend controller
+      formData.append("username", data.username);
+      formData.append("displayName", data.displayName);
+      formData.append("message", data.message);
+      formData.append("signature", data.signature);
+
       if (data.image) {
-        formData.append('image', data.image);
+        formData.append("image", data.image);
       }
 
       const response = await fetch(`${this.baseUrl}/api/users/profile`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
@@ -117,22 +127,26 @@ class KuriApiClient {
       }
 
       // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
-        throw new Error(`Expected JSON but received: ${text.substring(0, 100)}...`);
+        throw new Error(
+          `Expected JSON but received: ${text.substring(0, 100)}...`
+        );
       }
 
       const result: ApiResponse<any> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to create profile');
+        throw new Error(result.error?.message || "Failed to create profile");
       }
-      
+
       return result.data;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -145,30 +159,30 @@ class KuriApiClient {
    */
   async createCircleMetadata(data: CircleData): Promise<any> {
     const formData = new FormData();
-    formData.append('userAddress', data.userAddress);
-    formData.append('contractAddress', data.contractAddress);
-    formData.append('transactionHash', data.transactionHash);
-    formData.append('shortDescription', data.shortDescription);
-    
+    formData.append("userAddress", data.userAddress);
+    formData.append("contractAddress", data.contractAddress);
+    formData.append("transactionHash", data.transactionHash);
+    formData.append("shortDescription", data.shortDescription);
+
     if (data.longDescription) {
-      formData.append('longDescription', data.longDescription);
+      formData.append("longDescription", data.longDescription);
     }
-    
+
     if (data.image) {
-      formData.append('image', data.image);
+      formData.append("image", data.image);
     }
 
     const response = await fetch(`${this.baseUrl}/api/circles/metadata`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
     });
 
     const result: ApiResponse<any> = await response.json();
-    
+
     if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to create metadata');
+      throw new Error(result.error?.message || "Failed to create metadata");
     }
-    
+
     return result.data;
   }
 
@@ -177,12 +191,15 @@ class KuriApiClient {
    */
   async getUserProfile(address: string): Promise<KuriUserProfile | null> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/users/profile/${address.toLowerCase()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/users/profile/${address.toLowerCase()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -192,15 +209,17 @@ class KuriApiClient {
       }
 
       const result: ApiResponse<KuriUserProfile> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to get user profile');
+        throw new Error(result.error?.message || "Failed to get user profile");
       }
-      
+
       return result.data || null;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -212,27 +231,35 @@ class KuriApiClient {
   async getUserProfiles(addresses: string[]): Promise<KuriUserProfile[]> {
     try {
       const response = await fetch(`${this.baseUrl}/api/users/profiles/batch`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ addresses: addresses.map(addr => addr.toLowerCase()) }),
+        body: JSON.stringify({
+          addresses: addresses.map((addr) => addr.toLowerCase()),
+        }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result: ApiResponse<{profiles: KuriUserProfile[], totalFound: number, totalRequested: number}> = await response.json();
-      
+      const result: ApiResponse<{
+        profiles: KuriUserProfile[];
+        totalFound: number;
+        totalRequested: number;
+      }> = await response.json();
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to get user profiles');
+        throw new Error(result.error?.message || "Failed to get user profiles");
       }
-      
+
       return result.data?.profiles || [];
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -244,27 +271,34 @@ class KuriApiClient {
   async validateMarketAddresses(addresses: string[]): Promise<string[]> {
     try {
       const response = await fetch(`${this.baseUrl}/api/markets/validation`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ addresses: addresses.map(addr => addr.toLowerCase()) }),
+        body: JSON.stringify({
+          addresses: addresses.map((addr) => addr.toLowerCase()),
+        }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result: ApiResponse<{validAddresses: string[]}> = await response.json();
-      
+      const result: ApiResponse<{ validAddresses: string[] }> =
+        await response.json();
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to validate market addresses');
+        throw new Error(
+          result.error?.message || "Failed to validate market addresses"
+        );
       }
-      
+
       return result.data?.validAddresses || [];
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -275,27 +309,34 @@ class KuriApiClient {
    */
   async getAllValidMarketAddresses(): Promise<string[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/markets/valid-addresses`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/markets/valid-addresses`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result: ApiResponse<string[]> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to get valid market addresses');
+        throw new Error(
+          result.error?.message || "Failed to get valid market addresses"
+        );
       }
-      
+
       return result.data || [];
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -306,12 +347,15 @@ class KuriApiClient {
    */
   async getMarketMetadata(address: string): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/markets/${address.toLowerCase()}/metadata`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/markets/${address.toLowerCase()}/metadata`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -321,15 +365,19 @@ class KuriApiClient {
       }
 
       const result: ApiResponse<any> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to get market metadata');
+        throw new Error(
+          result.error?.message || "Failed to get market metadata"
+        );
       }
-      
+
       return result.data;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -340,28 +388,41 @@ class KuriApiClient {
    */
   async getBulkMarketMetadata(addresses: string[]): Promise<any[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/markets/metadata/batch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ addresses: addresses.map(addr => addr.toLowerCase()) }),
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/markets/metadata/batch`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            addresses: addresses.map((addr) => addr.toLowerCase()),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result: ApiResponse<{metadata: any[], totalFound: number, totalRequested: number}> = await response.json();
-      
+      const result: ApiResponse<{
+        metadata: any[];
+        totalFound: number;
+        totalRequested: number;
+      }> = await response.json();
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to get bulk market metadata');
+        throw new Error(
+          result.error?.message || "Failed to get bulk market metadata"
+        );
       }
-      
+
       return result.data?.metadata || [];
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -382,28 +443,35 @@ class KuriApiClient {
     };
   }): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/users/push-subscription`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/users/push-subscription`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result: ApiResponse<any> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to store push subscription');
+        throw new Error(
+          result.error?.message || "Failed to store push subscription"
+        );
       }
-      
+
       return result.data;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -423,28 +491,35 @@ class KuriApiClient {
     };
   }): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/users/push-preferences`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/users/push-preferences`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result: ApiResponse<any> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to update push preferences');
+        throw new Error(
+          result.error?.message || "Failed to update push preferences"
+        );
       }
-      
+
       return result.data;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -459,9 +534,9 @@ class KuriApiClient {
   }): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/api/notifications/test`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
@@ -471,15 +546,19 @@ class KuriApiClient {
       }
 
       const result: ApiResponse<any> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to send test notification');
+        throw new Error(
+          result.error?.message || "Failed to send test notification"
+        );
       }
-      
+
       return result.data;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -488,29 +567,39 @@ class KuriApiClient {
   /**
    * Get push subscription status
    */
-  async getPushStatus(userAddress: string, platform: string = 'web'): Promise<any> {
+  async getPushStatus(
+    userAddress: string,
+    platform: string = "web"
+  ): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/users/push-status?userAddress=${encodeURIComponent(userAddress)}&platform=${encodeURIComponent(platform)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/users/push-status?userAddress=${encodeURIComponent(
+          userAddress
+        )}&platform=${encodeURIComponent(platform)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result: ApiResponse<any> = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to get push status');
+        throw new Error(result.error?.message || "Failed to get push status");
       }
-      
+
       return result.data;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend server. Please check your connection.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to backend server. Please check your connection."
+        );
       }
       throw error;
     }
@@ -525,11 +614,17 @@ class KuriApiClient {
       const result = await response.json();
       return result.success === true;
     } catch (error) {
-      console.error('Health check failed:', error);
+      console.error("Health check failed:", error);
       return false;
     }
   }
 }
 
 export const apiClient = new KuriApiClient();
-export type { ProfileData, CircleData, ApiResponse, AuthMessageResponse, KuriUserProfile };
+export type {
+  ProfileData,
+  CircleData,
+  ApiResponse,
+  AuthMessageResponse,
+  KuriUserProfile,
+};

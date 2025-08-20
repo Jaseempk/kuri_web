@@ -9,7 +9,7 @@ import {
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useUserActivity } from "../hooks/useUserActivity";
 import { LoadingSkeleton } from "../components/ui/loading-states";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useKuriMarkets } from "../hooks/useKuriMarkets";
 import { MarketCard } from "../components/markets/MarketCard";
 import { Memberships } from "../components/profile/Memberships";
@@ -21,7 +21,8 @@ import { motion } from "framer-motion";
 export default function EnhancedProfile() {
   const { identifier } = useParams();
   const navigate = useNavigate();
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { profile, isLoading } = useUserProfile();
   const { activity } = useUserActivity(identifier || "");
   const { markets, loading: marketsLoading } = useKuriMarkets();
