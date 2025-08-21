@@ -11,7 +11,7 @@ import { Confetti } from "../ui/Confetti";
 import { trackMarketCreation, trackError } from "../../utils/analytics";
 import { apiClient } from "../../lib/apiClient";
 import { formatErrorForUser } from "../../utils/apiErrors";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { ChevronDown, Check } from "lucide-react";
 
 interface FormData {
@@ -51,7 +51,8 @@ export const CreateMarketForm = ({
   const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
 
   // const navigate = useNavigate();
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { initialiseKuriMarket, isCreating } = useKuriFactory();
 
   // Calculate monthly contribution per participant

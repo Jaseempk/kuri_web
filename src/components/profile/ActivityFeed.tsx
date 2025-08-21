@@ -1,4 +1,4 @@
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useKuriMarkets } from "../../hooks/useKuriMarkets";
 import { motion } from "framer-motion";
 import { formatEther } from "viem";
@@ -22,7 +22,8 @@ type Activity = {
 };
 
 export function ActivityFeed() {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { activity, loading } = useUserActivity(address || "");
   const { markets } = useKuriMarkets();
   const [marketMetadata, setMarketMetadata] = useState<

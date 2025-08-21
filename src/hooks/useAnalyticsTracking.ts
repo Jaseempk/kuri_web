@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useAccount, useChainId } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useLocation } from "react-router-dom";
 import {
   trackWalletConnection,
@@ -8,8 +8,11 @@ import {
 } from "../utils/analytics";
 
 export function useAnalyticsTracking() {
-  const { address, connector, status } = useAccount();
-  const chainId = useChainId();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
+  // Para uses Base Sepolia by default
+  const chainId = 84532; // Base Sepolia chain ID
+  const connector = { name: 'Para' }; // Para connector info
   const location = useLocation();
   const previousAddress = useRef<string | undefined>();
   const sessionStartTime = useRef<number>(Date.now());

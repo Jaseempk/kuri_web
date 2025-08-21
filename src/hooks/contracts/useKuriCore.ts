@@ -1,10 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import {
-  readContract,
-  writeContract,
-  simulateContract,
-  getAccount,
-} from "@wagmi/core";
+import { readContract, writeContract, simulateContract } from "@wagmi/core";
 import { KuriCoreABI } from "../../contracts/abis/KuriCoreV1";
 import { ERC20ABI } from "../../contracts/abis/ERC20";
 import { handleContractError } from "../../utils/errors";
@@ -12,6 +7,7 @@ import { config } from "../../config/wagmi";
 import { useTransactionStatus } from "../useTransactionStatus";
 
 import { calculateApprovalAmount } from "../../utils/tokenUtils";
+import { useAccount } from "@getpara/react-sdk";
 
 export enum KuriState {
   INLAUNCH,
@@ -72,7 +68,8 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const [userBalance, setUserBalance] = useState<bigint>(BigInt(0));
   const [currentInterval, setCurrentInterval] = useState<number>(0);
 
-  const account = getAccount(config);
+  const account = useAccount();
+  const userAddress = account.embedded.wallets?.[0]?.address as `0x${string}`;
   const { handleTransaction } = useTransactionStatus();
 
   // Fetch token address from the contract
@@ -93,7 +90,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
   // Check token allowance
   const checkAllowance = useCallback(async (): Promise<bigint> => {
-    if (!kuriAddress || !account.address || !tokenAddress) {
+    if (!kuriAddress || !userAddress || !tokenAddress) {
       return BigInt(0);
     }
 
@@ -102,18 +99,18 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: tokenAddress,
         abi: ERC20ABI,
         functionName: "allowance",
-        args: [account.address, kuriAddress],
+        args: [userAddress, kuriAddress],
       });
       return allowance as bigint;
     } catch (err) {
       console.error("Failed to check allowance:", err);
       return BigInt(0);
     }
-  }, [kuriAddress, account.address, tokenAddress]);
+  }, [kuriAddress, userAddress, tokenAddress]);
 
   // Check user's token balance
   const checkUserBalance = useCallback(async (): Promise<bigint> => {
-    if (!account.address || !tokenAddress) {
+    if (!userAddress || !tokenAddress) {
       return BigInt(0);
     }
 
@@ -122,7 +119,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: tokenAddress,
         abi: ERC20ABI,
         functionName: "balanceOf",
-        args: [account.address],
+        args: [userAddress],
       });
 
       const balanceAmount = balance as bigint;
@@ -133,12 +130,12 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       setUserBalance(BigInt(0));
       return BigInt(0);
     }
-  }, [account.address, tokenAddress]);
+  }, [userAddress, tokenAddress]);
 
   // Approve tokens
   const approveTokens = useCallback(
     async (amount: bigint) => {
-      if (!kuriAddress || !account.address || !tokenAddress) {
+      if (!kuriAddress || !userAddress || !tokenAddress) {
         throw new Error("Invalid parameters for token approval");
       }
 
@@ -166,12 +163,12 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         setIsApproving(false);
       }
     },
-    [kuriAddress, account.address, tokenAddress, handleTransaction]
+    [kuriAddress, userAddress, tokenAddress, handleTransaction]
   );
 
   // Check if user has paid for current interval
   const checkUserPaymentStatus = useCallback(async (): Promise<boolean> => {
-    if (!kuriAddress || !account.address || !marketData) {
+    if (!kuriAddress || !userAddress || !marketData) {
       return false;
     }
 
@@ -197,7 +194,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: kuriAddress,
         abi: KuriCoreABI,
         functionName: "userToData",
-        args: [account.address],
+        args: [userAddress],
       });
 
       const membershipStatus = (userData as any)[0];
@@ -237,7 +234,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: kuriAddress,
         abi: KuriCoreABI,
         functionName: "hasPaid",
-        args: [account.address, currentIntervalIndex],
+        args: [userAddress, currentIntervalIndex],
       })) as boolean;
 
       setUserPaymentStatus(hasPaid);
@@ -247,11 +244,11 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       setUserPaymentStatus(null);
       return false;
     }
-  }, [kuriAddress, account.address, marketData]);
+  }, [kuriAddress, userAddress, marketData]);
 
   // 🔥 NEW: Explicit method for components to call when they need payment status
   const checkPaymentStatusIfMember = useCallback(async (): Promise<boolean> => {
-    if (!kuriAddress || !account.address || !marketData) {
+    if (!kuriAddress || !userAddress || !marketData) {
       return false;
     }
 
@@ -262,18 +259,18 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
     // Call the internal payment status check
     return checkUserPaymentStatus();
-  }, [kuriAddress, account.address, marketData, checkUserPaymentStatus]);
+  }, [kuriAddress, userAddress, marketData, checkUserPaymentStatus]);
 
   // Refresh user-specific data (payment status and balance)
   const refreshUserData = useCallback(async (): Promise<void> => {
-    if (!account.address) return;
+    if (!userAddress) return;
 
     try {
       await Promise.all([checkUserPaymentStatus(), checkUserBalance()]);
     } catch (err) {
       console.error("Failed to refresh user data:", err);
     }
-  }, [account.address]);
+  }, [userAddress]);
 
   // Enhanced fetchMarketData to also check payment status
   const fetchMarketData = useCallback(async () => {
@@ -308,16 +305,16 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } finally {
       setIsLoading(false);
     }
-  }, [kuriAddress, account.address]);
+  }, [kuriAddress, userAddress]);
 
   // Check payment status and balance when market becomes active or user changes
   useEffect(() => {
     // Only check balance for active markets with connected users
-    if (marketData?.state === 2 && account.address) {
+    if (marketData?.state === 2 && userAddress) {
       checkUserBalance(); // Keep this - safe for all users
       // checkUserPaymentStatus(); ← REMOVED: Now explicit only
     }
-  }, [marketData?.state, account.address]);
+  }, [marketData?.state, userAddress]);
 
   // Fetch market data and token address on mount and address change
   useEffect(() => {
@@ -327,7 +324,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
   // Initialize market
   const initializeKuri = useCallback(async () => {
-    if (!kuriAddress || !account.address) throw new Error("Invalid parameters");
+    if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
 
     try {
       const { request } = await simulateContract(config, {
@@ -349,11 +346,11 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } catch (error) {
       throw handleContractError(error);
     }
-  }, [kuriAddress, account.address, handleTransaction, fetchMarketData]);
+  }, [kuriAddress, userAddress, handleTransaction, fetchMarketData]);
 
   // Enhanced deposit function to refresh payment status after deposit
   const deposit = useCallback(async () => {
-    if (!kuriAddress || !account.address || !marketData || !tokenAddress)
+    if (!kuriAddress || !userAddress || !marketData || !tokenAddress)
       throw new Error("Invalid parameters");
 
     try {
@@ -432,7 +429,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     }
   }, [
     kuriAddress,
-    account.address,
+    userAddress,
     marketData,
     tokenAddress,
     checkAllowance,
@@ -445,8 +442,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   // Claim amount
   const claimKuriAmount = useCallback(
     async (intervalIndex: number) => {
-      if (!kuriAddress || !account.address)
-        throw new Error("Invalid parameters");
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
 
       try {
         const { request } = await simulateContract(config, {
@@ -470,15 +466,16 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         throw handleContractError(error);
       }
     },
-    [kuriAddress, account.address, handleTransaction, fetchMarketData]
+    [kuriAddress, userAddress, handleTransaction, fetchMarketData]
   );
 
-  // Request membership
+  // Request membership with Para-compatible Wagmi hooks
   const requestMembership = useCallback(async () => {
-    if (!kuriAddress || !account.address) throw new Error("Invalid parameters");
+    if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
     setIsRequesting(true);
 
     try {
+      // Use simulateContract and writeContract from @wagmi/core (Para compatible)
       const { request } = await simulateContract(config, {
         address: kuriAddress,
         abi: KuriCoreABI,
@@ -501,13 +498,12 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } finally {
       setIsRequesting(false);
     }
-  }, [kuriAddress, account.address, handleTransaction, fetchMarketData]);
+  }, [kuriAddress, userAddress, handleTransaction, fetchMarketData]);
 
   // Accept member
   const acceptUserMembershipRequest = useCallback(
     async (address: `0x${string}`) => {
-      if (!kuriAddress || !account.address)
-        throw new Error("Invalid parameters");
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
 
       try {
         const { request } = await simulateContract(config, {
@@ -531,14 +527,13 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         throw handleContractError(error);
       }
     },
-    [kuriAddress, account.address, handleTransaction, fetchMarketData]
+    [kuriAddress, userAddress, handleTransaction, fetchMarketData]
   );
 
   // Reject member
   const rejectUserMembershipRequest = useCallback(
     async (address: `0x${string}`) => {
-      if (!kuriAddress || !account.address)
-        throw new Error("Invalid parameters");
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
 
       try {
         const { request } = await simulateContract(config, {
@@ -562,14 +557,13 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         throw handleContractError(error);
       }
     },
-    [kuriAddress, account.address, handleTransaction, fetchMarketData]
+    [kuriAddress, userAddress, handleTransaction, fetchMarketData]
   );
 
   // Accept multiple members (V1 batch operation)
   const acceptMultipleMembers = useCallback(
     async (addresses: `0x${string}`[]) => {
-      if (!kuriAddress || !account.address)
-        throw new Error("Invalid parameters");
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
       if (addresses.length === 0) throw new Error("No addresses provided");
 
       try {
@@ -594,7 +588,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         throw handleContractError(error);
       }
     },
-    [kuriAddress, account.address, handleTransaction, fetchMarketData]
+    [kuriAddress, userAddress, handleTransaction, fetchMarketData]
   );
 
   // Get member status

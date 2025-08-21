@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 
 export default function ProfileRedirect() {
   const navigate = useNavigate();
   const { profile, isLoading } = useUserProfile();
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
 
   useEffect(() => {
     if (!isLoading && (profile?.username || address)) {

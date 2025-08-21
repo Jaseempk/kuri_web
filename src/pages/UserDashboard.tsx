@@ -1,9 +1,10 @@
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useUserActivity } from "../hooks/useUserActivity";
 import { formatEther } from "viem";
 
 export default function UserDashboard() {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { activity, loading, error } = useUserActivity(address || "");
 
   if (!address) {

@@ -1,13 +1,14 @@
 import { useCallback } from "react";
 import { KuriUserProfile } from "../types/user";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useApiAuth } from "./useApiAuth";
 import { apiClient } from "../lib/apiClient";
 import { formatErrorForUser } from "../utils/apiErrors";
 import { useQuery } from "@tanstack/react-query";
 
 export const useUserProfile = () => {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { getSignedAuth } = useApiAuth();
 
   const {
@@ -58,6 +59,7 @@ export const useUserProfile = () => {
     error,
     updateProfile,
     refreshProfile,
+    email: account.user?.email,
   };
 };
 

@@ -1,10 +1,13 @@
-import { type Config, createConfig, http } from "wagmi";
-import { baseSepolia } from "wagmi/chains";
-import { getDefaultConfig } from "connectkit";
+import { createConfig, http } from "wagmi";
+import { baseSepolia, base } from "wagmi/chains";
+
+import { ParaWeb } from "@getpara/web-sdk";
+import { paraConnector } from "@getpara/wagmi-v2-integration";
 
 const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 const WALLET_CONNECT_PROJECT_ID = import.meta.env
   .VITE_WALLET_CONNECT_PROJECT_ID;
+const PARA_API_KEY = import.meta.env.VITE_PARA_API_KEY;
 
 if (!ALCHEMY_API_KEY) {
   throw new Error("Missing ALCHEMY_API_KEY environment variable");
@@ -14,25 +17,30 @@ if (!WALLET_CONNECT_PROJECT_ID) {
   throw new Error("Missing WALLET_CONNECT_PROJECT_ID environment variable");
 }
 
-// Create a more resilient transport with retries and longer timeout
-const transport = http(
-  `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
-  {
-    timeout: 30000, // 30 seconds
-    retryCount: 3,
-    retryDelay: 1000, // 1 second between retries
-  }
-);
+const para = new ParaWeb(PARA_API_KEY);
 
-const wagmiConfig = getDefaultConfig({
-  appName: "Kuri Finance",
-  walletConnectProjectId: WALLET_CONNECT_PROJECT_ID,
-  chains: [baseSepolia],
-  transports: {
-    [baseSepolia.id]: transport,
-  },
-  // Handle multiple wallet extensions gracefully
-  ssr: false, // Disable server-side rendering for wallet detection
+// Define chains you want to support
+const chains = [baseSepolia, base] as const;
+
+// Create Para connector with required parameters
+const connector = paraConnector({
+  para,
+  chains: [...chains],
+  appName: "Kuri App",
+  options: {},
 });
 
-export const config: Config = createConfig(wagmiConfig);
+// Create config with modern transports approach
+export const config = createConfig({
+  chains,
+  connectors: [connector as any],
+  transports: {
+    // Public testnet RPC endpoints
+    [baseSepolia.id]: http(
+      `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+    ),
+    [base.id]: http(
+      "https://base-mainnet.g.alchemy.com/v2/txntl9XYKWyIkkmj1p0JcecUKxqt9327"
+    ),
+  },
+});

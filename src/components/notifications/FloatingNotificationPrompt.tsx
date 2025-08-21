@@ -4,12 +4,13 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { useUserProfile } from '../../hooks/useUserProfile';
-import { useAccount } from 'wagmi';
+import { useAccount } from '@getpara/react-sdk';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const FloatingNotificationPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { profile } = useUserProfile();
   const { 
     isInitialized, 

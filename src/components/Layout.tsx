@@ -5,8 +5,7 @@ import { Logo } from "./ui/Logo";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { getAccount } from "@wagmi/core";
-import { config } from "../config/wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { ProfileButton } from "./ui/ProfileButton";
 
 interface LayoutProps {
@@ -15,7 +14,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const account = getAccount(config);
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigationItems = [
@@ -63,12 +63,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center gap-2 xs:gap-3">
             {/* Connect/Profile Button */}
             <div className="hidden xs:block">
-              {account.address ? <ProfileButton /> : <ConnectButton />}
+              {address ? <ProfileButton /> : <ConnectButton />}
             </div>
 
             {/* Mobile Connect/Profile Button (smaller) */}
             <div className="xs:hidden">
-              {account.address ? <ProfileButton /> : <ConnectButton />}
+              {address ? <ProfileButton /> : <ConnectButton />}
             </div>
 
             {/* Mobile Menu Button */}

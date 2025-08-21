@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import {
   OneSignalHelper,
   NotificationPreferences,
@@ -29,7 +29,8 @@ export const usePushNotifications = () => {
     loading: true,
   });
 
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
 
   // Wait for OneSignal to initialize
   useEffect(() => {

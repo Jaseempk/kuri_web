@@ -1,19 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { User } from "lucide-react";
 import { Button } from "./button";
 
+const formatAddress = (address: string) => {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
+
 export function ProfileButton() {
   const location = useLocation();
-  const { address } = useAccount();
-  const { profile } = useUserProfile();
+  const account = useAccount();
+  const { profile, email } = useUserProfile();
+  
+  const address = account.embedded.wallets?.[0]?.address;
 
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  // Check if current path is a profile path
   const isProfilePath =
     location.pathname.startsWith("/u/") || location.pathname === "/me";
 
@@ -37,7 +38,7 @@ export function ProfileButton() {
           <User className="w-5 h-5" />
         )}
         <span className="text-sm font-medium hidden md:inline">
-          {profile?.display_name || "My Profile"}
+          {profile?.display_name || email || "My Profile"}
         </span>
         {address && (
           <span className="text-sm text-muted-foreground hidden md:inline">

@@ -7,7 +7,7 @@ import {
   waitForTransactionReceipt,
 } from "@wagmi/core";
 import { decodeEventLog } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { KuriFactoryABI } from "../../contracts/abis/KuriFactoryV1";
 import { getContractAddress } from "../../config/contracts";
 import { handleContractError } from "../../utils/errors";
@@ -18,7 +18,9 @@ import { useKuriMarkets } from "../useKuriMarkets";
 
 export const useKuriFactory = () => {
   const [isCreating, setIsCreating] = useState(false);
-  const { address, chainId } = useAccount();
+  const paraAccount = useAccount();
+  const address = paraAccount.embedded.wallets?.[0]?.address;
+  const chainId = baseSepolia.id; // Use Para with Base Sepolia
   const factoryAddress = getContractAddress(
     chainId ?? baseSepolia.id,
     "KuriFactory"
@@ -42,7 +44,7 @@ export const useKuriFactory = () => {
       wannabeMember: boolean = true,
       currencyIndex: number = 0
     ) => {
-      if (!account.address) throw new Error("Wallet not connected");
+      if (!address) throw new Error("Wallet not connected");
       setIsCreating(true);
       console.log("factooryAddress:", factoryAddress);
       console.log("kuriAmount:", kuriAmount);

@@ -6,7 +6,6 @@
  */
 
 import React, { useEffect, useMemo } from 'react';
-import { useAccount } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
 
 import { PostCreationModal } from './PostCreationModal';

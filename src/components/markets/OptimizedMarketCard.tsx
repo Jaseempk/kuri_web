@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { config } from "../../config/wagmi";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
@@ -93,7 +93,8 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   className,
 }) => {
   const navigate = useNavigate();
-  const { address } = useAccount();
+  const paraAccount = useAccount();
+  const address = paraAccount.embedded.wallets?.[0]?.address;
 
   // Get user data from the optimized market object instead of individual hook calls
   const userMarketData = market.userMarketData;
@@ -119,7 +120,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
-  const account = getAccount(config);
+  const wagmiAccount = getAccount(config);
   
   const { requireProfile } = useProfileRequired({
     strict: false,
@@ -187,7 +188,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   // Handle Kuri initialization
   const handleInitialize = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!account.address) return;
+    if (!address) return;
 
     setIsLoading(true);
     try {
@@ -211,7 +212,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   const handleJoinRequest = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Stop event from bubbling up to parent
 
-    if (!account.address) {
+    if (!address) {
       setError("Please connect your wallet first");
       return;
     }
@@ -248,7 +249,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
 
   // Handle member action completion (refresh data)
   const handleMemberActionComplete = async () => {
-    if (!account.address) return;
+    if (!address) return;
 
     try {
       // In the optimized version, this should trigger a refetch from the parent

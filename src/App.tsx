@@ -5,7 +5,8 @@ import {
   Outlet,
 } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
-import { Web3Provider } from "./providers/Web3Provider";
+import { ParaWeb3Provider } from "./providers/ParaWeb3Provider";
+import { ParaErrorBoundary } from "./components/providers/ParaErrorBoundary";
 import { ToastProvider } from "./components/providers/ToastProvider";
 import { FarcasterProvider } from "./contexts/FarcasterContext";
 import { FarcasterAwareLayout } from "./components/layouts/FarcasterAwareLayout";
@@ -16,6 +17,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { NetworkStatus } from "./components/NetworkStatus";
 import { FloatingNotificationPrompt } from "./components/notifications/FloatingNotificationPrompt";
 import { NotificationHandler } from "./components/notifications/NotificationHandler";
+import { AuthGuard } from "./components/guards/AuthGuard";
 import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
@@ -36,9 +38,11 @@ function RoutesWithAnalytics() {
       <Route path="/onboarding" element={<Onboarding />} />
       <Route
         element={
-          <FarcasterAwareLayout>
-            <Outlet />
-          </FarcasterAwareLayout>
+          <AuthGuard>
+            <FarcasterAwareLayout>
+              <Outlet />
+            </FarcasterAwareLayout>
+          </AuthGuard>
         }
       >
         <Route path="/markets" element={<MarketList />} />
@@ -52,9 +56,15 @@ function RoutesWithAnalytics() {
   );
 }
 
+// Runtime Para configuration validation
+if (!import.meta.env.VITE_PARA_API_KEY) {
+  throw new Error('VITE_PARA_API_KEY is required for Para authentication');
+}
+
 function App() {
   return (
-    <Web3Provider>
+    <ParaErrorBoundary>
+      <ParaWeb3Provider>
       <ApolloProvider>
         <FarcasterProvider>
           <ToastProvider />
@@ -70,7 +80,8 @@ function App() {
           <FloatingNotificationPrompt />
         </FarcasterProvider>
       </ApolloProvider>
-    </Web3Provider>
+    </ParaWeb3Provider>
+    </ParaErrorBoundary>
   );
 }
 

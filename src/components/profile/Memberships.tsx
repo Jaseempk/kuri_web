@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@getpara/react-sdk";
 import { useKuriMarkets } from "../../hooks/useKuriMarkets";
 import { motion } from "framer-motion";
 import { Badge } from "../ui/badge";
@@ -7,7 +7,8 @@ import { formatEther } from "viem";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 
 export function Memberships() {
-  const { address } = useAccount();
+  const account = useAccount();
+  const address = account.embedded.wallets?.[0]?.address;
   const { markets, loading } = useKuriMarkets();
   const { getMemberStatus } = useKuriCore();
 
