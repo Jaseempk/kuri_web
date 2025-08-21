@@ -1,21 +1,28 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAccount } from "@getpara/react-sdk";
+import { useAccount, useModal } from "@getpara/react-sdk";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 import { sanitizeInput } from "../utils/sanitize";
 import { validateImageFile } from "../utils/fileValidation";
 import { trackEvent, trackError } from "../utils/analytics";
 import { formatErrorForUser } from "../utils/apiErrors";
 
+enum OnboardingStep {
+  EMAIL_AUTH = "email_auth",
+  PROFILE_CREATION = "profile_creation",
+}
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const location = useLocation();
   const account = useAccount();
+  const { openModal } = useModal();
   const address = account.embedded.wallets?.[0]?.address;
   const { profile, updateProfile } = useUserProfile();
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(
+    OnboardingStep.EMAIL_AUTH
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [onboardingStartTime] = useState<number>(Date.now());
@@ -29,13 +36,21 @@ export default function Onboarding() {
     imagePreview: null as string | null,
   });
 
-
-  // Redirect if user already has a profile
+  // Check authentication status and profile existence
   useEffect(() => {
-    if (profile) {
-      navigate(returnUrl);
+    if (account.isConnected && address) {
+      if (profile) {
+        // User is authenticated and has profile - redirect to app
+        navigate(returnUrl);
+      } else {
+        // User is authenticated but no profile - show profile creation
+        setCurrentStep(OnboardingStep.PROFILE_CREATION);
+      }
+    } else {
+      // User not authenticated - show email auth step
+      setCurrentStep(OnboardingStep.EMAIL_AUTH);
     }
-  }, [profile, navigate, returnUrl]);
+  }, [account.isConnected, address, profile, navigate, returnUrl]);
 
   // Track onboarding start
   useEffect(() => {
@@ -70,9 +85,11 @@ export default function Onboarding() {
       setError("Please add a profile picture to continue");
       return false;
     }
-    
+
     if (hasInvalidImage) {
-      setError("Your image is too large or wrong format. Please choose a smaller image (under 5MB)");
+      setError(
+        "Your image is too large or wrong format. Please choose a smaller image (under 5MB)"
+      );
       return false;
     }
 
@@ -81,10 +98,10 @@ export default function Onboarding() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
+
     // Clear any previous errors first
     setError("");
-    
+
     if (!file) {
       // Clear image if no file selected
       setFormData((prev) => ({ ...prev, image: null, imagePreview: null }));
@@ -98,7 +115,11 @@ export default function Onboarding() {
       setError(validation.error || "Invalid file");
       setHasInvalidImage(true);
       // Don't clear the file input - let user see their invalid selection
-      setFormData((prev) => ({ ...prev, image: file, imagePreview: URL.createObjectURL(file) }));
+      setFormData((prev) => ({
+        ...prev,
+        image: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
       return;
     }
 
@@ -141,9 +162,8 @@ export default function Onboarding() {
         steps_completed: 1, // Single step onboarding
       });
 
-
       toast.success("Profile created successfully!");
-      navigate(returnUrl, { replace: true });
+      // Navigation will be handled by useEffect after profile is refreshed
     } catch (error) {
       // Track onboarding failure
       trackError(
@@ -161,11 +181,15 @@ export default function Onboarding() {
     }
   };
 
+  const handleEmailAuth = () => {
+    openModal({ step: "AUTH_MAIN" });
+  };
+
   const handleSkip = () => {
     // Track onboarding abandonment
     const duration = Math.floor((Date.now() - onboardingStartTime) / 1000);
     trackEvent("onboarding_abandoned", {
-      step: "profile_creation",
+      step: currentStep,
       duration,
     });
 
@@ -179,120 +203,254 @@ export default function Onboarding() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#F9F5F1] py-12">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-[#8B6F47] mb-2">
-            Complete Your Profile
+  // Render email authentication step
+  const renderEmailAuthStep = () => (
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden max-w-4xl w-full flex flex-col lg:flex-row">
+      {/* Left Column - Content */}
+      <div className="w-full lg:w-1/2 p-6 sm:p-8 lg:p-12 flex flex-col justify-center">
+        <div className="mb-6 lg:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-800 mb-3 lg:mb-4">
+            Welcome to Kuri
           </h1>
-          <p className="text-gray-600 mb-8">
-            Set up your profile to unlock full access to Kuri's features,
-            including creating and joining circles.
+          <p className="text-stone-600 text-base sm:text-lg">
+            Get started by connecting your email. We'll create a secure wallet
+            for you automatically.
           </p>
+        </div>
 
-          {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
+        <div className="space-y-4">
+          <button
+            onClick={handleEmailAuth}
+            disabled={account.isLoading}
+            className="w-full bg-[#8B735B] text-white py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold flex items-center justify-center hover:bg-[#7a6550] transition-colors duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg>
+            {account.isLoading ? "Connecting..." : "Connect with Email"}
+          </button>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex flex-col gap-4">
-              <label className="block font-semibold text-[#8B6F47]">
-                Profile Picture
-              </label>
-              <div className="flex flex-col md:flex-row items-center gap-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#E8DED1] file:text-[#8B6F47] hover:file:bg-[#e0d3b8] border border-[#E8DED1] rounded-lg p-2"
-                />
-                {formData.imagePreview && (
+          <p className="text-center text-xs sm:text-sm text-stone-500 px-2">
+            Join with just your email - no wallet installation needed. Secure
+            biometric authentication powered by Para.
+          </p>
+        </div>
+
+        <div className="mt-6 lg:mt-8 text-center">
+          <button
+            onClick={handleSkip}
+            className="text-stone-600 font-semibold py-2 px-4 rounded-lg hover:bg-stone-200/50 transition-colors duration-300 text-sm sm:text-base"
+          >
+            Skip for Now
+          </button>
+        </div>
+      </div>
+
+      {/* Right Column - Background Image */}
+      <div
+        className="w-full lg:w-1/2 h-48 sm:h-64 lg:h-auto bg-cover bg-center relative"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80')",
+        }}
+      >
+        <div className="h-full w-full bg-black/10"></div>
+      </div>
+    </div>
+  );
+
+  // Render profile creation step
+  const renderProfileCreationStep = () => (
+    <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-4 sm:p-8 lg:p-16">
+      <div className="text-center mb-8 sm:mb-10">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#4E342E] mb-2">
+          Welcome to Kuri!
+        </h1>
+        <p className="text-base sm:text-lg text-[#8D6E63] px-2">
+          Let's set up your profile to unlock full access and start connecting.
+        </p>
+      </div>
+
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-6 text-sm">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-6">
+          {/* Profile Picture Section */}
+          <div className="flex flex-col items-center md:items-start">
+            <label className="block text-sm font-medium text-[#4E342E] mb-2 w-full text-left">
+              Profile Picture
+            </label>
+            <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 mb-4">
+              <label
+                className="border-2 border-dashed border-[#D1C4B0] flex items-center justify-center p-3 sm:p-4 lg:p-6 cursor-pointer rounded-xl text-center text-[#8D6E63] transition-colors hover:bg-[#F9F6F1] hover:border-[#A1887F] h-full"
+                htmlFor="profile-picture"
+              >
+                {formData.imagePreview ? (
                   <img
                     src={formData.imagePreview}
                     alt="Profile Preview"
-                    className="rounded-full border border-[#E8DED1] shadow w-24 h-24 object-cover"
+                    className="w-full h-full object-cover rounded-lg"
                   />
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold text-[#8B6F47] mb-2">
-                Username
-              </label>
-              <Input
-                type="text"
-                placeholder="Choose a unique username"
-                value={formData.username}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    username: e.target.value,
-                  }))
-                }
-                required
-                pattern="^[a-zA-Z0-9_]{3,20}$"
-                title="Username must be 3-20 characters and contain only letters, numbers, and underscores"
-                className="border-[#E8DED1]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-semibold text-[#8B6F47] mb-2">
-                Display Name
-              </label>
-              <Input
-                type="text"
-                placeholder="Enter your display name"
-                value={formData.display_name}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    display_name: e.target.value,
-                  }))
-                }
-                required
-                maxLength={50}
-                className="border-[#E8DED1]"
-              />
-            </div>
-
-            <div className="flex gap-4 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSkip}
-                className="flex-1 border-2 border-[#8B6F47] text-[#8B6F47] hover:bg-[#F9F5F1]"
-              >
-                Skip for Now
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-[#8B6F47] text-white hover:bg-[#725A3A] text-sm sm:text-base"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-1.5 min-w-0">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white flex-shrink-0" />
-                    <span className="truncate">
-                      <span className="sm:hidden">Creating...</span>
-                      <span className="hidden sm:inline">Creating Profile...</span>
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <svg
+                      className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mb-1 sm:mb-2 text-[#A1887F]"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 17a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="font-semibold text-xs sm:text-sm">
+                      Click to upload
+                    </span>
+                    <span className="text-xs mt-1 text-gray-500">
+                      PNG, JPG up to 5MB
                     </span>
                   </div>
-                ) : (
-                  <span className="truncate">
-                    <span className="sm:hidden">Create Profile</span>
-                    <span className="hidden sm:inline">Complete Profile</span>
-                  </span>
                 )}
-              </Button>
+              </label>
+              <input
+                id="profile-picture"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
             </div>
-          </form>
+          </div>
+
+          {/* Form Fields Section */}
+          <div className="flex flex-col justify-center space-y-4 sm:space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-[#4E342E] mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#A1887F]">
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M14.243 5.757a6 6 0 10-.986 9.284 1 1 0 111.087 1.678A8 8 0 1118 10a3 3 0 01-4.8 2.401A4 4 0 1114 10a1 1 0 102 0c0-1.537-.586-3.07-1.757-4.243zM12 10a2 2 0 10-4 0 2 2 0 004 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Choose a unique username"
+                  value={formData.username}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      username: e.target.value,
+                    }))
+                  }
+                  required
+                  pattern="^[a-zA-Z0-9_]{3,20}$"
+                  title="Username must be 3-20 characters and contain only letters, numbers, and underscores"
+                  className="block w-full pl-10 pr-4 py-2.5 sm:py-3 bg-[#F9F6F1] border border-[#D1C4B0] rounded-xl focus:ring-[#8D6E63] focus:border-[#8D6E63] text-[#4E342E] focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base"
+                />
+              </div>
+              <p className="mt-1 sm:mt-2 text-xs text-gray-500">
+                Must be 3-20 characters long.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#4E342E] mb-2">
+                Display Name
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#A1887F]">
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Enter your display name"
+                  value={formData.display_name}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      display_name: e.target.value,
+                    }))
+                  }
+                  required
+                  maxLength={50}
+                  className="block w-full pl-10 pr-4 py-2.5 sm:py-3 bg-[#F9F6F1] border border-[#D1C4B0] rounded-xl focus:ring-[#8D6E63] focus:border-[#8D6E63] text-[#4E342E] focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 mt-8 sm:mt-10">
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="w-full sm:w-auto sm:max-w-xs py-2.5 sm:py-3 px-4 border border-[#A1887F] rounded-xl text-[#8D6E63] font-semibold hover:bg-[#F9F6F1] transition-colors text-sm sm:text-base"
+          >
+            Skip for Now
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full sm:w-auto sm:max-w-xs py-2.5 sm:py-3 px-4 border border-transparent rounded-xl text-white font-semibold bg-[#8D6E63] hover:bg-[#795548] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8D6E63] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
+                <span className="hidden sm:inline">Creating Profile...</span>
+                <span className="sm:hidden">Creating...</span>
+              </div>
+            ) : (
+              <>
+                <span className="sm:hidden">Complete</span>
+                <span className="hidden sm:inline">Complete Profile</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{
+        background: "radial-gradient(circle at top left, #FDF6E3, #F5EBE0)",
+      }}
+    >
+      {currentStep === OnboardingStep.EMAIL_AUTH
+        ? renderEmailAuthStep()
+        : renderProfileCreationStep()}
     </div>
   );
 }

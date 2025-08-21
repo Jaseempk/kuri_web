@@ -24,6 +24,7 @@
     "@farcaster/miniapp-wagmi-connector": "1.0.0",
     "@getpara/graz": "2.0.0-alpha.12",
     "@getpara/react-sdk": "2.0.0-alpha.47",
+    "@getpara/wagmi-v2-integration": "^1.18.1",
     "@leapwallet/cosmos-social-login-capsule-provider": "0.0.44",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-label": "^2.1.7",

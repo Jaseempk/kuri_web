@@ -156,7 +156,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const wagmiAccount = getAccount(config);
 
   const { requireProfile } = useProfileRequired({
-    strict: false,
+    strict: false, // AuthGuard handles route-level protection
     action: "join_circle",
   });
 

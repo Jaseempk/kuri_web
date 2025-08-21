@@ -198,7 +198,7 @@ export default function MarketList() {
   const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { requireProfile } = useProfileRequired({
-    strict: false, // Don't enforce on page load
+    strict: false, // Don't enforce on page load - AuthGuard handles this
     action: "market_action",
   });
 

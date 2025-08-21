@@ -17,6 +17,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { NetworkStatus } from "./components/NetworkStatus";
 import { FloatingNotificationPrompt } from "./components/notifications/FloatingNotificationPrompt";
 import { NotificationHandler } from "./components/notifications/NotificationHandler";
+import { AuthGuard } from "./components/guards/AuthGuard";
 import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
@@ -37,9 +38,11 @@ function RoutesWithAnalytics() {
       <Route path="/onboarding" element={<Onboarding />} />
       <Route
         element={
-          <FarcasterAwareLayout>
-            <Outlet />
-          </FarcasterAwareLayout>
+          <AuthGuard>
+            <FarcasterAwareLayout>
+              <Outlet />
+            </FarcasterAwareLayout>
+          </AuthGuard>
         }
       >
         <Route path="/markets" element={<MarketList />} />
