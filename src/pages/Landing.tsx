@@ -615,16 +615,6 @@ function App() {
                   <span className="relative z-10">Learn More</span>
                 </Button>
               </motion.div>
-
-              {/* Para Email Authentication Message
-              <motion.p
-                className="text-sm text-gray-600 mt-4 max-w-md mx-auto"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.1 }}
-              >
-                Join with just your email - no wallet installation needed. Secure biometric authentication powered by Para.
-              </motion.p> */}
             </motion.div>
 
             {/* Right image column with circular layers */}

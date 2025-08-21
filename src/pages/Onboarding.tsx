@@ -205,10 +205,9 @@ export default function Onboarding() {
 
   // Render email authentication step
   const renderEmailAuthStep = () => (
-    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden max-w-4xl w-full flex flex-col lg:flex-row">
-      {/* Left Column - Content */}
-      <div className="w-full lg:w-1/2 p-6 sm:p-8 lg:p-12 flex flex-col justify-center">
-        <div className="mb-6 lg:mb-8">
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden max-w-lg w-full">
+      <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-center">
+        <div className="mb-6 lg:mb-8 text-center">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-800 mb-3 lg:mb-4">
             Welcome to Kuri
           </h1>
@@ -227,17 +226,15 @@ export default function Onboarding() {
             <svg
               className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3"
               fill="currentColor"
-              viewBox="0 0 20 20"
+              viewBox="0 0 24 24"
             >
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
             </svg>
             {account.isLoading ? "Connecting..." : "Connect with Email"}
           </button>
 
-          <p className="text-center text-xs sm:text-sm text-stone-500 px-2">
-            Join with just your email - no wallet installation needed. Secure
-            biometric authentication powered by Para.
+          <p className="text-center text-xs sm:text-sm text-stone-500 mt-4">
+            Join with just your email - no wallet installation needed.
           </p>
         </div>
 
@@ -249,17 +246,6 @@ export default function Onboarding() {
             Skip for Now
           </button>
         </div>
-      </div>
-
-      {/* Right Column - Background Image */}
-      <div
-        className="w-full lg:w-1/2 h-48 sm:h-64 lg:h-auto bg-cover bg-center relative"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80')",
-        }}
-      >
-        <div className="h-full w-full bg-black/10"></div>
       </div>
     </div>
   );
