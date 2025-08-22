@@ -39,28 +39,22 @@ export function PendingRequests() {
 
   if (loading || loadingStatus) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="bg-white/5 animate-pulse backdrop-blur-sm rounded-xl p-4 md:p-6 border border-white/10 h-[200px] md:h-[250px]"
-          >
-            <div className="h-5 md:h-6 w-3/4 bg-white/10 rounded mb-3 md:mb-4" />
-            <div className="h-3 md:h-4 w-1/2 bg-white/10 rounded mb-2" />
-            <div className="h-3 md:h-4 w-1/3 bg-white/10 rounded" />
-          </div>
-        ))}
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (pendingMarkets.length === 0) {
     return (
-      <div className="text-center py-8 md:py-12">
-        <h3 className="text-lg md:text-xl font-semibold mb-2">
+      <div className="flex flex-col items-center justify-center text-center py-12 flex-1">
+        <span className="material-icons text-6xl text-gray-300 mb-4">
+          hourglass_top
+        </span>
+        <h2 className="text-xl font-semibold text-foreground mb-2">
           No Pending Requests
-        </h3>
-        <p className="text-sm md:text-base text-muted-foreground">
+        </h2>
+        <p className="text-muted-foreground max-w-xs">
           You don't have any pending circle membership requests.
         </p>
       </div>
@@ -68,22 +62,22 @@ export function PendingRequests() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {pendingMarkets.map((market, index) => (
         <motion.div
           key={market.address}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="group bg-white/5 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-white/10 hover:border-gold/20 transition-all hover-lift"
+          className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all"
         >
           <div className="flex flex-col h-full">
-            <div className="flex items-start justify-between mb-3 md:mb-4">
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2 line-clamp-1">
+                <h3 className="text-lg font-semibold mb-2 line-clamp-1 text-foreground">
                   {market.name}
                 </h3>
-                <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                <p className="text-sm text-muted-foreground line-clamp-1">
                   Created by {market.creator}
                 </p>
               </div>
@@ -92,20 +86,20 @@ export function PendingRequests() {
               </Badge>
             </div>
 
-            <div className="mt-auto grid grid-cols-2 gap-2 md:gap-3">
-              <div className="bg-white/5 rounded-lg p-2 md:p-3">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
+            <div className="mt-auto grid grid-cols-2 gap-3">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-sm text-muted-foreground mb-1">
                   Deposit
                 </p>
-                <p className="text-sm md:text-base font-medium">
+                <p className="text-base font-medium text-foreground">
                   {formatEther(market.depositAmount)} ETH
                 </p>
               </div>
-              <div className="bg-white/5 rounded-lg p-2 md:p-3">
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-sm text-muted-foreground mb-1">
                   Members
                 </p>
-                <p className="text-sm md:text-base font-medium">
+                <p className="text-base font-medium text-foreground">
                   {market.totalMembers}
                 </p>
               </div>

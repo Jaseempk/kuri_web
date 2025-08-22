@@ -239,7 +239,7 @@ export const NotificationSettings = () => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-8">
+        <div className="text-center py-8 flex flex-col items-center justify-center flex-1">
           <BellOff className="h-8 w-8 text-gray-400 mx-auto mb-3" />
           <h4 className="font-medium mb-2">Notifications Disabled</h4>
           <p className="text-sm text-gray-500 mb-4">
