@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-9dc17825'], (function (workbox) { 'use strict';
+define(['./workbox-41f5f610'], (function (workbox) { 'use strict';
 
   self.skipWaiting();
   workbox.clientsClaim();
@@ -82,14 +82,22 @@ define(['./workbox-9dc17825'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.7bdqeh8qh8o"
+    "revision": "0.f66gse5mphg"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
+  workbox.registerRoute(/^https:\/\/kuribackend-production\.up\.railway\.app\/api\/users\/profile/, new workbox.NetworkOnly({
+    "cacheName": "never-cache-profiles",
+    plugins: []
+  }), 'GET');
+  workbox.registerRoute(/^https:\/\/kuribackend-production\.up\.railway\.app\/api\/auth\/message/, new workbox.NetworkOnly({
+    "cacheName": "never-cache-auth",
+    plugins: []
+  }), 'GET');
   workbox.registerRoute(/^https:\/\/kuribackend-production\.up\.railway\.app\//, new workbox.NetworkFirst({
-    "cacheName": "kuri-api",
+    "cacheName": "kuri-api-general",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 100,
       maxAgeSeconds: 300

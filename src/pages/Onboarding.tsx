@@ -163,7 +163,9 @@ export default function Onboarding() {
       });
 
       toast.success("Profile created successfully!");
-      // Navigation will be handled by useEffect after profile is refreshed
+      
+      // Direct navigation - don't rely on useEffect
+      navigate(returnUrl, { replace: true });
     } catch (error) {
       // Track onboarding failure
       trackError(
@@ -211,9 +213,8 @@ export default function Onboarding() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-800 mb-3 lg:mb-4">
             Welcome to Kuri
           </h1>
-          <p className="text-stone-600 text-base sm:text-lg">
-            Get started by connecting your email. We'll create a secure wallet
-            for you automatically.
+          <p className="text-stone-600 text-base sm:text-lg ">
+            Login or Signup
           </p>
         </div>
 

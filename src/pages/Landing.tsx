@@ -457,23 +457,23 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            {/* Desktop Connect Button */}
+
+          {/* <div className="flex items-center space-x-4">
             <div className="hidden md:flex">
               <ConnectButton />
             </div>
-            {/* Mobile Connect Button - Always visible */}
+
             <div className="md:hidden">
               <ConnectButton />
             </div>
-            {/* Mobile Menu Button */}
+
             <button
               className="md:hidden text-white p-1"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X /> : <Menu />}
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Mobile menu */}
