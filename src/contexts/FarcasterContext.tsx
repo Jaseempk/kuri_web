@@ -27,7 +27,7 @@ export function FarcasterProvider({ children }: { children: React.ReactNode }) {
         if (ctx) {
           setIsInFarcaster(true);
           setContext(ctx);
-          sdk.actions.ready();
+          await sdk.actions.ready();
         }
       } catch (error) {
         console.debug("Not in Farcaster environment:", error);
