@@ -11,21 +11,12 @@ const formatAddress = (address: string) => {
 export function ConnectButton() {
   const { isOpen, openModal, closeModal } = useModal();
   const account = useAccount();
-  
-  console.log("ConnectButton account:", account);
-  console.log("ConnectButton modal functions:", { isOpen, openModal, closeModal });
-  console.log("ConnectButton openModal type:", typeof openModal);
 
   const handleClick = () => {
-    console.log("ConnectButton clicked!");
-    console.log("account.isConnected:", account.isConnected);
-    
     if (account.isConnected) {
-      console.log("Opening account modal for connected user");
-      openModal({ step: 'ACCOUNT_MAIN' });
+      openModal({ step: "ACCOUNT_MAIN" });
     } else {
-      console.log("Opening auth modal for new user");
-      openModal({ step: 'AUTH_MAIN' });
+      openModal({ step: "AUTH_MAIN" });
     }
   };
 
