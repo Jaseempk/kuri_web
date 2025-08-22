@@ -53,7 +53,7 @@ export const ParaWeb3Provider = ({
   const apiKey = import.meta.env.VITE_PARA_API_KEY || "";
   console.log("ParaWeb3Provider apiKey:", apiKey ? "SET" : "NOT SET");
   console.log("ParaWeb3Provider Environment:", Environment.BETA);
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <ParaProvider
