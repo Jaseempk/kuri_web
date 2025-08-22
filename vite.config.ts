@@ -52,10 +52,24 @@ export default defineConfig({
         ],
         runtimeCaching: [
           {
+            urlPattern: /^https:\/\/kuribackend-production\.up\.railway\.app\/api\/users\/profile/,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'never-cache-profiles'
+            }
+          },
+          {
+            urlPattern: /^https:\/\/kuribackend-production\.up\.railway\.app\/api\/auth\/message/,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'never-cache-auth'
+            }
+          },
+          {
             urlPattern: /^https:\/\/kuribackend-production\.up\.railway\.app\//,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'kuri-api',
+              cacheName: 'kuri-api-general',
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 5 // 5 minutes

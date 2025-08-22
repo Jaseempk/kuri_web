@@ -163,7 +163,9 @@ export default function Onboarding() {
       });
 
       toast.success("Profile created successfully!");
-      // Navigation will be handled by useEffect after profile is refreshed
+      
+      // Direct navigation - don't rely on useEffect
+      navigate(returnUrl, { replace: true });
     } catch (error) {
       // Track onboarding failure
       trackError(
