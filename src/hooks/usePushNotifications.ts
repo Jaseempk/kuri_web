@@ -215,7 +215,7 @@ export const usePushNotifications = () => {
   // Computed properties
   const isSubscribed =
     state.subscriptionState?.optedIn && !!state.subscriptionState?.token;
-  const permission = state.subscriptionState?.permission || false;
+  const permission = state.subscriptionState?.permission || "default";
 
   return {
     ...state,

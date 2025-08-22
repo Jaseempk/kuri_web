@@ -122,7 +122,7 @@ export const NotificationSettings = () => {
           <Button
             onClick={enableNotifications}
             disabled={loading || !isInitialized}
-            className="bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))]/90"
+            className="bg-[hsl(var(--terracotta))] hover:opacity-90"
           >
             Enable
           </Button>
@@ -152,7 +152,7 @@ export const NotificationSettings = () => {
                 </span>
               </Label>
               <Switch
-                checked={localPreferences.joinRequests || false}
+                checked={localPreferences?.joinRequests || false}
                 disabled={saving}
                 onCheckedChange={(checked) =>
                   handlePreferenceChange("joinRequests", checked)
@@ -250,7 +250,7 @@ export const NotificationSettings = () => {
             <Button
               onClick={enableNotifications}
               disabled={loading || !isInitialized}
-              className="bg-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))]/90"
+              className="bg-[hsl(var(--terracotta))] hover:opacity-90"
             >
               Enable Notifications
             </Button>

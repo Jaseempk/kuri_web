@@ -18,6 +18,7 @@ import { ProfileHeaderSection } from "../components/profile/ProfileHeaderSection
 import { StatsSection } from "../components/profile/StatsSection";
 import { SidebarTabsList } from "../components/profile/SidebarTabsList";
 import { ContentPanel, EmptyState } from "../components/profile/ContentPanel";
+import { USDCBalanceSection } from "../components/profile/USDCBalanceSection";
 
 export default function EnhancedProfile() {
   const { identifier } = useParams();
@@ -59,18 +60,24 @@ export default function EnhancedProfile() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto">
         {/* Profile Header */}
-        <ProfileHeaderSection profile={profile} />
+        <ProfileHeaderSection 
+          profile={profile} 
+          totalCircles={activity?.memberships?.length || 0}
+        />
         
-        {/* Stats Section */}
+        {/* Stats Section (Desktop only) */}
         <StatsSection 
           profile={profile} 
           totalCircles={activity?.memberships?.length || 0}
         />
 
+        {/* USDC Balance Section (Mobile/Tablet only) */}
+        <USDCBalanceSection />
+
         {/* Content Section */}
         {isOwnProfile && (
-          <div className="mt-8 px-4">
-            <Tabs defaultValue="my-circles" className="flex flex-col lg:flex-row gap-8">
+          <div className="mt-6 md:mt-8 md:px-4">
+            <Tabs defaultValue="my-circles" className="flex flex-col lg:flex-row gap-6 md:gap-8">
               {/* Sidebar Navigation */}
               <SidebarTabsList />
               
@@ -86,10 +93,10 @@ export default function EnhancedProfile() {
                         market.creator.toLowerCase() === address?.toLowerCase()
                     ).length === 0 ? (
                     <EmptyState
-                      icon="add_circle_outline"
+                      icon="group_work"
                       title="No Circles Created Yet"
                       description="Start by creating your first circle in the Markets page."
-                      actionLabel="Go to Markets"
+                      actionLabel="Create a Circle"
                       onAction={() => navigate("/markets")}
                     />
                   ) : (

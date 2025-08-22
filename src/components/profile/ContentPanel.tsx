@@ -10,7 +10,7 @@ export function ContentPanel({ children, className }: ContentPanelProps) {
   return (
     <div 
       className={cn(
-        "flex-1 bg-white rounded-2xl p-8 shadow-sm min-h-[500px] flex flex-col",
+        "flex-1 bg-white rounded-2xl p-6 mx-4 shadow-lg min-h-[500px] flex flex-col md:p-8 md:mx-0 md:shadow-sm",
         className
       )}
     >
@@ -35,21 +35,24 @@ export function EmptyState({
   onAction 
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center text-center py-12 flex-1">
-      <span className="material-icons text-6xl text-muted-foreground mb-4">
-        {icon}
-      </span>
-      <h2 className="text-xl font-semibold text-foreground mb-2">
+    <div className="text-center py-12 px-4 flex-1">
+      <div className="flex justify-center items-center h-20 w-20 bg-gray-100 rounded-full mx-auto mb-6">
+        <span className="material-icons text-4xl text-gray-400">
+          {icon}
+        </span>
+      </div>
+      <h3 className="text-xl font-semibold text-gray-800 mb-2">
         {title}
-      </h2>
-      <p className="text-muted-foreground max-w-xs mb-6">
+      </h3>
+      <p className="text-gray-500 mb-6">
         {description}
       </p>
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium hover:bg-primary/90 transition-colors"
+          className="bg-primary text-white font-semibold py-3 px-6 rounded-full shadow-md hover:bg-opacity-90 transition duration-300 flex items-center mx-auto"
         >
+          <span className="material-icons mr-2">add_circle_outline</span>
           {actionLabel}
         </button>
       )}

@@ -55,7 +55,7 @@ export function StatsSection({ profile, totalCircles = 0 }: StatsSectionProps) {
   ];
 
   return (
-    <div className="mx-4 mt-12">
+    <div className="hidden md:block mx-4 mt-12">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
         {stats.map((stat, index) => (
           <StatCard

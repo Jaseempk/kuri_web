@@ -60,23 +60,26 @@ export function SidebarTabsList({ className }: SidebarTabsListProps) {
       </div>
 
       {/* Mobile Horizontal Tabs */}
-      <div className="lg:hidden mb-6">
-        <TabsList className="bg-white rounded-xl p-1 w-full overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin">
-          {tabItems.map((item) => (
-            <TabsTrigger
-              key={item.value}
-              value={item.value}
-              className={cn(
-                "data-[state=active]:bg-accent/10 data-[state=active]:text-primary",
-                "rounded-lg transition-all text-sm px-3 py-2 flex-shrink-0",
-                "text-muted-foreground font-medium"
-              )}
-            >
-              <span className="material-icons text-sm mr-2">{item.icon}</span>
-              {item.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="lg:hidden">
+        <div className="mx-4">
+          <div className="overflow-x-auto scrollbar-hide">
+            <TabsList className="bg-transparent border-b border-gray-200 rounded-none w-full h-auto p-0 flex justify-start">
+              {tabItems.map((item) => (
+                <TabsTrigger
+                  key={item.value}
+                  value={item.value}
+                  className={cn(
+                    "flex-shrink-0 px-4 py-3 font-medium text-gray-500 hover:text-primary transition-colors",
+                    "data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary",
+                    "border-b-2 border-transparent bg-transparent rounded-none"
+                  )}
+                >
+                  {item.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+        </div>
       </div>
     </>
   );
