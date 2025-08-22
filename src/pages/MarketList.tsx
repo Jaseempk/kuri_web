@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Card } from "../components/ui/card";
 import { useOptimizedMarkets } from "../hooks/useOptimizedMarkets";
 import { IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
@@ -9,7 +8,7 @@ import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
 import { OptimizedMarketCard } from "../components/markets/OptimizedMarketCard";
 import { OptimizedKuriMarket } from "../hooks/useOptimizedMarkets";
-import { Search, SlidersHorizontal, Check, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, Check, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
 import { formatUnits } from "viem";
 import { apiClient } from "../lib/apiClient";
 import { MarketMetadata } from "../components/markets/MarketCard";
@@ -19,6 +18,7 @@ import { usePostCreationShareReplacement } from "../components/modals/PostCreati
 import { useUSDCBalances } from "../hooks/useUSDCBalances";
 import { getAccount } from "@wagmi/core";
 import { config } from "../config/wagmi";
+import { UserBalanceCard } from "../components/ui/UserBalanceCard";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -50,27 +50,33 @@ const StatsCard = ({
   title: string;
   value: string;
   change: string;
-}) => (
-  <Card className="p-4 xs:p-5 sm:p-6 bg-white border-[#E8DED1] hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-muted-foreground mb-1">{title}</p>
-        <p className="text-xl xs:text-2xl font-bold text-[#8B6F47]">{value}</p>
-      </div>
-      <div className="text-right">
-        <p
-          className={`text-sm font-medium ${
-            parseFloat(change) >= 0 ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {parseFloat(change) >= 0 ? "+" : ""}
-          {change}%
-        </p>
-        <p className="text-xs text-muted-foreground">vs last period</p>
+}) => {
+  const isPositive = parseFloat(change) >= 0;
+  
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-sm text-gray-500">{title}</p>
+          <p className="text-3xl font-bold text-gray-800 mt-2">{value}</p>
+        </div>
+        <div className="text-right">
+          <div className={`flex items-center ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+            {isPositive ? (
+              <TrendingUp className="h-4 w-4" />
+            ) : (
+              <TrendingDown className="h-4 w-4" />
+            )}
+            <span className="text-lg font-semibold ml-1">
+              {isPositive ? '+' : ''}{change}%
+            </span>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">vs last period</p>
+        </div>
       </div>
     </div>
-  </Card>
-);
+  );
+};
 
 // Market search component
 const MarketSearch = ({
@@ -188,6 +194,7 @@ export default function MarketList() {
     totalParticipants: 0,
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeStatsCard, setActiveStatsCard] = useState(0);
   const { 
     showShareModal, 
     onSuccess, 
@@ -416,59 +423,98 @@ export default function MarketList() {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
-        {/* Stats Banner */}
-        <div className="bg-[#F9F5F1] border-b border-[#E8DED1]">
-          <div className="container mx-auto px-3 xs:px-4 py-4 xs:py-5 sm:py-6">
-            {/* Mobile: Horizontal scroll, Desktop: Grid */}
-            <div className="sm:hidden">
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
-                <div className="min-w-[280px] snap-start">
-                  <StatsCard
-                    title="Total Participants"
-                    value={totalParticipants.toString()}
-                    change={participantsChange}
-                  />
+      <div className="min-h-screen bg-[#fdfaf7]">
+        {/* Stats Section with Headers */}
+        <div className="py-8">
+          <div className="container mx-auto px-3 xs:px-4 space-y-8">
+            
+            {/* Your Wallet Section */}
+            {isWalletConnected && (
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Wallet</h2>
+                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1">
+                  <UserBalanceCard />
                 </div>
-                <div className="min-w-[280px] snap-start">
-                  <StatsCard
-                    title="Active Circles"
-                    value={activeCircles.toString()}
-                    change={circlesChange}
-                  />
+              </div>
+            )}
+            
+            {/* Market Statistics Section */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Market Statistics</h2>
+              
+              {/* Mobile: One card at a time swipe */}
+              <div className="sm:hidden">
+                <div 
+                  className="overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
+                  onScroll={(e) => {
+                    const scrollLeft = e.currentTarget.scrollLeft;
+                    const cardWidth = e.currentTarget.scrollWidth / 3;
+                    const newActiveCard = Math.round(scrollLeft / cardWidth);
+                    setActiveStatsCard(newActiveCard);
+                  }}
+                >
+                  <div className="flex pb-2">
+                    <div className="w-full flex-shrink-0 snap-center px-4">
+                      <StatsCard
+                        title="Total Participants"
+                        value={totalParticipants.toString()}
+                        change={participantsChange}
+                      />
+                    </div>
+                    <div className="w-full flex-shrink-0 snap-center px-4">
+                      <StatsCard
+                        title="Active Circles"
+                        value={activeCircles.toString()}
+                        change={circlesChange}
+                      />
+                    </div>
+                    <div className="w-full flex-shrink-0 snap-center px-4">
+                      <StatsCard
+                        title="Total Value Locked"
+                        value={`$${Number(
+                          formatUnits(totalValueLocked, 6)
+                        ).toLocaleString()}`}
+                        change={tvlChange}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-[280px] snap-start">
-                  <StatsCard
-                    title="Total Value Locked"
-                    value={`$${Number(
-                      formatUnits(totalValueLocked, 6)
-                    ).toLocaleString()}`}
-                    change={tvlChange}
-                  />
+                
+                {/* Swipe indicators */}
+                <div className="flex justify-center mt-4 space-x-2">
+                  {[0, 1, 2].map((index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                        activeStatsCard === index ? 'bg-gray-800' : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
                 </div>
+              </div>
+              
+              {/* Desktop: Grid layout */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <StatsCard
+                  title="Total Value Locked"
+                  value={`$${Number(
+                    formatUnits(totalValueLocked, 6)
+                  ).toLocaleString()}`}
+                  change={tvlChange}
+                />
+                <StatsCard
+                  title="Active Circles"
+                  value={activeCircles.toString()}
+                  change={circlesChange}
+                />
+                <StatsCard
+                  title="Total Participants"
+                  value={totalParticipants.toString()}
+                  change={participantsChange}
+                />
               </div>
             </div>
             
-            {/* Desktop: Grid layout */}
-            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
-              <StatsCard
-                title="Total Value Locked"
-                value={`$${Number(
-                  formatUnits(totalValueLocked, 6)
-                ).toLocaleString()}`}
-                change={tvlChange}
-              />
-              <StatsCard
-                title="Active Circles"
-                value={activeCircles.toString()}
-                change={circlesChange}
-              />
-              <StatsCard
-                title="Total Participants"
-                value={totalParticipants.toString()}
-                change={participantsChange}
-              />
-            </div>
           </div>
         </div>
 
@@ -503,7 +549,7 @@ export default function MarketList() {
                 </DialogContent>
               </Dialog>
               
-              <div className="text-center">
+              <div className="text-left">
                 <h1 className="text-2xl font-bold text-[#8B6F47]">
                   Explore Circles
                 </h1>

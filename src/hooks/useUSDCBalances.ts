@@ -103,3 +103,59 @@ export const useUSDCBalances = (
     refetch: fetchBalances,
   };
 };
+
+// Hook for fetching user's USDC balance
+export const useUserUSDCBalance = (userAddress: `0x${string}` | undefined) => {
+  const [balance, setBalance] = useState<bigint>(BigInt(0));
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchUserBalance = useCallback(async () => {
+    if (!userAddress) {
+      setBalance(BigInt(0));
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Validate user address
+      if (!userAddress.startsWith('0x') || userAddress.length !== 42) {
+        throw new Error(`Invalid user address: ${userAddress}`);
+      }
+
+      const balance = await readContract(config, {
+        address: USDC_ADDRESS,
+        abi: ERC20ABI,
+        functionName: "balanceOf",
+        args: [userAddress],
+      });
+
+      setBalance(balance as bigint);
+    } catch (err) {
+      // Handle user rejection errors gracefully
+      if (err instanceof Error && err.message.includes("User rejected")) {
+        console.warn("User rejected USDC balance request:", err);
+        setBalance(BigInt(0));
+      } else {
+        console.error(`Error fetching user USDC balance for ${userAddress}:`, err);
+        setError(err as Error);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userAddress]);
+
+  useEffect(() => {
+    fetchUserBalance();
+  }, [fetchUserBalance]);
+
+  return {
+    balance,
+    isLoading,
+    error,
+    refetch: fetchUserBalance,
+  };
+};
