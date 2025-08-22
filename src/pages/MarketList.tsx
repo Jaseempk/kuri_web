@@ -19,6 +19,7 @@ import { useUSDCBalances } from "../hooks/useUSDCBalances";
 import { getAccount } from "@wagmi/core";
 import { config } from "../config/wagmi";
 import { UserBalanceCard } from "../components/ui/UserBalanceCard";
+import { useAccount } from "@getpara/react-sdk";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -164,9 +165,15 @@ const IntervalTypeFilter = ({
 };
 
 export default function MarketList() {
-  // Check wallet connection status
+  // Use Para SDK for wallet connection status
+  const paraAccount = useAccount();
+  const isWalletConnected = Boolean(
+    paraAccount.isConnected && 
+    paraAccount.embedded.wallets?.[0]?.address
+  );
+  
+  // Keep Wagmi account for other features that might need it
   const account = getAccount(config);
-  const isWalletConnected = Boolean(account.isConnected && account.address);
 
   // Replace useKuriMarkets with useOptimizedMarkets
   const {
