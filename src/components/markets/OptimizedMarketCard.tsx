@@ -105,8 +105,8 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   // Only use KuriCore for interactive actions (not for data fetching)
   const shouldUseCore = shouldUseKuriCore(market, address);
   const {
-    requestMembership,
-    initializeKuri,
+    requestMembershipSponsored,
+    initializeKuriSponsored,
     isRequesting,
     fetchMarketData,
     // Don't fetch marketData here - use the optimized data from props
@@ -192,7 +192,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
 
     setIsLoading(true);
     try {
-      await initializeKuri();
+      await initializeKuriSponsored();
       toast.success("Kuri cycle initialized successfully!");
       // Refresh market data after initialization
       await fetchMarketData();
@@ -231,7 +231,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
     setIsLoading(true);
 
     try {
-      await requestMembership();
+      await requestMembershipSponsored();
       toast.success("Membership requested successfully!");
       // Note: In the optimized version, the parent component should handle
       // refreshing the user data after membership request

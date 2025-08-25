@@ -5,8 +5,9 @@ import {
   KuriMarketDetailQueryVariables,
   KuriState,
 } from "../graphql/types";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { transformV1KuriInitialised } from "../utils/v1DataTransform";
+import { resolveMultipleAddressesRobust } from "../utils/addressResolution";
 
 export interface MarketDetail {
   creator: string;
@@ -44,15 +45,30 @@ export const useKuriMarketDetail = (marketAddress: string) => {
     notifyOnNetworkStatusChange: true,
   });
 
-  const marketDetail = useMemo((): MarketDetail | null => {
+  const marketDetail = useMemo(async (): Promise<MarketDetail | null> => {
     if (!data?.kuriInitialised) return null;
 
     // Transform the indexed fields to named fields
     const transformedData = transformV1KuriInitialised(data.kuriInitialised);
 
-    // Create a map of accepted members for quick lookup
+    // Extract all user addresses that need resolution
+    const depositUsers = data.userDepositeds.map(d => d.user);
+    const membershipUsers = data.membershipRequesteds.map(r => r.user);
+    const acceptedUsers = data.userAccepteds.map(a => a.user);
+    const winnerAddresses = data.raffleWinnerSelecteds.map(w => w.winnerAddress);
+    
+    const allUsers = [...new Set([...depositUsers, ...membershipUsers, ...acceptedUsers, ...winnerAddresses])];
+    
+    // Batch resolve addresses to EOAs
+    const resolvedAddresses = await resolveMultipleAddressesRobust(allUsers);
+    const addressMap = new Map(allUsers.map((addr, i) => [addr, resolvedAddresses[i]]));
+
+    // Create a map of accepted members for quick lookup (using resolved addresses)
     const acceptedMembersMap = new Map(
-      data.userAccepteds.map((accepted) => [accepted.user, accepted])
+      data.userAccepteds.map((accepted) => {
+        const resolvedUser = addressMap.get(accepted.user) || accepted.user;
+        return [resolvedUser, accepted];
+      })
     );
 
     return {
@@ -65,26 +81,39 @@ export const useKuriMarketDetail = (marketAddress: string) => {
       nextDepositTime: transformedData._kuriData_nextIntervalDepositTime,
       state: transformedData._kuriData_state as KuriState,
       deposits: data.userDepositeds.map((deposit) => ({
-        user: deposit.user,
+        user: addressMap.get(deposit.user) || deposit.user, // Resolved EOA
         intervalIndex: deposit.intervalIndex,
         amount: deposit.amountDeposited,
         timestamp: deposit.depositTimestamp,
       })),
       winners: data.raffleWinnerSelecteds.map((winner) => ({
         intervalIndex: winner.intervalIndex,
-        winner: winner.winnerAddress,
+        winner: addressMap.get(winner.winnerAddress) || winner.winnerAddress, // Resolved EOA
         timestamp: winner.winnerTimestamp,
       })),
-      members: data.membershipRequesteds.map((request) => ({
-        address: request.user,
-        status: acceptedMembersMap.has(request.user) ? "accepted" : "requested",
-        timestamp: request.timestamp,
-      })),
+      members: data.membershipRequesteds.map((request) => {
+        const resolvedUser = addressMap.get(request.user) || request.user;
+        return {
+          address: resolvedUser, // Resolved EOA
+          status: acceptedMembersMap.has(resolvedUser) ? "accepted" : "requested",
+          timestamp: request.timestamp,
+        };
+      }),
     };
   }, [data]);
 
+  const [resolvedMarketDetail, setResolvedMarketDetail] = useState<MarketDetail | null>(null);
+
+  useEffect(() => {
+    const resolveMarketDetail = async () => {
+      const resolved = await marketDetail;
+      setResolvedMarketDetail(resolved);
+    };
+    resolveMarketDetail();
+  }, [marketDetail]);
+
   return {
-    marketDetail,
+    marketDetail: resolvedMarketDetail,
     loading,
     error,
     refetch,

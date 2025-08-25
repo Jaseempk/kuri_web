@@ -132,9 +132,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   const {
     requestMembership,
+    requestMembershipSponsored, // 🚀 NEW: Gas-sponsored version
     getMemberStatus,
     isRequesting,
-    initializeKuri,
+    initializeKuriSponsored,
     marketData,
     fetchMarketData,
     userPaymentStatus,
@@ -266,7 +267,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
     setIsLoading(true);
     try {
-      await initializeKuri();
+      await initializeKuriSponsored();
       toast.success("Kuri cycle initialized successfully!");
     } catch (err) {
       console.error("Failed to initialize Kuri:", err);
@@ -303,7 +304,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     setIsLoading(true);
 
     try {
-      await requestMembership();
+      // 🚀 USE SPONSORED VERSION FOR TESTING
+      await requestMembershipSponsored();
 
       // Refresh membership status from contract to get the actual state
       const status = await getMemberStatus(address as `0x${string}`);

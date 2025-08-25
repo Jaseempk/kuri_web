@@ -33,7 +33,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
   kuriAddress,
   onClaimSuccess,
 }) => {
-  const { claimKuriAmount, isLoading, error, checkPaymentStatusIfMember } =
+  const { claimKuriAmountSponsored, isLoading, error, checkPaymentStatusIfMember } =
     useKuriCore(kuriAddress);
   const [currentInterval] = useState(0);
 
@@ -56,7 +56,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
     if (!kuriAddress) return;
 
     try {
-      await claimKuriAmount(currentInterval);
+      await claimKuriAmountSponsored(currentInterval);
       onClaimSuccess?.();
     } catch (err) {
       console.error("Claim failed:", err);

@@ -16,9 +16,10 @@ export const MarketDetails = ({ marketAddress }: MarketDetailsProps) => {
     isLoading,
     error,
     requestMembership,
-    initializeKuri,
-    deposit,
-    claimKuriAmount,
+    requestMembershipSponsored, // 🚀 NEW: Gas-sponsored version
+    initializeKuriSponsored,
+    depositSponsored,
+    claimKuriAmountSponsored,
   } = useKuriCore(marketAddress);
 
   const [isRequesting, setIsRequesting] = useState(false);
@@ -42,7 +43,8 @@ export const MarketDetails = ({ marketAddress }: MarketDetailsProps) => {
     if (!address) return;
     setIsRequesting(true);
     try {
-      await requestMembership();
+      // 🚀 USE SPONSORED VERSION FOR TESTING
+      await requestMembershipSponsored();
     } catch (err) {
       console.error("Error requesting membership:", err);
     } finally {
@@ -54,7 +56,7 @@ export const MarketDetails = ({ marketAddress }: MarketDetailsProps) => {
     if (!address) return;
     setIsInitializing(true);
     try {
-      await initializeKuri();
+      await initializeKuriSponsored();
     } catch (err) {
       console.error("Error initializing market:", err);
     } finally {
@@ -66,7 +68,7 @@ export const MarketDetails = ({ marketAddress }: MarketDetailsProps) => {
     if (!address) return;
     setIsDepositing(true);
     try {
-      await deposit();
+      await depositSponsored();
     } catch (err) {
       console.error("Error making deposit:", err);
     } finally {
@@ -78,7 +80,7 @@ export const MarketDetails = ({ marketAddress }: MarketDetailsProps) => {
     if (!address) return;
     setIsClaiming(true);
     try {
-      await claimKuriAmount(intervalIndex);
+      await claimKuriAmountSponsored(intervalIndex);
     } catch (err) {
       console.error("Error claiming amount:", err);
     } finally {

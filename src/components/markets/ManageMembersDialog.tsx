@@ -29,7 +29,7 @@ export const ManageMembersDialog = ({
   onOpenChange,
   onMemberActionComplete,
 }: ManageMembersDialogProps) => {
-  const { requestMembership, isRequesting, marketData } = useKuriCore(
+  const { requestMembershipSponsored, isRequesting, marketData } = useKuriCore(
     market.address as `0x${string}`
   );
   const account = useAccount();
@@ -40,7 +40,7 @@ export const ManageMembersDialog = ({
 
   const handleRequestMembership = async () => {
     try {
-      await requestMembership();
+      await requestMembershipSponsored();
       onMemberActionComplete?.();
       onOpenChange?.(false);
     } catch (error) {

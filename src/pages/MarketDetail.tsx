@@ -186,7 +186,8 @@ export default function MarketDetail() {
     isLoading,
     error,
     requestMembership,
-    initializeKuri,
+    requestMembershipSponsored, // 🚀 NEW: Gas-sponsored version
+    initializeKuriSponsored,
     getMemberStatus,
     fetchMarketData,
     checkPaymentStatusIfMember, // 🔥 NEW: Explicit payment status check
@@ -388,8 +389,9 @@ export default function MarketDetail() {
 
     setIsRequesting(true);
     try {
-      await requestMembership();
-      toast.success("Membership request sent!");
+      // 🚀 USE SPONSORED VERSION FOR TESTING
+      await requestMembershipSponsored();
+      toast.success("Membership request sent! (Gas was sponsored 🎉)");
 
       // Track successful market join
       if (marketData) {
@@ -430,7 +432,7 @@ export default function MarketDetail() {
 
     setIsInitializing(true);
     try {
-      await initializeKuri();
+      await initializeKuriSponsored();
       toast.success("Kuri cycle initialized successfully!");
 
       // Track successful market initialization

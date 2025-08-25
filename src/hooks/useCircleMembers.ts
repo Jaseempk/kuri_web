@@ -4,10 +4,12 @@ import { MEMBERSHIP_REQUESTS_QUERY, MARKET_DEPLOYMENT_QUERY } from "../graphql/q
 import { MarketDeploymentQueryResult, MarketDeploymentQueryVariables } from "../graphql/types";
 import { useKuriCore } from "./contracts/useKuriCore";
 import { useBulkUserProfiles } from "./useBulkUserProfiles";
+import { resolveSmartWalletToEOA } from "../utils/addressResolution";
 
 export interface MembershipRequest {
   id: string;
-  user: string;
+  user: string; // Resolved EOA address for display
+  originalUser?: string; // Original smart wallet address for contract calls
   timestamp: string;
   state: number;
 }
@@ -27,7 +29,7 @@ export const useCircleMembers = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { marketData, getMemberStatus, acceptMember, acceptMultipleMembers, rejectMember, isAccepting, isRejecting } = useKuriCore(marketAddress as `0x${string}`);
+  const { marketData, getMemberStatus, acceptMemberSponsored, acceptMultipleMembersSponsored, rejectMemberSponsored, isAccepting, isRejecting } = useKuriCore(marketAddress as `0x${string}`);
 
   // Query membership requests from subgraph
   const {
@@ -58,7 +60,7 @@ export const useCircleMembers = (
     }
   );
 
-  // Fetch member states from contract
+  // Fetch member states from contract with address resolution
   useEffect(() => {
     const fetchMemberStates = async () => {
       if (!data?.membershipRequesteds) return;
@@ -68,13 +70,29 @@ export const useCircleMembers = (
           data.membershipRequesteds.map(
             async (request: Omit<MembershipRequest, "state">) => {
               try {
+                // First resolve the smart wallet address to EOA for display
+                const resolvedUser = await resolveSmartWalletToEOA(request.user);
+                
+                // Use original address for contract call (smart wallet or EOA)
                 const state = await getMemberStatus(
                   request.user as `0x${string}`
                 );
-                return { ...request, state: state ?? 4 }; // Default to APPLIED state
+                
+                return { 
+                  ...request, 
+                  user: resolvedUser, // Use resolved EOA for display
+                  originalUser: request.user, // Keep original address for contract calls
+                  state: state ?? 4 
+                };
               } catch (err) {
                 console.error(`Error fetching state for ${request.user}:`, err);
-                return { ...request, state: 4 }; // Default to APPLIED state on error
+                // Still resolve the address even if state fetch fails
+                try {
+                  const resolvedUser = await resolveSmartWalletToEOA(request.user);
+                  return { ...request, user: resolvedUser, originalUser: request.user, state: 4 };
+                } catch (resolveErr) {
+                  return { ...request, state: 4 };
+                }
               }
             }
           )
@@ -154,10 +172,24 @@ export const useCircleMembers = (
   // Helper function to refresh member status
   const refreshMemberStatus = async (userAddress: string) => {
     try {
-      const status = await getMemberStatus(userAddress as `0x${string}`);
+      // userAddress could be either resolved EOA or original smart wallet address
+      // Find the member request to get the original address for contract calls
+      const memberRequest = memberRequests.find(req => 
+        req.user === userAddress || req.originalUser === userAddress
+      );
+      
+      if (!memberRequest) {
+        console.warn(`No member request found for address: ${userAddress}`);
+        return null;
+      }
+      
+      // Use original address for contract call, fallback to current address
+      const contractAddress = memberRequest.originalUser || userAddress;
+      const status = await getMemberStatus(contractAddress as `0x${string}`);
+      
       setMemberRequests((prev) =>
         prev.map((req) =>
-          req.user === userAddress ? { ...req, state: status ?? 4 } : req
+          req.user === memberRequest.user ? { ...req, state: status ?? 4 } : req
         )
       );
       return status;
@@ -183,9 +215,9 @@ export const useCircleMembers = (
     
     // Actions (for management components)
     getMemberStatus,
-    acceptMember,
-    acceptMultipleMembers,
-    rejectMember,
+    acceptMember: acceptMemberSponsored,
+    acceptMultipleMembers: acceptMultipleMembersSponsored,
+    rejectMember: rejectMemberSponsored,
     isAccepting,
     isRejecting,
     refreshMemberStatus,
