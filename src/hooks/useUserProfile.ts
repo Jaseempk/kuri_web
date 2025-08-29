@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { KuriUserProfile } from "../types/user";
 import { useAccount } from "@getpara/react-sdk";
 import { useApiAuth } from "./useApiAuth";
@@ -13,22 +13,25 @@ export const useUserProfile = () => {
   const { getSignedAuth } = useApiAuth();
   const queryClient = useQueryClient();
 
-  const {
-    data: profile,
-    isLoading,
-    error,
-    refetch: refreshProfile,
-  } = useQuery({
+  const queryOptions = useMemo(() => ({
     queryKey: ["user-profile-smart", smartAddress?.toLowerCase()],
     queryFn: async () => {
       if (!smartAddress) throw new Error("Smart wallet address not available");
       return apiClient.getUserProfile(smartAddress);
     },
-    enabled: !!smartAddress, // Better condition
+    enabled: !!smartAddress,
     staleTime: 10 * 60 * 1000, // 10 minutes - longer to prevent excessive fetching
     refetchOnWindowFocus: false,
-    placeholderData: (previousData) => previousData, // Keep previous data during transitions
-  });
+    placeholderData: (previousData: KuriUserProfile | null | undefined) => previousData || null, // Keep previous data during transitions
+  }), [smartAddress]);
+
+  const {
+    data: profile,
+    isLoading,
+    error,
+    refetch: refreshProfile,
+  } = useQuery(queryOptions);
+
   console.log("User profile data:", profile, "for address:", smartAddress);
 
   const updateProfile = useCallback(

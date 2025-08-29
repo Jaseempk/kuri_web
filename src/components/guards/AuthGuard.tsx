@@ -57,7 +57,7 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
         });
         return;
       }
-    }, 100); // Small delay to allow state to stabilize
+    }, 500); // Delay to allow smart wallet resolution and profile loading
   }, [account.isConnected, account.isLoading, address, profile, profileLoading, addressLoading]);
 
   // Reset navigation flag when component unmounts or when auth state changes significantly

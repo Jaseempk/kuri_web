@@ -71,8 +71,9 @@ export async function getSmartWalletAddressCached(
   }
   
   const smartWalletAddress = await getSmartWalletAddressForEOA(paraWalletId, eoaAddress, signMessageAsync);
-  smartWalletCache.set(cacheKey, smartWalletAddress);
-  return smartWalletAddress;
+  const normalizedAddress = smartWalletAddress.toLowerCase() as `0x${string}`;
+  smartWalletCache.set(cacheKey, normalizedAddress);
+  return normalizedAddress;
 }
 
 export function clearSmartWalletCache(): void {

@@ -43,7 +43,7 @@ export const useSmartWallet = (): UseSmartWalletReturn => {
         signMessageAsync
       );
       console.log("Fetched smart wallet address:", smartWalletAddress);
-      setSmartAddress(smartWalletAddress);
+      setSmartAddress(smartWalletAddress.toLowerCase() as `0x${string}`);
     } catch (err) {
       console.error("Failed to get smart wallet address:", err);
       setError(
@@ -62,12 +62,10 @@ export const useSmartWallet = (): UseSmartWalletReturn => {
     if (account.isConnected && embeddedAddress) {
       console.log("saathanam kayyilundo?", embeddedAddress);
       fetchSmartWallet();
-    } else {
-      // Only set to null if we're truly disconnected (not during loading)
-      if (!account.isLoading) {
-        setSmartAddress(null);
-        setError(null);
-      }
+    } else if (!account.isConnected && !account.isLoading) {
+      // Only reset if truly disconnected, not just missing embedded address
+      setSmartAddress(null);
+      setError(null);
     }
   }, [account.isConnected, embeddedAddress, account.isLoading]); // Remove fetchSmartWallet!
 

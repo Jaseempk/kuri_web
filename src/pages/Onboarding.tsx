@@ -29,7 +29,6 @@ export default function Onboarding() {
   const [error, setError] = useState<string>("");
   const [onboardingStartTime] = useState<number>(Date.now());
   const [hasInvalidImage, setHasInvalidImage] = useState(false);
-  const [authCheckComplete, setAuthCheckComplete] = useState(false);
   const returnUrl = location.state?.returnUrl || "/markets";
 
   const [formData, setFormData] = useState({
@@ -39,30 +38,26 @@ export default function Onboarding() {
     imagePreview: null as string | null,
   });
 
+  // Derived state for cleaner auth checks
+  const authDependenciesResolved = !account.isLoading && !profileLoading && !addressLoading;
+  const hasCompleteAuthState = account.isConnected && address && smartAddress;
+
   // Check authentication status and profile existence
   useEffect(() => {
-    // Only check once when component loads and data is stable
-    if (authCheckComplete) return;
+    if (!authDependenciesResolved) return; // Wait for all data to stabilize
 
-    // Don't check while still loading
-    if (account.isLoading || profileLoading || addressLoading) return;
-
-    if (account.isConnected && address && smartAddress && profile) {
-      // User is authenticated and has profile - redirect to app
-      // Prevent infinite loop by defaulting to /markets if returnUrl is /onboarding
+    if (hasCompleteAuthState && profile) {
+      // Fully authenticated - redirect
       const safeReturnUrl = returnUrl === "/onboarding" ? "/markets" : returnUrl;
-      setAuthCheckComplete(true);
       navigate(safeReturnUrl, { replace: true });
-    } else if (account.isConnected && address && smartAddress && !profile) {
-      // User is authenticated but no profile - show profile creation
+    } else if (hasCompleteAuthState && !profile) {
+      // Need profile creation
       setCurrentStep(OnboardingStep.PROFILE_CREATION);
-      setAuthCheckComplete(true);
     } else if (!account.isConnected) {
-      // User not authenticated - show email auth step
+      // Need authentication  
       setCurrentStep(OnboardingStep.EMAIL_AUTH);
-      setAuthCheckComplete(true);
     }
-  }, [account.isConnected, account.isLoading, address, smartAddress, profile, profileLoading, addressLoading]); // Remove navigate and returnUrl
+  }, [authDependenciesResolved, hasCompleteAuthState, profile, navigate, returnUrl]);
 
   // Track onboarding start
   useEffect(() => {
