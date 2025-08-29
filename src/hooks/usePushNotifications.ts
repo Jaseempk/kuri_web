@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useAccount } from "@getpara/react-sdk";
+import { useSmartWallet } from "./useSmartWallet";
 import {
   OneSignalHelper,
   NotificationPreferences,
@@ -29,8 +29,7 @@ export const usePushNotifications = () => {
     loading: true,
   });
 
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress } = useSmartWallet();
 
   // Wait for OneSignal to initialize
   useEffect(() => {
@@ -63,18 +62,18 @@ export const usePushNotifications = () => {
     checkInit();
   }, []);
 
-  // Handle user login/logout based on wallet connection
+  // Handle user login/logout based on smart wallet connection
   useEffect(() => {
     if (!state.isInitialized) return;
 
-    if (address) {
-      console.log("Wallet connected, logging in to OneSignal:", address);
-      OneSignalHelper.login(address);
+    if (smartAddress) {
+      console.log("Smart wallet connected, logging in to OneSignal:", smartAddress);
+      OneSignalHelper.login(smartAddress);
     } else {
-      console.log("Wallet disconnected, logging out from OneSignal");
+      console.log("Smart wallet disconnected, logging out from OneSignal");
       OneSignalHelper.logout();
     }
-  }, [state.isInitialized, address]);
+  }, [state.isInitialized, smartAddress]);
 
   // Set up subscription change listener
   useEffect(() => {
@@ -93,10 +92,10 @@ export const usePushNotifications = () => {
         OneSignalHelper.showNotifyButton();
       }
 
-      // If user gets a token and we have their address, login again to ensure linking
-      if (event.current.token && address) {
+      // If user gets a token and we have their smart address, login again to ensure linking
+      if (event.current.token && smartAddress) {
         console.log("Token received, ensuring user is logged in");
-        OneSignalHelper.login(address);
+        OneSignalHelper.login(smartAddress);
       }
     };
 
@@ -119,7 +118,7 @@ export const usePushNotifications = () => {
     }
 
     return cleanup || undefined;
-  }, [state.isInitialized, address]);
+  }, [state.isInitialized, smartAddress]);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!state.isSupported) {
@@ -184,8 +183,8 @@ export const usePushNotifications = () => {
   );
 
   const sendTestNotification = useCallback(async (): Promise<boolean> => {
-    if (!address) {
-      console.warn("No wallet address available for test notification");
+    if (!smartAddress) {
+      console.warn("No smart wallet address available for test notification");
       return false;
     }
 
@@ -195,7 +194,7 @@ export const usePushNotifications = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userAddress: address,
+          userAddress: smartAddress,
           message: "Test notification from Kuri frontend!",
         }),
       });
@@ -205,7 +204,7 @@ export const usePushNotifications = () => {
       console.error("Failed to send test notification:", error);
       return false;
     }
-  }, [address]);
+  }, [smartAddress]);
 
   // Clear error function
   const clearError = useCallback(() => {

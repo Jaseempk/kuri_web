@@ -5,8 +5,7 @@ import {
   UserActivityQueryVariables,
 } from "../graphql/types";
 import { useMemo, useState, useEffect } from "react";
-import { useAccount, useSignMessage } from "@getpara/react-sdk";
-import { getSmartWalletAddressCached } from "../utils/smartWalletMapping";
+import { useSmartWallet } from "./useSmartWallet";
 import { resolveMultipleAddressesRobust } from "../utils/addressResolution";
 
 export interface UserActivity {
@@ -32,38 +31,13 @@ export interface UserActivity {
 }
 
 export const useUserActivity = (userAddress: string) => {
-  const account = useAccount();
-  const { signMessageAsync } = useSignMessage();
-  const [queryAddress, setQueryAddress] = useState<string | null>(null);
-
-  // Generate query address (smart wallet) from EOA
-  useEffect(() => {
-    const generateQueryAddress = async () => {
-      if (!userAddress) return;
-      
-      const paraWalletClient = account.embedded.wallets?.[0];
-      if (!paraWalletClient) {
-        // No Para wallet = no sponsored transactions yet, use EOA for backward compatibility
-        setQueryAddress(userAddress);
-        return;
-      }
-
-      try {
-        const smartWalletAddress = await getSmartWalletAddressCached(
-          paraWalletClient.id,
-          userAddress as `0x${string}`,
-          signMessageAsync
-        );
-        setQueryAddress(smartWalletAddress);
-      } catch (error) {
-        console.error("Failed to generate smart wallet address:", error);
-        // Fallback to EOA address
-        setQueryAddress(userAddress);
-      }
-    };
-
-    generateQueryAddress();
-  }, [userAddress, account, signMessageAsync]);
+  const { smartAddress } = useSmartWallet();
+  
+  // Use smart wallet address if it matches the requested user, otherwise use provided address
+  const queryAddress = userAddress && smartAddress && 
+    userAddress.toLowerCase() === smartAddress.toLowerCase() 
+    ? smartAddress 
+    : userAddress;
 
   const { data, loading, error, refetch } = useQuery<
     UserActivityQueryResult,

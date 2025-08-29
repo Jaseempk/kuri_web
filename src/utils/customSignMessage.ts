@@ -1,5 +1,5 @@
-import { hashMessage } from "viem";
-import type { Hash, SignableMessage } from "viem";
+import { hashMessage, hashTypedData } from "viem";
+import type { Hash, SignableMessage, TypedData, TypedDataDefinition } from "viem";
 
 const SIGNATURE_LENGTH = 130;
 const V_OFFSET_FOR_ETHEREUM = 27;
@@ -66,4 +66,16 @@ export async function customSignMessage(
 ): Promise<Hash> {
   const hashedMessage = hashMessage(message);
   return signWithParaHook(signMessageAsync, walletId, hashedMessage, true);
+}
+
+export async function customSignTypedData<
+  const TTypedData extends TypedData | Record<string, unknown>,
+  TPrimaryType extends keyof TTypedData | "EIP712Domain" = keyof TTypedData
+>(
+  signMessageAsync: (params: { walletId: string; messageBase64: string }) => Promise<{ signature: string }>,
+  walletId: string,
+  typedData: TypedDataDefinition<TTypedData, TPrimaryType>
+): Promise<Hash> {
+  const hashedTypedData = hashTypedData(typedData);
+  return signWithParaHook(signMessageAsync, walletId, hashedTypedData, true);
 }

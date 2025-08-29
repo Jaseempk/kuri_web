@@ -2,7 +2,7 @@ import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts"
 import { WalletClientSigner } from "@aa-sdk/core";
 import { alchemy, baseSepolia } from "@account-kit/infra";
 import { createWalletClient, http } from "viem";
-import { customSignMessage } from "./customSignMessage";
+import { customSignMessage, customSignTypedData } from "./customSignMessage";
 import { generateSalt } from "./generateSalt";
 
 export interface GasSponsorshipParams {
@@ -15,6 +15,7 @@ export interface SponsoredClient {
   account: { address: `0x${string}` };
   sendUserOperation: (params: any) => Promise<any>;
   waitForUserOperationTransaction: (opResult: any) => Promise<any>;
+  signMessage: (params: { message: string }) => Promise<string>;
 }
 
 /**
@@ -26,7 +27,6 @@ export async function createGasSponsoredClient({
   paraWalletClient,
   signMessageAsync,
 }: GasSponsorshipParams): Promise<SponsoredClient> {
-  console.log("🔧 Creating Para-compatible Viem account for gas sponsorship...");
 
   // Create Para-compatible LocalAccount
   const customAccount = {
@@ -34,23 +34,25 @@ export async function createGasSponsoredClient({
     type: "local" as const,
     source: "para",
     signMessage: async ({ message }: { message: any }) => {
-      console.log("🖊️  Custom signing message via Para...");
       return customSignMessage(
         signMessageAsync,
         paraWalletClient.id,
         message
       );
     },
-    signTransaction: async (transaction: any) => {
+    signTransaction: async () => {
       throw new Error("signTransaction not implemented for Para account");
     },
     signTypedData: async (parameters: any) => {
-      throw new Error("signTypedData not implemented for Para account");
+      return customSignTypedData(
+        signMessageAsync,
+        paraWalletClient.id,
+        parameters
+      );
     },
     publicKey: userAddress as `0x${string}`,
   };
 
-  console.log("🔗 Creating Viem wallet client with Para account...");
 
   // Create viem WalletClient with custom Para account
   const viemWalletClient = createWalletClient({
@@ -69,7 +71,6 @@ export async function createGasSponsoredClient({
     "wallet"
   );
 
-  console.log("⚡ Creating Alchemy client with gas sponsorship...");
 
   // Generate proper deterministic salt using wallet ID
   const salt = generateSalt(paraWalletClient.id, 0);
@@ -87,7 +88,6 @@ export async function createGasSponsoredClient({
     salt,
   });
 
-  console.log("✅ Smart wallet address:", sponsoredClient.account.address);
 
   return sponsoredClient;
 }
@@ -99,14 +99,12 @@ export async function executeSponsoredTransaction({
   sponsoredClient,
   target,
   callData,
-  operationName = "transaction",
 }: {
   sponsoredClient: SponsoredClient;
   target: `0x${string}`;
   callData: `0x${string}`;
   operationName?: string;
 }): Promise<string> {
-  console.log(`🚀 Sending gas-sponsored ${operationName}...`);
 
   // Send UserOperation (automatically sponsored by Alchemy policy)
   const userOpResult = await sponsoredClient.sendUserOperation({
@@ -117,12 +115,32 @@ export async function executeSponsoredTransaction({
     },
   });
 
-  console.log(`${operationName} UserOperation Hash:`, userOpResult.hash);
 
   // Wait for the transaction to be mined
-  console.log(`⏳ Waiting for ${operationName} UserOperation to be mined...`);
   const txHash = await sponsoredClient.waitForUserOperationTransaction(userOpResult);
-  console.log(`✅ ${operationName} transaction mined! Hash:`, txHash);
 
   return txHash;
+}
+
+/**
+ * Smart wallet message signing using Alchemy Account Kit
+ * @param sponsoredClient - The Alchemy sponsored client
+ * @param message - Message to sign
+ * @returns Signature from smart wallet
+ */
+export async function signMessageWithSmartWallet({
+  sponsoredClient,
+  message,
+}: {
+  sponsoredClient: SponsoredClient;
+  message: string;
+}): Promise<string> {
+
+  try {
+    // Try direct smart wallet message signing
+    const signature = await sponsoredClient.signMessage({ message });
+    return signature;
+  } catch (error) {
+    throw new Error(`Smart wallet message signing failed: ${error}`);
+  }
 }

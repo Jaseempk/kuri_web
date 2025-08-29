@@ -8,6 +8,7 @@ import { useTransactionStatus } from "../useTransactionStatus";
 
 import { calculateApprovalAmount } from "../../utils/tokenUtils";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
+import { useSmartWallet } from "../useSmartWallet";
 import {
   createGasSponsoredClient,
   executeSponsoredTransaction,
@@ -74,7 +75,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const [currentInterval, setCurrentInterval] = useState<number>(0);
 
   const account = useAccount();
-  const userAddress = account.embedded.wallets?.[0]?.address as `0x${string}`;
+  const { smartAddress: userAddress } = useSmartWallet();
   const { handleTransaction } = useTransactionStatus();
   const { signMessageAsync } = useSignMessage();
 
@@ -188,7 +189,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
         // Create sponsored client using the helper
         const sponsoredClient = await createGasSponsoredClient({
-          userAddress,
+          userAddress: paraWalletClient.address as `0x${string}`,
           paraWalletClient,
           signMessageAsync,
         });
@@ -689,7 +690,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
         // Create sponsored client using the helper
         const sponsoredClient = await createGasSponsoredClient({
-          userAddress,
+          userAddress: paraWalletClient.address as `0x${string}`,
           paraWalletClient,
           signMessageAsync,
         });
@@ -838,7 +839,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
         // Create sponsored client using the helper
         const sponsoredClient = await createGasSponsoredClient({
-          userAddress,
+          userAddress: paraWalletClient.address as `0x${string}`,
           paraWalletClient,
           signMessageAsync,
         });
@@ -899,7 +900,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
         // Create sponsored client using the helper
         const sponsoredClient = await createGasSponsoredClient({
-          userAddress,
+          userAddress: paraWalletClient.address as `0x${string}`,
           paraWalletClient,
           signMessageAsync,
         });
@@ -961,7 +962,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
         // Create sponsored client using the helper
         const sponsoredClient = await createGasSponsoredClient({
-          userAddress,
+          userAddress: paraWalletClient.address as `0x${string}`,
           paraWalletClient,
           signMessageAsync,
         });

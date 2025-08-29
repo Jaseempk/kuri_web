@@ -1,14 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { useAccount } from "@getpara/react-sdk";
+import { useSmartWallet } from "../hooks/useSmartWallet";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 
 export default function ProfileRedirect() {
   const navigate = useNavigate();
   const { profile, isLoading } = useUserProfile();
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress: address } = useSmartWallet();
 
   useEffect(() => {
     if (!isLoading && (profile?.username || address)) {

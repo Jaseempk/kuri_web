@@ -7,6 +7,7 @@ import { sanitizeInput } from "../utils/sanitize";
 import { validateImageFile } from "../utils/fileValidation";
 import { trackEvent, trackError } from "../utils/analytics";
 import { formatErrorForUser } from "../utils/apiErrors";
+import { useSmartWallet } from "@/hooks/useSmartWallet";
 
 enum OnboardingStep {
   EMAIL_AUTH = "email_auth",
@@ -19,7 +20,8 @@ export default function Onboarding() {
   const account = useAccount();
   const { openModal } = useModal();
   const address = account.embedded.wallets?.[0]?.address;
-  const { profile, updateProfile } = useUserProfile();
+  const { profile, updateProfile, isLoading: profileLoading } = useUserProfile();
+  const { smartAddress, isLoading: addressLoading } = useSmartWallet();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(
     OnboardingStep.EMAIL_AUTH
   );
@@ -27,6 +29,7 @@ export default function Onboarding() {
   const [error, setError] = useState<string>("");
   const [onboardingStartTime] = useState<number>(Date.now());
   const [hasInvalidImage, setHasInvalidImage] = useState(false);
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
   const returnUrl = location.state?.returnUrl || "/markets";
 
   const [formData, setFormData] = useState({
@@ -38,19 +41,28 @@ export default function Onboarding() {
 
   // Check authentication status and profile existence
   useEffect(() => {
-    if (account.isConnected && address) {
-      if (profile) {
-        // User is authenticated and has profile - redirect to app
-        navigate(returnUrl);
-      } else {
-        // User is authenticated but no profile - show profile creation
-        setCurrentStep(OnboardingStep.PROFILE_CREATION);
-      }
-    } else {
+    // Only check once when component loads and data is stable
+    if (authCheckComplete) return;
+
+    // Don't check while still loading
+    if (account.isLoading || profileLoading || addressLoading) return;
+
+    if (account.isConnected && address && smartAddress && profile) {
+      // User is authenticated and has profile - redirect to app
+      // Prevent infinite loop by defaulting to /markets if returnUrl is /onboarding
+      const safeReturnUrl = returnUrl === "/onboarding" ? "/markets" : returnUrl;
+      setAuthCheckComplete(true);
+      navigate(safeReturnUrl, { replace: true });
+    } else if (account.isConnected && address && smartAddress && !profile) {
+      // User is authenticated but no profile - show profile creation
+      setCurrentStep(OnboardingStep.PROFILE_CREATION);
+      setAuthCheckComplete(true);
+    } else if (!account.isConnected) {
       // User not authenticated - show email auth step
       setCurrentStep(OnboardingStep.EMAIL_AUTH);
+      setAuthCheckComplete(true);
     }
-  }, [account.isConnected, address, profile, navigate, returnUrl]);
+  }, [account.isConnected, account.isLoading, address, smartAddress, profile, profileLoading, addressLoading]); // Remove navigate and returnUrl
 
   // Track onboarding start
   useEffect(() => {
@@ -163,7 +175,7 @@ export default function Onboarding() {
       });
 
       toast.success("Profile created successfully!");
-      
+
       // Direct navigation - don't rely on useEffect
       navigate(returnUrl, { replace: true });
     } catch (error) {

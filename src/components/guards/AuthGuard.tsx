@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccount } from "@getpara/react-sdk";
 import { useUserProfile } from "../../hooks/useUserProfile";
+import { useSmartWallet } from "../../hooks/useSmartWallet";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -11,36 +12,70 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
   const navigate = useNavigate();
   const account = useAccount();
   const { profile, isLoading: profileLoading } = useUserProfile();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress: address, isLoading: addressLoading } = useSmartWallet();
+  const [hasNavigated, setHasNavigated] = useState(false);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    // Don't redirect while still loading account or profile data
-    if (account.isLoading || profileLoading) {
+    // Clear any pending navigation
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current);
+    }
+
+    // Don't navigate if we already navigated recently
+    if (hasNavigated) {
       return;
     }
 
-    // If not connected, redirect to onboarding
-    if (!account.isConnected || !address) {
-      navigate("/onboarding", { 
-        state: { 
-          returnUrl: window.location.pathname + window.location.search,
-          source: "auth_required" 
-        } 
-      });
+    // Don't redirect while still loading account, profile, or address data
+    if (account.isLoading || profileLoading || addressLoading) {
       return;
     }
 
-    // If connected but no profile, redirect to onboarding
-    if (!profile) {
-      navigate("/onboarding", { 
-        state: { 
-          returnUrl: window.location.pathname + window.location.search,
-          source: "profile_required" 
-        } 
-      });
-      return;
+    // Add small delay to prevent rapid navigation and allow state to stabilize
+    navigationTimeoutRef.current = setTimeout(() => {
+      // If not connected, redirect to onboarding
+      if (!account.isConnected || !address) {
+        setHasNavigated(true);
+        navigate("/onboarding", { 
+          state: { 
+            returnUrl: window.location.pathname + window.location.search,
+            source: "auth_required" 
+          } 
+        });
+        return;
+      }
+
+      // If connected but no profile, redirect to onboarding
+      if (!profile) {
+        setHasNavigated(true);
+        navigate("/onboarding", { 
+          state: { 
+            returnUrl: window.location.pathname + window.location.search,
+            source: "profile_required" 
+          } 
+        });
+        return;
+      }
+    }, 100); // Small delay to allow state to stabilize
+  }, [account.isConnected, account.isLoading, address, profile, profileLoading, addressLoading]);
+
+  // Reset navigation flag when component unmounts or when auth state changes significantly
+  useEffect(() => {
+    return () => {
+      setHasNavigated(false);
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Reset navigation flag when user becomes authenticated
+  useEffect(() => {
+    if (account.isConnected && address && profile && hasNavigated) {
+      setHasNavigated(false);
     }
-  }, [account.isConnected, account.isLoading, address, profile, profileLoading, navigate]);
+  }, [account.isConnected, address, profile, hasNavigated]);
 
   // Show loading state while checking authentication
   if (account.isLoading || profileLoading) {

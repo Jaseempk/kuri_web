@@ -1,11 +1,10 @@
-import { useAccount } from "@getpara/react-sdk";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
+import { useSmartWallet } from "../../hooks/useSmartWallet";
 import { formatUnits } from "viem";
 
 export function USDCBalanceSection() {
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
-  const { balance, isLoading, error } = useUserUSDCBalance(address);
+  const { smartAddress: address } = useSmartWallet();
+  const { balance, isLoading, error } = useUserUSDCBalance(address || undefined);
 
   // Format USDC balance with at least 2 decimal places
   const formatUSDCDisplay = (amount: bigint): string => {

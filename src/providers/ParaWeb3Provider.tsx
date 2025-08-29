@@ -45,6 +45,13 @@ queryClient.setQueryDefaults(["kuriMarkets"], {
   retry: 3,
 });
 
+queryClient.setQueryDefaults(["user-profile-smart"], {
+  staleTime: 10 * 60 * 1000, // 10 minutes - much longer
+  gcTime: 30 * 60 * 1000, // 30 minutes
+  refetchOnWindowFocus: false,
+  retry: 1, // Reduce retries
+});
+
 export const ParaWeb3Provider = ({
   children,
 }: {

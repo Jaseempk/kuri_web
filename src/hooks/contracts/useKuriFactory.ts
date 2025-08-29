@@ -3,11 +3,11 @@ import {
   // readContract,
   writeContract,
   simulateContract,
-  getAccount,
   waitForTransactionReceipt,
 } from "@wagmi/core";
 import { decodeEventLog, encodeFunctionData } from "viem";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
+import { useSmartWallet } from "../useSmartWallet";
 import { KuriFactoryABI } from "../../contracts/abis/KuriFactoryV1";
 import { getContractAddress } from "../../config/contracts";
 import { handleContractError } from "../../utils/errors";
@@ -21,13 +21,12 @@ export const useKuriFactory = () => {
   const [isCreating, setIsCreating] = useState(false);
   const paraAccount = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const address = paraAccount.embedded.wallets?.[0]?.address;
+  const { smartAddress: address } = useSmartWallet();
   const chainId = baseSepolia.id; // Use Para with Base Sepolia
   const factoryAddress = getContractAddress(
     chainId ?? baseSepolia.id,
     "KuriFactory"
   );
-  const account = getAccount(config);
   const { handleTransaction, isSuccess: isCreationSuccess } =
     useTransactionStatus();
   const {
@@ -141,7 +140,7 @@ export const useKuriFactory = () => {
 
         // Create sponsored client using the helper
         const sponsoredClient = await createGasSponsoredClient({
-          userAddress: address as `0x${string}`,
+          userAddress: paraWalletClient.address as `0x${string}`,
           paraWalletClient,
           signMessageAsync,
         });
