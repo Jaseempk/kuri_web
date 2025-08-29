@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAccount } from "@getpara/react-sdk";
 import { useLocation } from "react-router-dom";
+import { useSmartWallet } from "./useSmartWallet";
 import {
   trackWalletConnection,
   trackPageView,
@@ -9,7 +10,7 @@ import {
 
 export function useAnalyticsTracking() {
   const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress: address } = useSmartWallet();
   // Para uses Base Sepolia by default
   const chainId = 84532; // Base Sepolia chain ID
   const connector = { name: 'Para' }; // Para connector info

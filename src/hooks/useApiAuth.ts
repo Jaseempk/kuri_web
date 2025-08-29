@@ -1,8 +1,9 @@
-import { useAccount } from "@getpara/react-sdk";
+import { useAccount, useSignMessage } from "@getpara/react-sdk";
 import { useViemClient } from "@getpara/react-sdk/evm/hooks";
 import { baseSepolia } from "viem/chains";
 import { http } from "viem";
 import { apiClient } from "../lib/apiClient";
+import { createGasSponsoredClient, signMessageWithSmartWallet } from "../utils/gasSponsorship";
 
 interface SignedAuth {
   message: string;
@@ -12,6 +13,7 @@ interface SignedAuth {
 
 export const useApiAuth = () => {
   const account = useAccount();
+  const { signMessageAsync } = useSignMessage();
 
   // Get the wallet address for viem client configuration
   const walletAddress = account.embedded.wallets?.[0]?.address as
@@ -34,13 +36,14 @@ export const useApiAuth = () => {
   /**
    * Get signed authentication for API calls using Viem client
    * @param action - Type of action requiring authentication
+   * @param targetAddress - Optional smart wallet address to use for authentication
    * @returns Signed authentication data
    */
   const getSignedAuth = async (
-    action: "create_profile" | "create_market"
+    action: "create_profile" | "create_market",
+    targetAddress?: string
   ): Promise<SignedAuth> => {
     const walletData = account.embedded.wallets?.[0];
-    console.log("useApiAuth walletData:", walletData);
 
     if (!walletData?.address) {
       throw new Error("Para wallet not connected");
@@ -51,35 +54,59 @@ export const useApiAuth = () => {
     }
 
     try {
+      // Use smart wallet address if provided, otherwise use embedded wallet address
+      const addressForAuth = targetAddress || walletData.address;
+      
       const { message } = await apiClient.getAuthMessage(
         action,
-        walletData.address
+        addressForAuth
       );
 
-      console.log("🟦 [VIEM AUTH DEBUG] Signing with Viem client:");
-      console.log("  Action:", action);
-      console.log("  Address:", walletData.address);
-      console.log("  Raw message:", JSON.stringify(message));
-      console.log("  Message length:", message.length);
 
-      // Sign with Viem client (no Base64 encoding needed)
-      const signature = await viemClient.signMessage({
-        message: message, // Raw string message
-      });
+      let signature: string;
 
-      console.log("🟦 [VIEM AUTH DEBUG] Signature result:", signature);
+      // If target address is provided (smart wallet), try smart wallet signing first
+      if (targetAddress) {
+        try {
+          
+          // Create sponsored client for smart wallet signing
+          const sponsoredClient = await createGasSponsoredClient({
+            userAddress: walletData.address as `0x${string}`,
+            paraWalletClient: walletData,
+            signMessageAsync,
+          });
 
-      // Return in same format as existing backend expects
+          // Try signing with smart wallet
+          signature = await signMessageWithSmartWallet({
+            sponsoredClient,
+            message,
+          });
+
+
+        } catch (smartWalletError) {
+          
+          // Fallback: Sign with embedded wallet for smart wallet
+          signature = await viemClient.signMessage({
+            message: message,
+          });
+
+        }
+      } else {
+        // Standard embedded wallet signing
+        signature = await viemClient.signMessage({
+          message: message,
+        });
+
+      }
+
+
       return {
         message,
         signature,
-        address: walletData.address,
+        address: addressForAuth,
       };
     } catch (error) {
-      console.error(
-        "🔴 [VIEM AUTH DEBUG] Para Viem authentication error:",
-        error
-      );
+      console.error("Authentication error:", error);
       throw error;
     }
   };

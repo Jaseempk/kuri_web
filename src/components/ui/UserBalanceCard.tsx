@@ -1,21 +1,20 @@
 import { useAccount, useModal } from "@getpara/react-sdk";
 import { formatUnits } from "viem";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
+import { useSmartWallet } from "../../hooks/useSmartWallet";
 import { Plus, RefreshCw } from "lucide-react";
 
 export const UserBalanceCard = () => {
   const account = useAccount();
   const { openModal } = useModal();
-  const userAddress = account.embedded.wallets?.[0]?.address as
-    | `0x${string}`
-    | undefined;
+  const { smartAddress: userAddress } = useSmartWallet();
 
   const {
     balance,
     isLoading: isLoadingBalance,
     error: balanceError,
     refetch: refetchBalance,
-  } = useUserUSDCBalance(userAddress);
+  } = useUserUSDCBalance(userAddress || undefined);
 
   // Don't render if user is not connected
   if (!account.isConnected || !userAddress) {

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { useAccount } from "@getpara/react-sdk";
 import { useUserProfile } from "../../hooks/useUserProfile";
+import { useSmartWallet } from "../../hooks/useSmartWallet";
 import { User } from "lucide-react";
 import { Button } from "./button";
 
@@ -10,10 +10,8 @@ const formatAddress = (address: string) => {
 
 export function ProfileButton() {
   const location = useLocation();
-  const account = useAccount();
   const { profile, email } = useUserProfile();
-  
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress: address } = useSmartWallet();
 
   const isProfilePath =
     location.pathname.startsWith("/u/") || location.pathname === "/me";

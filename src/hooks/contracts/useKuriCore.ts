@@ -7,7 +7,13 @@ import { config } from "../../config/wagmi";
 import { useTransactionStatus } from "../useTransactionStatus";
 
 import { calculateApprovalAmount } from "../../utils/tokenUtils";
-import { useAccount } from "@getpara/react-sdk";
+import { useAccount, useSignMessage } from "@getpara/react-sdk";
+import { useSmartWallet } from "../useSmartWallet";
+import {
+  createGasSponsoredClient,
+  executeSponsoredTransaction,
+} from "../../utils/gasSponsorship";
+import { encodeFunctionData } from "viem";
 
 export enum KuriState {
   INLAUNCH,
@@ -69,8 +75,9 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const [currentInterval, setCurrentInterval] = useState<number>(0);
 
   const account = useAccount();
-  const userAddress = account.embedded.wallets?.[0]?.address as `0x${string}`;
+  const { smartAddress: userAddress } = useSmartWallet();
   const { handleTransaction } = useTransactionStatus();
+  const { signMessageAsync } = useSignMessage();
 
   // Fetch token address from the contract
   const fetchTokenAddress = useCallback(async () => {
@@ -164,6 +171,68 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       }
     },
     [kuriAddress, userAddress, tokenAddress, handleTransaction]
+  );
+
+  // 🚀 NEW: Gas-sponsored approve tokens using Alchemy Account Kit
+  const approveTokensSponsored = useCallback(
+    async (amount: bigint) => {
+      if (!kuriAddress || !userAddress || !tokenAddress) {
+        throw new Error("Invalid parameters for token approval");
+      }
+
+      setIsApproving(true);
+
+      try {
+        // Get Para's wallet client
+        const paraWalletClient = account.embedded.wallets?.[0];
+        if (!paraWalletClient) throw new Error("Para wallet not available");
+
+        // Create sponsored client using the helper
+        const sponsoredClient = await createGasSponsoredClient({
+          userAddress: paraWalletClient.address as `0x${string}`,
+          paraWalletClient,
+          signMessageAsync,
+        });
+
+        // Encode the contract call data for ERC20 approval
+        const callData = encodeFunctionData({
+          abi: ERC20ABI,
+          functionName: "approve",
+          args: [kuriAddress, amount],
+        });
+
+        // Execute sponsored transaction
+        const txHash = await executeSponsoredTransaction({
+          sponsoredClient,
+          target: tokenAddress, // Target is the token contract, not KuriCore
+          callData,
+          operationName: "token approval",
+        });
+
+        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
+
+        await handleTransaction(txHash as `0x${string}`, {
+          loadingMessage: "Approving tokens (gas-sponsored)...",
+          successMessage: "Token approval successful! 🎉 Gas was sponsored!",
+          errorMessage: "Failed to approve tokens (sponsored)",
+        });
+
+        return txHash;
+      } catch (error) {
+        console.error("Gas-sponsored approveTokens failed:", error);
+        throw handleContractError(error);
+      } finally {
+        setIsApproving(false);
+      }
+    },
+    [
+      kuriAddress,
+      userAddress,
+      tokenAddress,
+      handleTransaction,
+      account,
+      signMessageAsync,
+    ]
   );
 
   // Check if user has paid for current interval
@@ -439,6 +508,146 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     refreshUserData,
   ]);
 
+  // 🚀 NEW: Gas-sponsored deposit using Alchemy Account Kit (MOST COMPLEX)
+  const depositSponsored = useCallback(async () => {
+    if (!kuriAddress || !userAddress || !marketData || !tokenAddress)
+      throw new Error("Invalid parameters");
+
+    try {
+      const kuriAmount = marketData.kuriAmount;
+
+      // Check if this is a first deposit (interval 1) that requires 1% fee
+      const isFirstDeposit =
+        currentInterval === 1 && userPaymentStatus === false;
+
+      // Calculate required amount including fee for first deposit
+      const requiredAmount = isFirstDeposit
+        ? kuriAmount + kuriAmount / BigInt(100) // Add 1% fee
+        : kuriAmount;
+
+      const requiredApproval = calculateApprovalAmount(requiredAmount);
+      const currentAllowance = await checkAllowance();
+
+      // Get Para's wallet client
+      const paraWalletClient = account.embedded.wallets?.[0];
+      if (!paraWalletClient) throw new Error("Para wallet not available");
+
+      // Create sponsored client using the helper
+      const sponsoredClient = await createGasSponsoredClient({
+        userAddress,
+        paraWalletClient,
+        signMessageAsync,
+      });
+
+      // STEP 1: Handle token approval if needed (gas-sponsored)
+      if (currentAllowance < requiredAmount) {
+        console.log(
+          `🎫 Insufficient allowance. Current: ${currentAllowance}, Required: ${requiredAmount}${
+            isFirstDeposit ? " (includes 1% fee)" : ""
+          }`
+        );
+
+        // Encode the contract call data for ERC20 approval
+        const approveCallData = encodeFunctionData({
+          abi: ERC20ABI,
+          functionName: "approve",
+          args: [kuriAddress, requiredApproval],
+        });
+
+        // Execute sponsored approve transaction
+        await executeSponsoredTransaction({
+          sponsoredClient,
+          target: tokenAddress,
+          callData: approveCallData,
+          operationName: "approval",
+        });
+
+        // Verify approval was successful
+        const newAllowance = await checkAllowance();
+        if (newAllowance < requiredAmount) {
+          throw new Error(
+            "Token approval failed - insufficient allowance after approval"
+          );
+        }
+
+        console.log(
+          `✅ Token approval successful! New allowance: ${newAllowance}`
+        );
+      } else {
+        console.log(
+          "✅ Sufficient allowance already available, skipping approval"
+        );
+      }
+
+      // STEP 2: Execute the deposit (gas-sponsored)
+      const depositCallData = encodeFunctionData({
+        abi: KuriCoreABI,
+        functionName: "userInstallmentDeposit",
+        args: [],
+      });
+
+      // Execute sponsored deposit transaction
+      const depositTxHash = await executeSponsoredTransaction({
+        sponsoredClient,
+        target: kuriAddress,
+        callData: depositCallData,
+        operationName: "deposit",
+      });
+
+      console.log(
+        "🎉 Both approval and deposit gas fees sponsored by Alchemy Gas Manager!"
+      );
+
+      await handleTransaction(depositTxHash as `0x${string}`, {
+        loadingMessage: "Processing deposit (gas-sponsored)...",
+        successMessage: "Deposit successful! 🎉 Gas was sponsored!",
+        errorMessage: "Failed to make deposit (sponsored)",
+      });
+
+      // Refresh market data first
+      await fetchMarketData();
+
+      // Explicitly refresh user data with retry mechanism
+      // Sometimes there's a slight delay before blockchain state is queryable
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await refreshUserData();
+          break; // Success, exit retry loop
+        } catch (err) {
+          retries--;
+          if (retries > 0) {
+            // Wait a bit before retrying
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          } else {
+            console.error(
+              "Failed to refresh user data after all retries:",
+              err
+            );
+          }
+        }
+      }
+
+      return depositTxHash;
+    } catch (error) {
+      console.error("Gas-sponsored deposit failed:", error);
+      throw handleContractError(error);
+    }
+  }, [
+    kuriAddress,
+    userAddress,
+    marketData,
+    tokenAddress,
+    currentInterval,
+    userPaymentStatus,
+    checkAllowance,
+    handleTransaction,
+    fetchMarketData,
+    refreshUserData,
+    account,
+    signMessageAsync,
+  ]);
+
   // Claim amount
   const claimKuriAmount = useCallback(
     async (intervalIndex: number) => {
@@ -469,7 +678,65 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     [kuriAddress, userAddress, handleTransaction, fetchMarketData]
   );
 
-  // Request membership with Para-compatible Wagmi hooks
+  // 🚀 NEW: Gas-sponsored claim Kuri amount using Alchemy Account Kit
+  const claimKuriAmountSponsored = useCallback(
+    async (intervalIndex: number) => {
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
+
+      try {
+        // Get Para's wallet client
+        const paraWalletClient = account.embedded.wallets?.[0];
+        if (!paraWalletClient) throw new Error("Para wallet not available");
+
+        // Create sponsored client using the helper
+        const sponsoredClient = await createGasSponsoredClient({
+          userAddress: paraWalletClient.address as `0x${string}`,
+          paraWalletClient,
+          signMessageAsync,
+        });
+
+        // Encode the contract call data
+        const callData = encodeFunctionData({
+          abi: KuriCoreABI,
+          functionName: "claimKuriAmount",
+          args: [intervalIndex],
+        });
+
+        // Execute sponsored transaction
+        const txHash = await executeSponsoredTransaction({
+          sponsoredClient,
+          target: kuriAddress,
+          callData,
+          operationName: "claimKuriAmount",
+        });
+
+        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
+
+        await handleTransaction(txHash as `0x${string}`, {
+          loadingMessage: "Claiming amount (gas-sponsored)...",
+          successMessage: "Amount claimed successfully! 🎉 Gas was sponsored!",
+          errorMessage: "Failed to claim amount (sponsored)",
+        });
+
+        // Refresh market data after successful claim
+        await fetchMarketData();
+        return txHash;
+      } catch (error) {
+        console.error("Gas-sponsored claimKuriAmount failed:", error);
+        throw handleContractError(error);
+      }
+    },
+    [
+      kuriAddress,
+      userAddress,
+      handleTransaction,
+      fetchMarketData,
+      account,
+      signMessageAsync,
+    ]
+  );
+
+  // Request membership with Para-compatible Wagmi hooks (ORIGINAL)
   const requestMembership = useCallback(async () => {
     if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
     setIsRequesting(true);
@@ -499,6 +766,305 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       setIsRequesting(false);
     }
   }, [kuriAddress, userAddress, handleTransaction, fetchMarketData]);
+
+  // 🚀 NEW: Gas-sponsored request membership using Alchemy Account Kit
+  const requestMembershipSponsored = useCallback(async () => {
+    if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
+    setIsRequesting(true);
+
+    try {
+      // Get Para's wallet client
+      const paraWalletClient = account.embedded.wallets?.[0];
+      if (!paraWalletClient) throw new Error("Para wallet not available");
+
+      // Create sponsored client using the helper
+      const sponsoredClient = await createGasSponsoredClient({
+        userAddress,
+        paraWalletClient,
+        signMessageAsync,
+      });
+
+      // Encode the contract call data
+      const callData = encodeFunctionData({
+        abi: KuriCoreABI,
+        functionName: "requestMembership",
+        args: [], // requestMembership takes no parameters
+      });
+
+      // Execute sponsored transaction
+      const txHash = await executeSponsoredTransaction({
+        sponsoredClient,
+        target: kuriAddress,
+        callData,
+        operationName: "requestMembership",
+      });
+
+      console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
+
+      await handleTransaction(txHash as `0x${string}`, {
+        loadingMessage: "Requesting membership (gas-sponsored)...",
+        successMessage:
+          "Membership requested successfully! 🎉 Gas was sponsored!",
+        errorMessage: "Failed to request membership (sponsored)",
+      });
+
+      // Refresh market data after successful request
+      await fetchMarketData();
+      return txHash;
+    } catch (error) {
+      console.error("Gas-sponsored transaction failed:", error);
+      throw handleContractError(error);
+    } finally {
+      setIsRequesting(false);
+    }
+  }, [
+    kuriAddress,
+    userAddress,
+    handleTransaction,
+    fetchMarketData,
+    account,
+    signMessageAsync,
+  ]);
+
+  // 🚀 NEW: Gas-sponsored accept member using Alchemy Account Kit
+  const acceptUserMembershipRequestSponsored = useCallback(
+    async (memberAddress: `0x${string}`) => {
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
+      setIsAccepting(true);
+
+      try {
+        // Get Para's wallet client
+        const paraWalletClient = account.embedded.wallets?.[0];
+        if (!paraWalletClient) throw new Error("Para wallet not available");
+
+        // Create sponsored client using the helper
+        const sponsoredClient = await createGasSponsoredClient({
+          userAddress: paraWalletClient.address as `0x${string}`,
+          paraWalletClient,
+          signMessageAsync,
+        });
+
+        // Encode the contract call data
+        const callData = encodeFunctionData({
+          abi: KuriCoreABI,
+          functionName: "acceptUserMembershipRequest",
+          args: [memberAddress],
+        });
+
+        // Execute sponsored transaction
+        const txHash = await executeSponsoredTransaction({
+          sponsoredClient,
+          target: kuriAddress,
+          callData,
+          operationName: "acceptMember",
+        });
+
+        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
+
+        await handleTransaction(txHash as `0x${string}`, {
+          loadingMessage: "Accepting member (gas-sponsored)...",
+          successMessage: "Member accepted successfully! 🎉 Gas was sponsored!",
+          errorMessage: "Failed to accept member (sponsored)",
+        });
+
+        // Refresh market data after successful request
+        await fetchMarketData();
+        return txHash;
+      } catch (error) {
+        console.error("Gas-sponsored acceptMember failed:", error);
+        throw handleContractError(error);
+      } finally {
+        setIsAccepting(false);
+      }
+    },
+    [
+      kuriAddress,
+      userAddress,
+      handleTransaction,
+      fetchMarketData,
+      account,
+      signMessageAsync,
+    ]
+  );
+
+  // 🚀 NEW: Gas-sponsored reject member using Alchemy Account Kit
+  const rejectUserMembershipRequestSponsored = useCallback(
+    async (memberAddress: `0x${string}`) => {
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
+      setIsRejecting(true);
+
+      try {
+        // Get Para's wallet client
+        const paraWalletClient = account.embedded.wallets?.[0];
+        if (!paraWalletClient) throw new Error("Para wallet not available");
+
+        // Create sponsored client using the helper
+        const sponsoredClient = await createGasSponsoredClient({
+          userAddress: paraWalletClient.address as `0x${string}`,
+          paraWalletClient,
+          signMessageAsync,
+        });
+
+        // Encode the contract call data
+        const callData = encodeFunctionData({
+          abi: KuriCoreABI,
+          functionName: "rejectUserMembershipRequest",
+          args: [memberAddress],
+        });
+
+        // Execute sponsored transaction
+        const txHash = await executeSponsoredTransaction({
+          sponsoredClient,
+          target: kuriAddress,
+          callData,
+          operationName: "rejectMember",
+        });
+
+        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
+
+        await handleTransaction(txHash as `0x${string}`, {
+          loadingMessage: "Rejecting member (gas-sponsored)...",
+          successMessage: "Member rejected successfully! 🎉 Gas was sponsored!",
+          errorMessage: "Failed to reject member (sponsored)",
+        });
+
+        // Refresh market data after successful request
+        await fetchMarketData();
+        return txHash;
+      } catch (error) {
+        console.error("Gas-sponsored rejectMember failed:", error);
+        throw handleContractError(error);
+      } finally {
+        setIsRejecting(false);
+      }
+    },
+    [
+      kuriAddress,
+      userAddress,
+      handleTransaction,
+      fetchMarketData,
+      account,
+      signMessageAsync,
+    ]
+  );
+
+  // 🚀 NEW: Gas-sponsored accept multiple members using Alchemy Account Kit
+  const acceptMultipleMembersSponsored = useCallback(
+    async (addresses: `0x${string}`[]) => {
+      if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
+      if (addresses.length === 0) throw new Error("No addresses provided");
+      setIsAccepting(true);
+
+      try {
+        // Get Para's wallet client
+        const paraWalletClient = account.embedded.wallets?.[0];
+        if (!paraWalletClient) throw new Error("Para wallet not available");
+
+        // Create sponsored client using the helper
+        const sponsoredClient = await createGasSponsoredClient({
+          userAddress: paraWalletClient.address as `0x${string}`,
+          paraWalletClient,
+          signMessageAsync,
+        });
+
+        // Encode the contract call data
+        const callData = encodeFunctionData({
+          abi: KuriCoreABI,
+          functionName: "acceptMultipleUserMembershipRequests",
+          args: [addresses],
+        });
+
+        // Execute sponsored transaction
+        const txHash = await executeSponsoredTransaction({
+          sponsoredClient,
+          target: kuriAddress,
+          callData,
+          operationName: "acceptMultipleMembers",
+        });
+
+        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
+
+        await handleTransaction(txHash as `0x${string}`, {
+          loadingMessage: `Accepting ${addresses.length} members (gas-sponsored)...`,
+          successMessage: `Successfully accepted ${addresses.length} members! 🎉 Gas was sponsored!`,
+          errorMessage: "Failed to accept members (sponsored)",
+        });
+
+        // Refresh market data after successful request
+        await fetchMarketData();
+        return txHash;
+      } catch (error) {
+        console.error("Gas-sponsored acceptMultipleMembers failed:", error);
+        throw handleContractError(error);
+      } finally {
+        setIsAccepting(false);
+      }
+    },
+    [
+      kuriAddress,
+      userAddress,
+      handleTransaction,
+      fetchMarketData,
+      account,
+      signMessageAsync,
+    ]
+  );
+
+  // 🚀 NEW: Gas-sponsored initialize Kuri using Alchemy Account Kit
+  const initializeKuriSponsored = useCallback(async () => {
+    if (!kuriAddress || !userAddress) throw new Error("Invalid parameters");
+
+    try {
+      // Get Para's wallet client
+      const paraWalletClient = account.embedded.wallets?.[0];
+      if (!paraWalletClient) throw new Error("Para wallet not available");
+
+      // Create sponsored client using the helper
+      const sponsoredClient = await createGasSponsoredClient({
+        userAddress,
+        paraWalletClient,
+        signMessageAsync,
+      });
+
+      // Encode the contract call data
+      const callData = encodeFunctionData({
+        abi: KuriCoreABI,
+        functionName: "initialiseKuri",
+        args: [],
+      });
+
+      // Execute sponsored transaction
+      const txHash = await executeSponsoredTransaction({
+        sponsoredClient,
+        target: kuriAddress,
+        callData,
+        operationName: "initializeKuri",
+      });
+
+      console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
+
+      await handleTransaction(txHash as `0x${string}`, {
+        loadingMessage: "Initializing market (gas-sponsored)...",
+        successMessage:
+          "Market initialized successfully! 🎉 Gas was sponsored!",
+        errorMessage: "Failed to initialize market (sponsored)",
+      });
+
+      // Refresh market data after successful initialization
+      await fetchMarketData();
+      return txHash;
+    } catch (error) {
+      console.error("Gas-sponsored initializeKuri failed:", error);
+      throw handleContractError(error);
+    }
+  }, [
+    kuriAddress,
+    userAddress,
+    handleTransaction,
+    fetchMarketData,
+    account,
+    signMessageAsync,
+  ]);
 
   // Accept member
   const acceptUserMembershipRequest = useCallback(
@@ -649,16 +1215,24 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
     // Actions
     requestMembership,
+    requestMembershipSponsored, // 🚀 NEW: Gas-sponsored version
     acceptMember: acceptUserMembershipRequest,
+    acceptMemberSponsored: acceptUserMembershipRequestSponsored, // 🚀 NEW: Gas-sponsored version
     acceptMultipleMembers,
+    acceptMultipleMembersSponsored, // 🚀 NEW: Gas-sponsored version
     rejectMember: rejectUserMembershipRequest,
+    rejectMemberSponsored: rejectUserMembershipRequestSponsored, // 🚀 NEW: Gas-sponsored version
     getMemberStatus,
     initializeKuri,
+    initializeKuriSponsored, // 🚀 NEW: Gas-sponsored version
     deposit,
+    depositSponsored, // 🚀 NEW: Gas-sponsored version (most complex)
     claimKuriAmount,
+    claimKuriAmountSponsored, // 🚀 NEW: Gas-sponsored version
     fetchMarketData,
     checkAllowance,
     approveTokens,
+    approveTokensSponsored, // 🚀 NEW: Gas-sponsored version
     checkUserPaymentStatus,
     checkUserBalance,
     refreshUserData,

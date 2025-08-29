@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { useAccount } from "@getpara/react-sdk";
 import { useKuriMarkets } from "../../hooks/useKuriMarkets";
+import { useSmartWallet } from "../../hooks/useSmartWallet";
 import { motion } from "framer-motion";
 import { Badge } from "../ui/badge";
 import { formatEther } from "viem";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 
 export function PendingRequests() {
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress: address } = useSmartWallet();
   const { markets, loading } = useKuriMarkets();
   const { getMemberStatus } = useKuriCore();
 

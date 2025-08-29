@@ -8,6 +8,7 @@ import { useUserProfile } from "../hooks/useUserProfile";
 import { useUserActivity } from "../hooks/useUserActivity";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 import { useAccount } from "@getpara/react-sdk";
+import { useSmartWallet } from "../hooks/useSmartWallet";
 import { useKuriMarkets } from "../hooks/useKuriMarkets";
 import { MarketCard } from "../components/markets/MarketCard";
 import { Memberships } from "../components/profile/Memberships";
@@ -24,7 +25,7 @@ export default function EnhancedProfile() {
   const { identifier } = useParams();
   const navigate = useNavigate();
   const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress: address } = useSmartWallet();
   const { profile, isLoading } = useUserProfile();
   const { activity } = useUserActivity(identifier || "");
   const { markets, loading: marketsLoading } = useKuriMarkets();

@@ -46,7 +46,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   kuriAddress,
 }) => {
   const {
-    deposit,
+    depositSponsored,
     isLoading,
     error,
     isApproving,
@@ -107,7 +107,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
       }
 
       // If balance is sufficient, proceed with deposit
-      await deposit();
+      await depositSponsored();
 
       // Track successful deposit
       trackDeposit(

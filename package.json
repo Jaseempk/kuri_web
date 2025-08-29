@@ -8,9 +8,13 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "test:gas-sponsorship": "node scripts/test-gas-sponsorship.js"
   },
   "dependencies": {
+    "@aa-sdk/core": "4.57.1",
+    "@account-kit/infra": "4.57.1",
+    "@account-kit/smart-contracts": "4.57.1",
     "@apollo/client": "^3.13.8",
     "@cosmjs/cosmwasm-stargate": "0.36.0",
     "@cosmjs/launchpad": "0.27.1",
@@ -23,7 +27,8 @@
     "@farcaster/miniapp-sdk": "0.1.9",
     "@farcaster/miniapp-wagmi-connector": "1.0.0",
     "@getpara/graz": "2.0.0-alpha.12",
-    "@getpara/react-sdk": "2.0.0-alpha.47",
+    "@getpara/react-sdk": "2.0.0-alpha.50",
+    "@getpara/viem-v2-integration": "2.0.0-alpha.47",
     "@getpara/wagmi-v2-integration": "^1.18.1",
     "@leapwallet/cosmos-social-login-capsule-provider": "0.0.44",
     "@radix-ui/react-dialog": "^1.0.5",

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAccount } from "@getpara/react-sdk";
+import { useSmartWallet } from "./useSmartWallet";
 import { KuriMarket } from "./useKuriMarkets";
 import {
   batchUserMarketData,
@@ -31,8 +31,7 @@ export const useUserMarketData = (
   markets: KuriMarket[],
   options: UseUserMarketDataOptions = {}
 ): UseUserMarketDataResult => {
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress } = useSmartWallet();
 
   const {
     enabled = true,
@@ -49,18 +48,18 @@ export const useUserMarketData = (
       creator: m.creator,
       state: m.state,
     })),
-    address || ""
+    smartAddress || ""
   );
 
   const queryResult = useQuery<BatchUserDataResult, Error>({
     queryKey: [
       "userMarketData",
-      address,
+      smartAddress,
       relevantMarkets.map((m) => m.address).sort(),
       includePaymentStatus,
     ],
     queryFn: async (): Promise<BatchUserDataResult> => {
-      if (!address || relevantMarkets.length === 0) {
+      if (!smartAddress || relevantMarkets.length === 0) {
         return { data: {}, errors: [] };
       }
 
@@ -71,7 +70,7 @@ export const useUserMarketData = (
 
       const result = await batchUserMarketData(
         marketAddresses,
-        address,
+        smartAddress,
         marketStates,
         marketCreators,
         includePaymentStatus
@@ -79,7 +78,7 @@ export const useUserMarketData = (
 
       return result;
     },
-    enabled: enabled && !!address && relevantMarkets.length > 0,
+    enabled: enabled && !!smartAddress && relevantMarkets.length > 0,
     staleTime,
     gcTime,
     refetchInterval,
@@ -112,10 +111,9 @@ export const useUserMarketDataForMarket = (
  * Hook to check if user has relevant data for any markets
  */
 export const useHasUserMarketData = (markets: KuriMarket[]): boolean => {
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress } = useSmartWallet();
 
-  if (!address) return false;
+  if (!smartAddress) return false;
 
   const relevantMarkets = filterRelevantMarkets(
     markets.map((m) => ({
@@ -123,7 +121,7 @@ export const useHasUserMarketData = (markets: KuriMarket[]): boolean => {
       creator: m.creator,
       state: m.state,
     })),
-    address
+    smartAddress
   );
 
   return relevantMarkets.length > 0;
@@ -133,9 +131,6 @@ export const useHasUserMarketData = (markets: KuriMarket[]): boolean => {
  * Hook to invalidate user market data cache
  */
 export const useInvalidateUserMarketData = () => {
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
-
   return {
     invalidateAll: () => {
       // This would be implemented with React Query's invalidateQueries

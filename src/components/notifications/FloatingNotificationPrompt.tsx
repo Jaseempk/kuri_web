@@ -4,14 +4,13 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { useUserProfile } from '../../hooks/useUserProfile';
-import { useAccount } from '@getpara/react-sdk';
+import { useSmartWallet } from '../../hooks/useSmartWallet';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const FloatingNotificationPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
-  const { profile } = useUserProfile();
+  const { smartAddress: address, isLoading: addressLoading } = useSmartWallet();
+  const { profile, isLoading: profileLoading } = useUserProfile();
   const { 
     isInitialized, 
     permission, 
@@ -22,8 +21,11 @@ export const FloatingNotificationPrompt = () => {
   } = usePushNotifications();
 
   useEffect(() => {
+    // Only check when both address and profile are stable (not loading)
+    if (addressLoading || profileLoading) return;
+    
     checkShouldShowPrompt();
-  }, [address, profile, isInitialized, permission, isSubscribed, isSupported]);
+  }, [address, profile, isInitialized, permission, isSubscribed, isSupported, addressLoading, profileLoading]);
 
   const checkShouldShowPrompt = () => {
     // Don't show if no wallet, no profile, not initialized, or already granted permission

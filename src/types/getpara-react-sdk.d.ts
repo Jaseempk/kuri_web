@@ -86,6 +86,12 @@ declare module "@getpara/react-sdk" {
     isLoading: boolean;
   }
 
+  // Viem account hook return type
+  export interface UseViemAccountReturn {
+    viemAccount: any | undefined; // Viem Account type
+    isLoading: boolean;
+  }
+
   // Hook exports
   export function useAccount(): UseAccountReturn;
   export function useModal(): UseModalReturn;
@@ -95,6 +101,7 @@ declare module "@getpara/react-sdk" {
     address?: `0x${string}`;
     walletClientConfig?: any;
   }): UseViemClientReturn;
+  export function useViemAccount(): UseViemAccountReturn;
 
   // Component exports
   export const ParaProvider: React.ComponentType<ParaProviderProps>;
@@ -102,4 +109,28 @@ declare module "@getpara/react-sdk" {
   // Default export (ParaWeb)
   const ParaWeb: any;
   export default ParaWeb;
+}
+
+// Para SDK EVM submodule declarations
+declare module "@getpara/react-sdk/evm" {
+  // Viem account hook return type with proper Para SDK structure
+  export interface UseViemAccountReturn {
+    viemAccount: {
+      address: `0x${string}`;
+      nonceManager?: any;
+      sign?: (parameters: { hash: `0x${string}` }) => Promise<`0x${string}`>;
+      signAuthorization?: (parameters: any) => Promise<any>;
+      signMessage: (parameters: { message: any }) => Promise<`0x${string}`>;
+      signTransaction: (transaction: any, options?: any) => Promise<`0x${string}`>;
+      signTypedData: (parameters: any) => Promise<`0x${string}`>;
+      publicKey: `0x${string}`;
+      source: string;
+      type: "local";
+    } | null | undefined;
+    isLoading: boolean;
+  }
+
+  // EVM-specific hooks
+  export function useViemAccount(params?: { address?: `0x${string}` }): UseViemAccountReturn;
+  export function useViemClient(config?: any): any;
 }

@@ -8,7 +8,7 @@ import {
 } from "../ui/dialog";
 import { ManageMembers } from "./ManageMembers";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
-import { useAccount } from "@getpara/react-sdk";
+import { useSmartWallet } from "../../hooks/useSmartWallet";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
@@ -29,18 +29,17 @@ export const ManageMembersDialog = ({
   onOpenChange,
   onMemberActionComplete,
 }: ManageMembersDialogProps) => {
-  const { requestMembership, isRequesting, marketData } = useKuriCore(
+  const { requestMembershipSponsored, isRequesting, marketData } = useKuriCore(
     market.address as `0x${string}`
   );
-  const account = useAccount();
-  const address = account.embedded.wallets?.[0]?.address;
+  const { smartAddress: address } = useSmartWallet();
   const [refreshKey, setRefreshKey] = useState(0);
 
   const isCreator = address?.toLowerCase() === market.creator.toLowerCase();
 
   const handleRequestMembership = async () => {
     try {
-      await requestMembership();
+      await requestMembershipSponsored();
       onMemberActionComplete?.();
       onOpenChange?.(false);
     } catch (error) {

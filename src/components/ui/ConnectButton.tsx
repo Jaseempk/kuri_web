@@ -1,7 +1,5 @@
 import { useModal, useAccount } from "@getpara/react-sdk";
-
-// Debug: Test if the imports are working
-console.log("Para SDK imports:", { useModal, useAccount });
+import { useSmartWallet } from "../../hooks/useSmartWallet";
 import { Button } from "./button";
 
 const formatAddress = (address: string) => {
@@ -9,8 +7,9 @@ const formatAddress = (address: string) => {
 };
 
 export function ConnectButton() {
-  const { isOpen, openModal, closeModal } = useModal();
+  const { openModal } = useModal();
   const account = useAccount();
+  const { smartAddress } = useSmartWallet();
 
   const handleClick = () => {
     if (account.isConnected) {
@@ -28,8 +27,8 @@ export function ConnectButton() {
       disabled={account.isLoading}
       className="hover:bg-white hover:text-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))]"
     >
-      {account.isConnected && account.embedded.wallets?.length
-        ? formatAddress(account.embedded.wallets[0].address)
+      {account.isConnected && smartAddress
+        ? formatAddress(smartAddress)
         : account.isLoading
         ? "Connecting..."
         : "Connect with Email"}

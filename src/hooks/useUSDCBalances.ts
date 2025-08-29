@@ -104,7 +104,7 @@ export const useUSDCBalances = (
   };
 };
 
-// Hook for fetching user's USDC balance
+// Hook for fetching user's USDC balance (expects smart wallet address)
 export const useUserUSDCBalance = (userAddress: `0x${string}` | undefined) => {
   const [balance, setBalance] = useState<bigint>(BigInt(0));
   const [isLoading, setIsLoading] = useState(true);
