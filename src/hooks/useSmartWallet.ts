@@ -24,7 +24,7 @@ export const useSmartWallet = (): UseSmartWalletReturn => {
   const embeddedAddress = embeddedWallet?.address as `0x${string}` | undefined;
 
   // Create stable key to prevent unnecessary callback recreation
-  const walletKey = `${embeddedWallet?.id || ''}-${embeddedAddress || ''}`;
+  const walletKey = `${embeddedWallet?.id || ""}-${embeddedAddress || ""}`;
 
   const fetchSmartWallet = useCallback(async () => {
     if (!embeddedWallet || !embeddedAddress) {
@@ -60,7 +60,6 @@ export const useSmartWallet = (): UseSmartWalletReturn => {
   // Fetch smart wallet when embedded wallet becomes available
   useEffect(() => {
     if (account.isConnected && embeddedAddress) {
-      console.log("saathanam kayyilundo?", embeddedAddress);
       fetchSmartWallet();
     } else if (!account.isConnected && !account.isLoading) {
       // Only reset if truly disconnected, not just missing embedded address

@@ -46,8 +46,8 @@ export default function Onboarding() {
   useEffect(() => {
     if (!authDependenciesResolved) return; // Wait for all data to stabilize
 
-    if (hasCompleteAuthState && profile) {
-      // Fully authenticated - redirect
+    if (hasCompleteAuthState && profile && !loading) {
+      // Fully authenticated and not in the middle of profile creation - redirect
       const safeReturnUrl = returnUrl === "/onboarding" ? "/markets" : returnUrl;
       navigate(safeReturnUrl, { replace: true });
     } else if (hasCompleteAuthState && !profile) {
@@ -57,7 +57,7 @@ export default function Onboarding() {
       // Need authentication  
       setCurrentStep(OnboardingStep.EMAIL_AUTH);
     }
-  }, [authDependenciesResolved, hasCompleteAuthState, profile, navigate, returnUrl]);
+  }, [authDependenciesResolved, hasCompleteAuthState, profile, navigate, returnUrl, loading]);
 
   // Track onboarding start
   useEffect(() => {
