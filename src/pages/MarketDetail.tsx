@@ -9,12 +9,11 @@ import { ShareModal } from "../components/modals/ShareModal";
 import { ManageMembersDialog } from "../components/markets/ManageMembersDialog";
 import { DepositForm } from "../components/markets/DepositForm";
 import { ClaimInterface } from "../components/markets/ClaimInterface";
-import { useAccount } from "@getpara/react-sdk";
+import { useSmartWallet } from "../hooks/useSmartWallet";
 import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
-  Calendar,
   Trophy,
   ArrowLeft,
   Loader2,
@@ -22,7 +21,6 @@ import {
   XCircle,
   AlertCircle,
   Activity,
-  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -539,8 +537,7 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
-  const paraAccount = useAccount();
-  const userAddress = paraAccount.embedded.wallets?.[0]?.address;
+  const { smartAddress: userAddress } = useSmartWallet();
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "activity" | "members"
@@ -1004,16 +1001,11 @@ export default function MarketDetail() {
       case 2: // REJECTED
         return (
           <button
-            onClick={handleJoinRequest}
-            disabled={isRequesting || isMarketFull}
-            className="w-full bg-[#E67A50] text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center"
+            disabled
+            className="w-full bg-red-500 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
-            {isRequesting ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-            ) : (
-              <ArrowRight className="w-5 h-5 mr-2" />
-            )}
-            {isRequesting ? "Sending Request..." : "Request Again"}
+            <XCircle className="w-5 h-5 mr-2" />
+            Application Rejected
           </button>
         );
 
