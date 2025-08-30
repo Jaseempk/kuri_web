@@ -173,7 +173,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     [kuriAddress, userAddress, tokenAddress, handleTransaction]
   );
 
-  // 🚀 NEW: Gas-sponsored approve tokens using Alchemy Account Kit
   const approveTokensSponsored = useCallback(
     async (amount: bigint) => {
       if (!kuriAddress || !userAddress || !tokenAddress) {
@@ -315,7 +314,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     }
   }, [kuriAddress, userAddress, marketData]);
 
-  // 🔥 NEW: Explicit method for components to call when they need payment status
   const checkPaymentStatusIfMember = useCallback(async (): Promise<boolean> => {
     if (!kuriAddress || !userAddress || !marketData) {
       return false;
