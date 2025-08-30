@@ -95,6 +95,429 @@ const getStatusBadge = (state: KuriState) => {
   }
 };
 
+// Extracted Stats Container Component
+interface StatsContainerProps {
+  marketData: {
+    totalActiveParticipantsCount: number;
+    totalParticipantsCount: number;
+    kuriAmount: bigint;
+  } | null;
+}
+
+const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
+  if (!marketData) return null;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, duration: 0.8 }}
+      className="bg-white/20 backdrop-blur-sm rounded-2xl p-4"
+    >
+      <div className="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <div className="flex items-center justify-center text-lg">
+            <span className="material-icons mr-1.5 text-xl">
+              groups
+            </span>
+          </div>
+          <p className="font-bold text-2xl">
+            {marketData.totalActiveParticipantsCount}/
+            {marketData.totalParticipantsCount}
+          </p>
+          <p className="text-xs opacity-80">Members</p>
+        </div>
+        <div>
+          <div className="flex items-center justify-center text-lg">
+            <span className="material-icons mr-1.5 text-xl">
+              paid
+            </span>
+          </div>
+          <p className="font-bold text-2xl">
+            $
+            {(
+              Number(marketData.kuriAmount) / 1_000_000
+            ).toFixed(0)}
+          </p>
+          <p className="text-xs opacity-80">Contribution</p>
+        </div>
+        <div>
+          <div className="flex items-center justify-center text-lg">
+            <span className="material-icons mr-1.5 text-xl">
+              savings
+            </span>
+          </div>
+          <p className="font-bold text-2xl">
+            $
+            {(
+              (Number(marketData.kuriAmount) / 1_000_000) *
+              marketData.totalParticipantsCount
+            ).toFixed(0)}
+          </p>
+          <p className="text-xs opacity-80">Pool</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Extracted Tab Content Component
+interface TabContentProps {
+  activeTab: string;
+  metadata: MarketMetadata | null | undefined;
+  marketData: {
+    startTime: bigint;
+    intervalType: number;
+    state: KuriState;
+    nexRaffleTime: bigint;
+    creator: string;
+  } | null;
+  creatorProfile: any;
+  creatorProfileLoading: boolean;
+  currentWinner: { intervalIndex: number; winner: string; timestamp: string; } | null;
+  winnerProfile: any;
+  winnerProfileLoading: boolean;
+  timeLeft: string;
+  address: string;
+  renderActionButton: () => React.ReactNode;
+}
+
+const TabContent: React.FC<TabContentProps> = ({
+  activeTab,
+  metadata,
+  marketData,
+  creatorProfile,
+  creatorProfileLoading,
+  currentWinner,
+  winnerProfile,
+  winnerProfileLoading,
+  timeLeft,
+  address,
+  renderActionButton,
+}) => {
+  if (!marketData) return null;
+
+  return (
+    <AnimatePresence mode="wait">
+      {activeTab === "overview" && (
+        <motion.div
+          key="overview"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-6 lg:space-y-8"
+        >
+          {/* About Section */}
+          <div>
+            <h2 className="text-xl lg:text-2xl font-bold text-gray-900 lg:text-gray-800 mb-2 lg:mb-4">
+              About This Circle
+            </h2>
+            <p className="text-gray-600 mb-6 lg:mb-8">
+              {metadata?.long_description ||
+                metadata?.short_description ||
+                "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
+            </p>
+          </div>
+
+          {/* Circle Stats + Creator Grid */}
+          <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 mb-6 lg:mb-8">
+            {/* Circle Stats */}
+            <div className="bg-gray-50 lg:bg-orange-50 rounded-xl lg:rounded-2xl p-4 lg:p-6">
+              <h3 className="text-lg font-semibold lg:font-bold text-gray-900 lg:text-gray-800 mb-4 lg:mb-3">
+                Circle Stats
+              </h3>
+              <div className="space-y-3 lg:space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                    Created On
+                  </span>
+                  <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
+                    {metadata?.created_at
+                      ? new Date(
+                          metadata.created_at
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : new Date(
+                          Number(marketData.startTime) * 1000
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                    Payout Frequency
+                  </span>
+                  <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800 capitalize">
+                    {getIntervalTypeText(
+                      marketData.intervalType
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                    Next Payout
+                  </span>
+                  <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
+                    {marketData.state === KuriState.ACTIVE
+                      ? new Date(
+                          Number(marketData.nexRaffleTime) *
+                            1000
+                        ).toLocaleDateString()
+                      : "TBD"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                    Circle Status
+                  </span>
+                  {(() => {
+                    const badge = getStatusBadge(marketData.state);
+                    return (
+                      <span
+                        className={`text-xs lg:text-sm font-medium px-2 py-1 rounded-full ${badge.className}`}
+                      >
+                        {badge.text}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Creator Section */}
+            <div className="bg-gray-100 p-6 rounded-2xl">
+              <h3 className="font-bold text-lg text-gray-800 mb-3">
+                Creator
+              </h3>
+              {creatorProfileLoading ? (
+                <div className="flex items-center">
+                  <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse mr-4" />
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-300 rounded animate-pulse mb-2" />
+                    <div className="h-4 bg-gray-300 rounded animate-pulse w-2/3" />
+                  </div>
+                </div>
+              ) : creatorProfile ? (
+                <div className="flex items-center">
+                  <img
+                    src={
+                      creatorProfile.profile_image_url ||
+                      "/images/default-avatar.png"
+                    }
+                    alt={
+                      creatorProfile.display_name ||
+                      creatorProfile.username ||
+                      "Creator"
+                    }
+                    className="w-16 h-16 rounded-full mr-4 object-cover"
+                  />
+                  <div>
+                    <p className="font-bold text-gray-900 text-lg">
+                      {creatorProfile.display_name ||
+                        creatorProfile.username ||
+                        "Anonymous Creator"}
+                    </p>
+                    <p className="text-gray-500 text-sm truncate">
+                      {marketData.creator.slice(0, 6)}...
+                      {marketData.creator.slice(-4)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <img
+                    src="/images/default-avatar.png"
+                    alt="Creator"
+                    className="w-16 h-16 rounded-full mr-4 object-cover"
+                  />
+                  <div>
+                    <p className="font-bold text-gray-900 text-lg">
+                      Anonymous Creator
+                    </p>
+                    <p className="text-gray-500 text-sm truncate">
+                      {marketData.creator.slice(0, 6)}...
+                      {marketData.creator.slice(-4)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+
+          {/* Desktop Action Section - Only show on desktop */}
+          <div className="hidden lg:block bg-orange-50 p-6 rounded-2xl">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              {/* Countdown Section */}
+              <div className="flex-grow">
+                {marketData.state === KuriState.INLAUNCH && (
+                  <>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                      Launch Period Ends In
+                    </h3>
+                    <div className="flex items-end gap-x-3">
+                      <div className="text-center">
+                        <span className="text-4xl font-bold text-orange-500">
+                          {timeLeft.includes("d")
+                            ? timeLeft.split("d")[0].padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Days</span>
+                      </div>
+                      <span className="text-4xl font-bold text-orange-500">:</span>
+                      <div className="text-center">
+                        <span className="text-4xl font-bold text-orange-500">
+                          {timeLeft.includes("h")
+                            ? timeLeft.split("h")[0].split(" ").pop()?.padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Hours</span>
+                      </div>
+                      <span className="text-4xl font-bold text-orange-500">:</span>
+                      <div className="text-center">
+                        <span className="text-4xl font-bold text-orange-500">
+                          {timeLeft.includes("m")
+                            ? timeLeft.split("m")[0].split(" ").pop()?.padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Minutes</span>
+                      </div>
+                      <span className="text-4xl font-bold text-orange-500">:</span>
+                      <div className="text-center">
+                        <span className="text-4xl font-bold text-orange-500">
+                          {timeLeft.includes("s")
+                            ? timeLeft.split("s")[0].split(" ").pop()?.padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Seconds</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {marketData.state === KuriState.ACTIVE && (
+                  <>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                      Next Raffle In
+                    </h3>
+                    <SequentialCountdown
+                      raffleTimestamp={Number(marketData.nexRaffleTime) * 1000}
+                      depositTimestamp={0}
+                      raffleDate={new Date(Number(marketData.nexRaffleTime) * 1000).toLocaleString()}
+                      depositDate=""
+                    />
+                  </>
+                )}
+
+                {/* Current Winner Display for Active Markets */}
+                {currentWinner && marketData.state === KuriState.ACTIVE && (
+                  <div className="mt-4 p-4 bg-gradient-to-br from-[hsl(var(--gold))]/20 to-amber-50 rounded-xl border border-[hsl(var(--gold))]/30">
+                    <h4 className="font-bold text-[#E67A50] mb-2 flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-[hsl(var(--gold))]" />
+                      Round #{currentWinner.intervalIndex} Winner
+                    </h4>
+                    {winnerProfileLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse" />
+                        <div className="h-4 bg-gray-300 rounded animate-pulse flex-1" />
+                      </div>
+                    ) : winnerProfile ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center">
+                          {winnerProfile.profile_image_url ? (
+                            <img
+                              src={winnerProfile.profile_image_url}
+                              alt={winnerProfile.display_name || winnerProfile.username || "Winner"}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Trophy className="w-4 h-4 text-white" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800 text-sm">
+                            {winnerProfile.display_name || winnerProfile.username || "Anonymous Winner"}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-800">Anonymous Winner</p>
+                    )}
+                  </div>
+                )}
+
+                {marketData.state === KuriState.COMPLETED && (
+                  <div className="text-center">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                    <h3 className="text-xl font-bold text-green-900 mb-1">Circle Completed</h3>
+                    <p className="text-green-700">All members have received their payouts</p>
+                  </div>
+                )}
+
+                {marketData.state === KuriState.LAUNCHFAILED && (
+                  <div className="text-center">
+                    <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
+                    <h3 className="text-xl font-bold text-red-900 mb-1">Launch Failed</h3>
+                    <p className="text-red-700">This circle did not reach the minimum requirements</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Button - Desktop Only */}
+              <div className="hidden lg:block flex-shrink-0">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  {renderActionButton()}
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === "activity" && (
+        <motion.div
+          key="activity"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4 lg:space-y-6"
+        >
+          <div className="text-center py-8 lg:py-12">
+            <Activity className="h-12 w-12 lg:h-16 lg:w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg lg:text-xl font-semibold text-gray-500 lg:text-gray-600 mb-2">
+              Activity Coming Soon
+            </h3>
+            <p className="text-sm lg:text-base text-gray-400 lg:text-gray-500">
+              Track deposits, payouts, and member activity in this section.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === "members" && (
+        <motion.div
+          key="members"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4 lg:space-y-6"
+        >
+          <CircleMembersDisplay marketAddress={address} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 // Convert useKuriCore KuriState to GraphQL KuriState for components that expect it
 const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
   switch (state) {
@@ -110,6 +533,8 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
       return GraphQLKuriState.UNINITIALIZED;
   }
 };
+
+
 
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
@@ -624,6 +1049,8 @@ export default function MarketDetail() {
     setShowShareModal(true);
   };
 
+
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#F9F5F1] flex items-center justify-center">
@@ -813,57 +1240,7 @@ export default function MarketDetail() {
                     {metadata?.short_description || "Kuri Circle"}
                   </motion.h1>
 
-                  {/* Mobile Liquid Morphic Stats Card - Same as Desktop */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.8 }}
-                    className="bg-white/20 backdrop-blur-sm rounded-2xl p-4"
-                  >
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <div className="flex items-center justify-center text-lg">
-                          <span className="material-icons mr-1.5 text-xl">
-                            groups
-                          </span>
-                        </div>
-                        <p className="font-bold text-2xl">
-                          {marketData.totalActiveParticipantsCount}/
-                          {marketData.totalParticipantsCount}
-                        </p>
-                        <p className="text-xs opacity-80">Members</p>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-center text-lg">
-                          <span className="material-icons mr-1.5 text-xl">
-                            paid
-                          </span>
-                        </div>
-                        <p className="font-bold text-2xl">
-                          $
-                          {(
-                            Number(marketData.kuriAmount) / 1_000_000
-                          ).toFixed(0)}
-                        </p>
-                        <p className="text-xs opacity-80">Contribution</p>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-center text-lg">
-                          <span className="material-icons mr-1.5 text-xl">
-                            savings
-                          </span>
-                        </div>
-                        <p className="font-bold text-2xl">
-                          $
-                          {(
-                            (Number(marketData.kuriAmount) / 1_000_000) *
-                            marketData.totalParticipantsCount
-                          ).toFixed(0)}
-                        </p>
-                        <p className="text-xs opacity-80">Pool</p>
-                      </div>
-                    </div>
-                  </motion.div>
+                  <StatsContainer marketData={marketData} />
                 </div>
               </motion.div>
             </div>
@@ -926,57 +1303,7 @@ export default function MarketDetail() {
                       {metadata?.short_description || "Kuri Circle"}
                     </motion.h1>
 
-                    {/* Liquid Morphic Stats Card */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4, duration: 0.8 }}
-                      className="bg-white/20 backdrop-blur-sm rounded-2xl p-4"
-                    >
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                          <div className="flex items-center justify-center text-lg">
-                            <span className="material-icons mr-1.5 text-xl">
-                              groups
-                            </span>
-                          </div>
-                          <p className="font-bold text-2xl">
-                            {marketData.totalActiveParticipantsCount}/
-                            {marketData.totalParticipantsCount}
-                          </p>
-                          <p className="text-xs opacity-80">Members</p>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-center text-lg">
-                            <span className="material-icons mr-1.5 text-xl">
-                              paid
-                            </span>
-                          </div>
-                          <p className="font-bold text-2xl">
-                            $
-                            {(
-                              Number(marketData.kuriAmount) / 1_000_000
-                            ).toFixed(0)}
-                          </p>
-                          <p className="text-xs opacity-80">Contribution</p>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-center text-lg">
-                            <span className="material-icons mr-1.5 text-xl">
-                              savings
-                            </span>
-                          </div>
-                          <p className="font-bold text-2xl">
-                            $
-                            {(
-                              (Number(marketData.kuriAmount) / 1_000_000) *
-                              marketData.totalParticipantsCount
-                            ).toFixed(0)}
-                          </p>
-                          <p className="text-xs opacity-80">Pool</p>
-                        </div>
-                      </div>
-                    </motion.div>
+                    <StatsContainer marketData={marketData} />
                   </div>
                 </motion.div>
               </div>
@@ -1030,411 +1357,19 @@ export default function MarketDetail() {
 
                   {/* Tab Content */}
                   <div className="p-8">
-                    <AnimatePresence mode="wait">
-                      {activeTab === "overview" && (
-                        <motion.div
-                          key="overview"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="space-y-8"
-                        >
-                          {/* About Section */}
-                          <div>
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                              About This Circle
-                            </h2>
-                            <p className="text-gray-600 mb-8">
-                              {metadata?.long_description ||
-                                metadata?.short_description ||
-                                "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
-                            </p>
-                          </div>
-
-                          {/* Two Column Grid: Circle Stats + Creator */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            {/* Circle Stats */}
-                            <div className="bg-orange-50 p-6 rounded-2xl">
-                              <h3 className="font-bold text-lg text-gray-800 mb-3">
-                                Circle Stats
-                              </h3>
-                              <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-600">
-                                    Created On
-                                  </span>
-                                  <span className="font-semibold text-gray-800">
-                                    {metadata?.created_at
-                                      ? new Date(
-                                          metadata.created_at
-                                        ).toLocaleDateString("en-US", {
-                                          year: "numeric",
-                                          month: "long",
-                                          day: "numeric",
-                                        })
-                                      : new Date(
-                                          Number(marketData.startTime) * 1000
-                                        ).toLocaleDateString("en-US", {
-                                          year: "numeric",
-                                          month: "long",
-                                          day: "numeric",
-                                        })}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-600">
-                                    Payout Frequency
-                                  </span>
-                                  <span className="font-semibold text-gray-800 capitalize">
-                                    {getIntervalTypeText(
-                                      marketData.intervalType
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-600">
-                                    Next Payout
-                                  </span>
-                                  <span className="font-semibold text-gray-800">
-                                    {marketData.state === KuriState.ACTIVE
-                                      ? new Date(
-                                          Number(marketData.nexRaffleTime) *
-                                            1000
-                                        ).toLocaleDateString()
-                                      : "TBD"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-600">
-                                    Circle Status
-                                  </span>
-                                  {(() => {
-                                    const badge = getStatusBadge(
-                                      marketData.state
-                                    );
-                                    return (
-                                      <span
-                                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.className}`}
-                                      >
-                                        {badge.text}
-                                      </span>
-                                    );
-                                  })()}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Creator */}
-                            <div className="bg-gray-100 p-6 rounded-2xl">
-                              <h3 className="font-bold text-lg text-gray-800 mb-3">
-                                Creator
-                              </h3>
-                              {creatorProfileLoading ? (
-                                <div className="flex items-center">
-                                  <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse mr-4" />
-                                  <div className="flex-1">
-                                    <div className="h-5 bg-gray-300 rounded animate-pulse mb-2" />
-                                    <div className="h-4 bg-gray-300 rounded animate-pulse w-2/3" />
-                                  </div>
-                                </div>
-                              ) : creatorProfile ? (
-                                <div className="flex items-center">
-                                  <img
-                                    src={
-                                      creatorProfile.profile_image_url ||
-                                      "/images/default-avatar.png"
-                                    }
-                                    alt={
-                                      creatorProfile.display_name ||
-                                      creatorProfile.username ||
-                                      "Creator"
-                                    }
-                                    className="w-16 h-16 rounded-full mr-4 object-cover"
-                                  />
-                                  <div>
-                                    <p className="font-bold text-gray-900 text-lg">
-                                      {creatorProfile.display_name ||
-                                        creatorProfile.username ||
-                                        "Anonymous Creator"}
-                                    </p>
-                                    <p className="text-gray-500 text-sm truncate">
-                                      {marketData.creator.slice(0, 6)}...
-                                      {marketData.creator.slice(-4)}
-                                    </p>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-center">
-                                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#E67A50] to-orange-400 flex items-center justify-center mr-4">
-                                    <svg
-                                      className="w-8 h-8 text-white"
-                                      fill="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-4h3v4H4zM16 13v5h4v-5h-4zM8 13c.55 0 1 .45 1 1v4c0 .55-.45 1-1 1s-1-.45-1-1v-4c0-.55.45-1 1-1z" />
-                                    </svg>
-                                  </div>
-                                  <div>
-                                    <p className="font-bold text-gray-900 text-lg">
-                                      Anonymous Creator
-                                    </p>
-                                    <p className="text-gray-500 text-sm truncate">
-                                      {marketData.creator.slice(0, 6)}...
-                                      {marketData.creator.slice(-4)}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Bottom Action Section */}
-                          <div className="bg-orange-50 p-6 rounded-2xl">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                              {/* Countdown Section */}
-                              <div className="flex-grow">
-                                {marketData.state === KuriState.INLAUNCH && (
-                                  <>
-                                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                                      Launch Period Ends In
-                                    </h3>
-                                    <div className="flex items-end gap-x-3">
-                                      <div className="text-center">
-                                        <span className="text-4xl font-bold text-orange-500">
-                                          {timeLeft.includes("d")
-                                            ? timeLeft
-                                                .split("d")[0]
-                                                .padStart(2, "0")
-                                            : "00"}
-                                        </span>
-                                        <span className="block text-xs text-gray-600">
-                                          Days
-                                        </span>
-                                      </div>
-                                      <span className="text-4xl font-bold text-orange-500">
-                                        :
-                                      </span>
-                                      <div className="text-center">
-                                        <span className="text-4xl font-bold text-orange-500">
-                                          {timeLeft.includes("h")
-                                            ? timeLeft
-                                                .split("h")[0]
-                                                .split(" ")
-                                                .pop()
-                                                ?.padStart(2, "0")
-                                            : "00"}
-                                        </span>
-                                        <span className="block text-xs text-gray-600">
-                                          Hours
-                                        </span>
-                                      </div>
-                                      <span className="text-4xl font-bold text-orange-500">
-                                        :
-                                      </span>
-                                      <div className="text-center">
-                                        <span className="text-4xl font-bold text-orange-500">
-                                          {timeLeft.includes("m")
-                                            ? timeLeft
-                                                .split("m")[0]
-                                                .split(" ")
-                                                .pop()
-                                                ?.padStart(2, "0")
-                                            : "00"}
-                                        </span>
-                                        <span className="block text-xs text-gray-600">
-                                          Minutes
-                                        </span>
-                                      </div>
-                                      <span className="text-4xl font-bold text-orange-500">
-                                        :
-                                      </span>
-                                      <div className="text-center">
-                                        <span className="text-4xl font-bold text-orange-500">
-                                          {timeLeft.includes("s")
-                                            ? timeLeft
-                                                .split("s")[0]
-                                                .split(" ")
-                                                .pop()
-                                                ?.padStart(2, "0")
-                                            : "00"}
-                                        </span>
-                                        <span className="block text-xs text-gray-600">
-                                          Seconds
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-
-                                {marketData.state === KuriState.ACTIVE && (
-                                  <>
-                                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                                      {Date.now() <
-                                      Number(
-                                        marketData.nextIntervalDepositTime
-                                      ) *
-                                        1000
-                                        ? "Next Deposit Due In"
-                                        : "Next Raffle In"}
-                                    </h3>
-                                    <SequentialCountdown
-                                      raffleTimestamp={
-                                        Number(marketData.nexRaffleTime) * 1000
-                                      }
-                                      depositTimestamp={
-                                        Number(
-                                          marketData.nextIntervalDepositTime
-                                        ) * 1000
-                                      }
-                                      raffleDate={new Date(
-                                        Number(marketData.nexRaffleTime) * 1000
-                                      ).toLocaleString()}
-                                      depositDate={new Date(
-                                        Number(
-                                          marketData.nextIntervalDepositTime
-                                        ) * 1000
-                                      ).toLocaleString()}
-                                    />
-                                  </>
-                                )}
-
-                                {/* Current Winner Display for Active Markets */}
-                                {currentWinner &&
-                                  marketData.state === KuriState.ACTIVE && (
-                                    <div className="mt-4 p-4 bg-gradient-to-br from-[hsl(var(--gold))]/20 to-amber-50 rounded-xl border border-[hsl(var(--gold))]/30">
-                                      <h4 className="font-bold text-[#E67A50] mb-2 flex items-center gap-2">
-                                        <Trophy className="w-4 h-4 text-[hsl(var(--gold))]" />
-                                        Round #{currentWinner.intervalIndex}{" "}
-                                        Winner
-                                      </h4>
-                                      {winnerProfileLoading ? (
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse" />
-                                          <div className="h-4 bg-gray-300 rounded animate-pulse flex-1" />
-                                        </div>
-                                      ) : winnerProfile ? (
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center">
-                                            {winnerProfile.profile_image_url ? (
-                                              <img
-                                                src={
-                                                  winnerProfile.profile_image_url
-                                                }
-                                                alt={
-                                                  winnerProfile.display_name ||
-                                                  winnerProfile.username ||
-                                                  "Winner"
-                                                }
-                                                className="w-full h-full object-cover"
-                                              />
-                                            ) : (
-                                              <Trophy className="w-4 h-4 text-white" />
-                                            )}
-                                          </div>
-                                          <div className="flex-1">
-                                            <p className="font-medium text-gray-800 text-sm">
-                                              {winnerProfile.display_name ||
-                                                winnerProfile.username ||
-                                                "Anonymous Winner"}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <p className="text-sm text-gray-800">
-                                          Anonymous Winner
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-
-                                {marketData.state === KuriState.COMPLETED && (
-                                  <div className="text-center">
-                                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
-                                    <h3 className="text-xl font-bold text-green-900 mb-1">
-                                      Circle Completed
-                                    </h3>
-                                    <p className="text-green-700">
-                                      All members have received their payouts
-                                    </p>
-                                  </div>
-                                )}
-
-                                {marketData.state ===
-                                  KuriState.LAUNCHFAILED && (
-                                  <div className="text-center">
-                                    <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
-                                    <h3 className="text-xl font-bold text-red-900 mb-1">
-                                      Launch Failed
-                                    </h3>
-                                    <p className="text-red-700">
-                                      This circle did not reach the minimum
-                                      requirements
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Action Button */}
-                              <div className="flex-shrink-0">
-                                <motion.div
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                >
-                                  {renderActionButton()}
-                                </motion.div>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {activeTab === "activity" && (
-                        <motion.div
-                          key="activity"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="space-y-6"
-                        >
-                          <h3 className="text-lg font-bold text-[#E67A50] flex items-center gap-3">
-                            <Activity className="w-5 h-5 text-gray-500" />
-                            Recent Activity
-                          </h3>
-                          <div className="text-center py-8">
-                            <motion.div
-                              initial={{ scale: 0.8, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.2 }}
-                              className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center"
-                            >
-                              <Calendar className="w-8 h-8 text-orange-600" />
-                            </motion.div>
-                            <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                              Activity Tracking Coming Soon
-                            </h4>
-                            <p className="text-gray-600 text-sm">
-                              Deposits, raffles, and member activities will be
-                              displayed here.
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {activeTab === "members" && (
-                        <motion.div
-                          key="members"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="space-y-6"
-                        >
-                          <CircleMembersDisplay marketAddress={address || ""} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <TabContent 
+                      activeTab={activeTab}
+                      metadata={metadata}
+                      marketData={marketData}
+                      creatorProfile={creatorProfile}
+                      creatorProfileLoading={creatorProfileLoading}
+                      currentWinner={currentWinner}
+                      winnerProfile={winnerProfile}
+                      winnerProfileLoading={winnerProfileLoading}
+                      timeLeft={timeLeft}
+                      address={address || ""}
+                      renderActionButton={renderActionButton}
+                    />
                   </div>
                 </motion.div>
               </div>
@@ -1489,210 +1424,19 @@ export default function MarketDetail() {
 
                 {/* Mobile Tab Content */}
                 <div className="p-6">
-                  <AnimatePresence mode="wait">
-                    {activeTab === "overview" && (
-                      <motion.div
-                        key="overview"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-6"
-                      >
-                        {/* About Section */}
-                        <div>
-                          <h2 className="text-xl font-bold text-gray-900 mb-2">
-                            About This Circle
-                          </h2>
-                          <p className="text-gray-600">
-                            {metadata?.long_description ||
-                              metadata?.short_description ||
-                              "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
-                          </p>
-                        </div>
-
-                        {/* Mobile Circle Stats */}
-                        <div className="bg-gray-50 rounded-xl p-4">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Circle Stats
-                          </h3>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-500">
-                                Created On
-                              </span>
-                              <span className="text-sm font-medium text-gray-900">
-                                {metadata?.created_at
-                                  ? new Date(
-                                      metadata.created_at
-                                    ).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    })
-                                  : new Date(
-                                      Number(marketData.startTime) * 1000
-                                    ).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    })}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-500">
-                                Payout Frequency
-                              </span>
-                              <span className="text-sm font-medium text-gray-900 capitalize">
-                                {getIntervalTypeText(
-                                  marketData.intervalType
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-500">
-                                Next Payout
-                              </span>
-                              <span className="text-sm font-medium text-gray-900">
-                                {marketData.state === KuriState.ACTIVE
-                                  ? new Date(
-                                      Number(marketData.nexRaffleTime) *
-                                        1000
-                                    ).toLocaleDateString()
-                                  : "TBD"}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-500">
-                                Circle Status
-                              </span>
-                              {(() => {
-                                const badge = getStatusBadge(
-                                  marketData.state
-                                );
-                                return (
-                                  <span
-                                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.className}`}
-                                  >
-                                    {badge.text}
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Mobile Creator Section */}
-                        <div className="bg-gray-50 rounded-xl p-4">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Creator
-                          </h3>
-                          {creatorProfileLoading ? (
-                            <div className="flex items-center">
-                              <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse mr-4" />
-                              <div className="flex-1">
-                                <div className="h-4 bg-gray-300 rounded animate-pulse mb-2" />
-                                <div className="h-3 bg-gray-300 rounded animate-pulse w-2/3" />
-                              </div>
-                            </div>
-                          ) : creatorProfile ? (
-                            <div className="flex items-center">
-                              <img
-                                src={
-                                  creatorProfile.profile_image_url ||
-                                  "/images/default-avatar.png"
-                                }
-                                alt={
-                                  creatorProfile.display_name ||
-                                  creatorProfile.username ||
-                                  "Creator"
-                                }
-                                className="w-12 h-12 rounded-full mr-4 object-cover"
-                              />
-                              <div>
-                                <div className="font-semibold text-gray-900">
-                                  {creatorProfile.display_name ||
-                                    creatorProfile.username ||
-                                    "Anonymous Creator"}
-                                </div>
-                                <div className="text-sm text-gray-500">
-                                  {marketData.creator.slice(0, 6)}...
-                                  {marketData.creator.slice(-4)}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E67A50] to-orange-400 flex items-center justify-center mr-4">
-                                <svg
-                                  className="w-6 h-6 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-4h3v4H4zM16 13v5h4v-5h-4zM8 13c.55 0 1 .45 1 1v4c0 .55-.45 1-1 1s-1-.45-1-1v-4c0-.55.45-1 1-1z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-gray-900">
-                                  Anonymous Creator
-                                </div>
-                                <div className="text-sm text-gray-500">
-                                  {marketData.creator.slice(0, 6)}...
-                                  {marketData.creator.slice(-4)}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {activeTab === "activity" && (
-                      <motion.div
-                        key="activity"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-6"
-                      >
-                        <h3 className="text-lg font-bold text-[#E67A50] flex items-center gap-3">
-                          <Activity className="w-5 h-5 text-gray-500" />
-                          Recent Activity
-                        </h3>
-                        <div className="text-center py-8">
-                          <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center"
-                          >
-                            <Calendar className="w-8 h-8 text-orange-600" />
-                          </motion.div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                            Activity Tracking Coming Soon
-                          </h4>
-                          <p className="text-gray-600 text-sm">
-                            Deposits, raffles, and member activities will be
-                            displayed here.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {activeTab === "members" && (
-                      <motion.div
-                        key="members"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-6"
-                      >
-                        <CircleMembersDisplay marketAddress={address || ""} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <TabContent 
+                    activeTab={activeTab}
+                    metadata={metadata}
+                    marketData={marketData}
+                    creatorProfile={creatorProfile}
+                    creatorProfileLoading={creatorProfileLoading}
+                    currentWinner={currentWinner}
+                    winnerProfile={winnerProfile}
+                    winnerProfileLoading={winnerProfileLoading}
+                    timeLeft={timeLeft}
+                    address={address || ""}
+                    renderActionButton={renderActionButton}
+                  />
                 </div>
               </motion.div>
 
