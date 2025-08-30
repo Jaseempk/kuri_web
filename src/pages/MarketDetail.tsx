@@ -460,7 +460,7 @@ export default function MarketDetail() {
       return (
         <button
           disabled
-          className="w-full md:w-auto bg-gray-400 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md cursor-not-allowed opacity-70 flex items-center justify-center"
+          className="w-full bg-gray-400 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-70 flex items-center justify-center"
         >
           <svg
             className="w-5 h-5 mr-2"
@@ -486,7 +486,7 @@ export default function MarketDetail() {
           <button
             onClick={handleInitialize}
             disabled={isInitializing || !canInitialize}
-            className="w-full md:w-auto bg-[#E67A50] text-white font-bold py-3 px-8 rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-70"
+            className="w-full bg-[#E67A50] text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-70"
           >
             {isInitializing ? (
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -527,7 +527,7 @@ export default function MarketDetail() {
           onOpenChange={setIsDialogOpen}
           onMemberActionComplete={handleMemberActionComplete}
         >
-          <button className="w-full md:w-auto bg-[#E67A50] text-white font-bold py-3 px-8 rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
+          <button className="w-full bg-[#E67A50] text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
             <span className="material-icons mr-2">people_outline</span>
             Manage Members ({marketData?.totalActiveParticipantsCount || 0}/
             {marketData?.totalParticipantsCount || 0})
@@ -543,7 +543,7 @@ export default function MarketDetail() {
           <button
             onClick={handleJoinRequest}
             disabled={isRequesting || isMarketFull}
-            className={`w-full md:w-auto font-bold py-3 px-8 rounded-full text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
+            className={`w-full font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
               isMarketFull
                 ? "bg-gray-400 text-white cursor-not-allowed opacity-70"
                 : "bg-[#E67A50] text-white hover:bg-orange-600"
@@ -569,7 +569,7 @@ export default function MarketDetail() {
         return (
           <button
             disabled
-            className="w-full md:w-auto bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            className="w-full bg-green-600 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
             <CheckCircle className="w-5 h-5 mr-2" />
             Active Member
@@ -581,7 +581,7 @@ export default function MarketDetail() {
           <button
             onClick={handleJoinRequest}
             disabled={isRequesting || isMarketFull}
-            className="w-full md:w-auto bg-[#E67A50] text-white font-bold py-3 px-8 rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center"
+            className="w-full bg-[#E67A50] text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center"
           >
             {isRequesting ? (
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -596,7 +596,7 @@ export default function MarketDetail() {
         return (
           <button
             disabled
-            className="w-full md:w-auto bg-red-500 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            className="w-full bg-red-500 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
             <AlertCircle className="w-5 h-5 mr-2" />
             Account Flagged
@@ -607,7 +607,7 @@ export default function MarketDetail() {
         return (
           <button
             disabled
-            className="w-full md:w-auto bg-yellow-500 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            className="w-full bg-yellow-500 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
             <Clock className="w-5 h-5 mr-2" />
             Application Pending
@@ -768,8 +768,108 @@ export default function MarketDetail() {
         {/* Main Content */}
         <div className="relative z-10 pt-4 sm:pt-6 md:pt-8">
           <div className="container mx-auto px-4">
-            {/* New Layout: 1/3 + 2/3 Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Mobile Layout: Single Column */}
+            <div className="lg:hidden">
+              {/* Mobile Hero Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative rounded-2xl overflow-hidden shadow-lg mb-6 h-64 w-full"
+              >
+                <motion.img
+                  src={imageUrl}
+                  alt={metadata?.short_description || "Kuri Circle"}
+                  className="w-full h-full object-cover"
+                  initial={{ scale: 1.1 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20" />
+
+                {/* Share Button - Top Right */}
+                <motion.div
+                  className="absolute top-4 right-4 z-40"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <button
+                    onClick={handleShareClick}
+                    className="bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/60 transition-all duration-300"
+                  >
+                    <span className="material-icons">share</span>
+                  </button>
+                </motion.div>
+
+                {/* Title and Mobile Stats Overlay */}
+                <div className="absolute bottom-0 left-0 p-6 text-white w-full">
+                  <motion.h1
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                    className="text-3xl font-bold mb-3"
+                  >
+                    {metadata?.short_description || "Kuri Circle"}
+                  </motion.h1>
+
+                  {/* Mobile Liquid Morphic Stats Card - Same as Desktop */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.8 }}
+                    className="bg-white/20 backdrop-blur-sm rounded-2xl p-4"
+                  >
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="flex items-center justify-center text-lg">
+                          <span className="material-icons mr-1.5 text-xl">
+                            groups
+                          </span>
+                        </div>
+                        <p className="font-bold text-2xl">
+                          {marketData.totalActiveParticipantsCount}/
+                          {marketData.totalParticipantsCount}
+                        </p>
+                        <p className="text-xs opacity-80">Members</p>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-center text-lg">
+                          <span className="material-icons mr-1.5 text-xl">
+                            paid
+                          </span>
+                        </div>
+                        <p className="font-bold text-2xl">
+                          $
+                          {(
+                            Number(marketData.kuriAmount) / 1_000_000
+                          ).toFixed(0)}
+                        </p>
+                        <p className="text-xs opacity-80">Contribution</p>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-center text-lg">
+                          <span className="material-icons mr-1.5 text-xl">
+                            savings
+                          </span>
+                        </div>
+                        <p className="font-bold text-2xl">
+                          $
+                          {(
+                            (Number(marketData.kuriAmount) / 1_000_000) *
+                            marketData.totalParticipantsCount
+                          ).toFixed(0)}
+                        </p>
+                        <p className="text-xs opacity-80">Pool</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Desktop Layout: 1/3 + 2/3 Grid */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-8">
               {/* Left Section: Hero Image with Liquid Morphic Stats */}
               <div className="lg:col-span-1">
                 <motion.div
@@ -1340,6 +1440,397 @@ export default function MarketDetail() {
               </div>
             </div>
 
+            {/* Mobile Content Card */}
+            <div className="lg:hidden">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white rounded-2xl shadow-lg"
+              >
+                {/* Mobile Tabs */}
+                <div className="border-b border-gray-200">
+                  <nav className="flex space-x-6 -mb-px">
+                    <button
+                      onClick={() => setActiveTab("overview")}
+                      className={`py-4 px-1 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
+                        activeTab === "overview"
+                          ? "text-[#E67A50] border-[#E67A50]"
+                          : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <span className="material-icons mr-2 text-xl">visibility</span>
+                      Overview
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("activity")}
+                      className={`py-4 px-1 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
+                        activeTab === "activity"
+                          ? "text-[#E67A50] border-[#E67A50]"
+                          : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <span className="material-icons mr-2 text-xl">timeline</span>
+                      Activity
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("members")}
+                      className={`py-4 px-1 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
+                        activeTab === "members"
+                          ? "text-[#E67A50] border-[#E67A50]"
+                          : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <span className="material-icons mr-2 text-xl">groups</span>
+                      Members
+                    </button>
+                  </nav>
+                </div>
+
+                {/* Mobile Tab Content */}
+                <div className="p-6">
+                  <AnimatePresence mode="wait">
+                    {activeTab === "overview" && (
+                      <motion.div
+                        key="overview"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-6"
+                      >
+                        {/* About Section */}
+                        <div>
+                          <h2 className="text-xl font-bold text-gray-900 mb-2">
+                            About This Circle
+                          </h2>
+                          <p className="text-gray-600">
+                            {metadata?.long_description ||
+                              metadata?.short_description ||
+                              "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
+                          </p>
+                        </div>
+
+                        {/* Mobile Circle Stats */}
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Circle Stats
+                          </h3>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">
+                                Created On
+                              </span>
+                              <span className="text-sm font-medium text-gray-900">
+                                {metadata?.created_at
+                                  ? new Date(
+                                      metadata.created_at
+                                    ).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })
+                                  : new Date(
+                                      Number(marketData.startTime) * 1000
+                                    ).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">
+                                Payout Frequency
+                              </span>
+                              <span className="text-sm font-medium text-gray-900 capitalize">
+                                {getIntervalTypeText(
+                                  marketData.intervalType
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">
+                                Next Payout
+                              </span>
+                              <span className="text-sm font-medium text-gray-900">
+                                {marketData.state === KuriState.ACTIVE
+                                  ? new Date(
+                                      Number(marketData.nexRaffleTime) *
+                                        1000
+                                    ).toLocaleDateString()
+                                  : "TBD"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">
+                                Circle Status
+                              </span>
+                              {(() => {
+                                const badge = getStatusBadge(
+                                  marketData.state
+                                );
+                                return (
+                                  <span
+                                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.className}`}
+                                  >
+                                    {badge.text}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mobile Creator Section */}
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Creator
+                          </h3>
+                          {creatorProfileLoading ? (
+                            <div className="flex items-center">
+                              <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse mr-4" />
+                              <div className="flex-1">
+                                <div className="h-4 bg-gray-300 rounded animate-pulse mb-2" />
+                                <div className="h-3 bg-gray-300 rounded animate-pulse w-2/3" />
+                              </div>
+                            </div>
+                          ) : creatorProfile ? (
+                            <div className="flex items-center">
+                              <img
+                                src={
+                                  creatorProfile.profile_image_url ||
+                                  "/images/default-avatar.png"
+                                }
+                                alt={
+                                  creatorProfile.display_name ||
+                                  creatorProfile.username ||
+                                  "Creator"
+                                }
+                                className="w-12 h-12 rounded-full mr-4 object-cover"
+                              />
+                              <div>
+                                <div className="font-semibold text-gray-900">
+                                  {creatorProfile.display_name ||
+                                    creatorProfile.username ||
+                                    "Anonymous Creator"}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {marketData.creator.slice(0, 6)}...
+                                  {marketData.creator.slice(-4)}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E67A50] to-orange-400 flex items-center justify-center mr-4">
+                                <svg
+                                  className="w-6 h-6 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-4h3v4H4zM16 13v5h4v-5h-4zM8 13c.55 0 1 .45 1 1v4c0 .55-.45 1-1 1s-1-.45-1-1v-4c0-.55.45-1 1-1z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-gray-900">
+                                  Anonymous Creator
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {marketData.creator.slice(0, 6)}...
+                                  {marketData.creator.slice(-4)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {activeTab === "activity" && (
+                      <motion.div
+                        key="activity"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-6"
+                      >
+                        <h3 className="text-lg font-bold text-[#E67A50] flex items-center gap-3">
+                          <Activity className="w-5 h-5 text-gray-500" />
+                          Recent Activity
+                        </h3>
+                        <div className="text-center py-8">
+                          <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center"
+                          >
+                            <Calendar className="w-8 h-8 text-orange-600" />
+                          </motion.div>
+                          <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                            Activity Tracking Coming Soon
+                          </h4>
+                          <p className="text-gray-600 text-sm">
+                            Deposits, raffles, and member activities will be
+                            displayed here.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {activeTab === "members" && (
+                      <motion.div
+                        key="members"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-6"
+                      >
+                        <CircleMembersDisplay marketAddress={address || ""} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+
+              {/* Mobile Countdown/Action Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="bg-orange-100 rounded-2xl p-6 mt-6"
+              >
+                {marketData.state === KuriState.INLAUNCH && (
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-900 text-center mb-4">
+                      Launch Period Ends In
+                    </h3>
+                    <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
+                      <div>
+                        <span className="text-4xl font-bold">
+                          {timeLeft.includes("d")
+                            ? timeLeft
+                                .split("d")[0]
+                                .padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Days</span>
+                      </div>
+                      <span className="text-3xl font-bold text-orange-500">:</span>
+                      <div>
+                        <span className="text-4xl font-bold">
+                          {timeLeft.includes("h")
+                            ? timeLeft
+                                .split("h")[0]
+                                .split(" ")
+                                .pop()
+                                ?.padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Hours</span>
+                      </div>
+                      <span className="text-3xl font-bold text-orange-500">:</span>
+                      <div>
+                        <span className="text-4xl font-bold">
+                          {timeLeft.includes("m")
+                            ? timeLeft
+                                .split("m")[0]
+                                .split(" ")
+                                .pop()
+                                ?.padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Minutes</span>
+                      </div>
+                      <span className="text-3xl font-bold text-orange-500">:</span>
+                      <div>
+                        <span className="text-4xl font-bold">
+                          {timeLeft.includes("s")
+                            ? timeLeft
+                                .split("s")[0]
+                                .split(" ")
+                                .pop()
+                                ?.padStart(2, "0")
+                            : "00"}
+                        </span>
+                        <span className="block text-xs text-gray-600">Seconds</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {marketData.state === KuriState.ACTIVE && (
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-900 text-center mb-4">
+                      {Date.now() <
+                      Number(
+                        marketData.nextIntervalDepositTime
+                      ) *
+                        1000
+                        ? "Next Deposit Due In"
+                        : "Next Raffle In"}
+                    </h3>
+                    <div className="flex justify-center mb-6">
+                      <SequentialCountdown
+                        raffleTimestamp={
+                          Number(marketData.nexRaffleTime) * 1000
+                        }
+                        depositTimestamp={
+                          Number(
+                            marketData.nextIntervalDepositTime
+                          ) * 1000
+                        }
+                        raffleDate={new Date(
+                          Number(marketData.nexRaffleTime) * 1000
+                        ).toLocaleString()}
+                        depositDate={new Date(
+                          Number(
+                            marketData.nextIntervalDepositTime
+                          ) * 1000
+                        ).toLocaleString()}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {marketData.state === KuriState.COMPLETED && (
+                  <div className="text-center">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                    <h3 className="text-xl font-bold text-green-900 mb-1">
+                      Circle Completed
+                    </h3>
+                    <p className="text-green-700">
+                      All members have received their payouts
+                    </p>
+                  </div>
+                )}
+
+                {marketData.state === KuriState.LAUNCHFAILED && (
+                  <div className="text-center">
+                    <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
+                    <h3 className="text-xl font-bold text-red-900 mb-1">
+                      Launch Failed
+                    </h3>
+                    <p className="text-red-700">
+                      This circle did not reach the minimum requirements
+                    </p>
+                  </div>
+                )}
+
+                {/* Mobile Action Button */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex justify-center"
+                >
+                  {renderActionButton()}
+                </motion.div>
+              </motion.div>
+            </div>
+
             {/* Member Actions for Active Members - Integrated into main layout */}
             {membershipStatus === 1 &&
               marketData.state === KuriState.ACTIVE && (
@@ -1347,7 +1838,7 @@ export default function MarketDetail() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  className="mt-8 bg-white rounded-3xl shadow-lg p-8"
+                  className="mt-8 bg-white rounded-2xl lg:rounded-3xl shadow-lg p-6 lg:p-8"
                 >
                   <div className="flex items-center justify-center mb-6">
                     <div className="flex items-center gap-3">
@@ -1364,14 +1855,14 @@ export default function MarketDetail() {
                   <div
                     className={`grid grid-cols-1 ${
                       shouldShowClaimCard ? "lg:grid-cols-2" : "lg:grid-cols-1"
-                    } gap-6`}
+                    } gap-4 lg:gap-6`}
                   >
                     {/* Deposit Card */}
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 1.0 }}
-                      className="bg-orange-50 p-6 rounded-2xl"
+                      className="bg-orange-50 p-4 lg:p-6 rounded-2xl"
                     >
                       <DepositForm
                         marketData={marketData}
@@ -1385,7 +1876,7 @@ export default function MarketDetail() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 1.2 }}
-                        className="bg-green-50 p-6 rounded-2xl"
+                        className="bg-green-50 p-4 lg:p-6 rounded-2xl"
                       >
                         <ClaimInterface
                           marketData={marketData}
