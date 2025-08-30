@@ -1385,10 +1385,10 @@ export default function MarketDetail() {
               >
                 {/* Mobile Tabs */}
                 <div className="border-b border-gray-200">
-                  <nav className="flex space-x-6 -mb-px">
+                  <nav className="flex space-x-4 xs:space-x-6 -mb-px overflow-x-auto scrollbar-hide">
                     <button
                       onClick={() => setActiveTab("overview")}
-                      className={`py-4 px-1 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
+                      className={`py-4 px-1 flex-shrink-0 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
                         activeTab === "overview"
                           ? "text-[#E67A50] border-[#E67A50]"
                           : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
@@ -1399,7 +1399,7 @@ export default function MarketDetail() {
                     </button>
                     <button
                       onClick={() => setActiveTab("activity")}
-                      className={`py-4 px-1 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
+                      className={`py-4 px-1 flex-shrink-0 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
                         activeTab === "activity"
                           ? "text-[#E67A50] border-[#E67A50]"
                           : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
@@ -1410,7 +1410,7 @@ export default function MarketDetail() {
                     </button>
                     <button
                       onClick={() => setActiveTab("members")}
-                      className={`py-4 px-1 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
+                      className={`py-4 px-1 flex-shrink-0 inline-flex items-center text-sm font-medium transition-all duration-300 border-b-2 ${
                         activeTab === "members"
                           ? "text-[#E67A50] border-[#E67A50]"
                           : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
