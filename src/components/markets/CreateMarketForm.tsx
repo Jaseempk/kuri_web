@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
-// import { LoadingSkeleton } from "../ui/loading-states";
+
 import { parseUnits } from "viem";
 import { toast } from "sonner";
 import { sanitizeInput } from "../../utils/sanitize";
@@ -638,7 +638,9 @@ export const CreateMarketForm = ({
                 </p>
                 {formData.shortDescription && (
                   <div className="pt-2 border-t border-[#E8DED1]">
-                    <span className="text-gray-600 text-xs sm:text-sm">Description:</span>
+                    <span className="text-gray-600 text-xs sm:text-sm">
+                      Description:
+                    </span>
                     <p className="font-medium mt-1 text-xs sm:text-sm">
                       {formData.shortDescription}
                     </p>
@@ -658,7 +660,6 @@ export const CreateMarketForm = ({
     <>
       {showConfetti && <Confetti />}
       <div className="w-full bg-white rounded-2xl md:rounded-3xl shadow-xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 max-h-[90vh] sm:max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-[#E8DED1] scrollbar-track-[#f5f5f5]">
-        
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center pt-2">
           Create New Circle
         </h2>

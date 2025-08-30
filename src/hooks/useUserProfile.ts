@@ -13,17 +13,22 @@ export const useUserProfile = () => {
   const { getSignedAuth } = useApiAuth();
   const queryClient = useQueryClient();
 
-  const queryOptions = useMemo(() => ({
-    queryKey: ["user-profile-smart", smartAddress?.toLowerCase()],
-    queryFn: async () => {
-      if (!smartAddress) throw new Error("Smart wallet address not available");
-      return apiClient.getUserProfile(smartAddress);
-    },
-    enabled: !!smartAddress,
-    staleTime: 10 * 60 * 1000, // 10 minutes - longer to prevent excessive fetching
-    refetchOnWindowFocus: false,
-    placeholderData: (previousData: KuriUserProfile | null | undefined) => previousData || null, // Keep previous data during transitions
-  }), [smartAddress]);
+  const queryOptions = useMemo(
+    () => ({
+      queryKey: ["user-profile-smart", smartAddress?.toLowerCase()],
+      queryFn: async () => {
+        if (!smartAddress)
+          throw new Error("Smart wallet address not available");
+        return apiClient.getUserProfile(smartAddress);
+      },
+      enabled: !!smartAddress,
+      staleTime: 10 * 60 * 1000, // 10 minutes - longer to prevent excessive fetching
+      refetchOnWindowFocus: false,
+      placeholderData: (previousData: KuriUserProfile | null | undefined) =>
+        previousData || null, // Keep previous data during transitions
+    }),
+    [smartAddress]
+  );
 
   const {
     data: profile,
@@ -32,7 +37,7 @@ export const useUserProfile = () => {
     refetch: refreshProfile,
   } = useQuery(queryOptions);
 
-  console.log("User profile data:", profile, "for address:", smartAddress);
+  // console.log("User profile data:", profile, "for address:", smartAddress);
 
   const updateProfile = useCallback(
     async (updates: Partial<KuriUserProfile> & { image?: File }) => {

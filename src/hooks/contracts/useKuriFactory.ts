@@ -15,7 +15,10 @@ import { config } from "../../config/wagmi";
 import { baseSepolia } from "viem/chains";
 import { useTransactionStatus } from "../useTransactionStatus";
 import { useKuriMarkets } from "../useKuriMarkets";
-import { createGasSponsoredClient, executeSponsoredTransaction } from "../../utils/gasSponsorship";
+import {
+  createGasSponsoredClient,
+  executeSponsoredTransaction,
+} from "../../utils/gasSponsorship";
 
 export const useKuriFactory = () => {
   const [isCreating, setIsCreating] = useState(false);
@@ -166,7 +169,9 @@ export const useKuriFactory = () => {
           operationName: "market creation",
         });
 
-        console.log("🎉 Market creation gas fees sponsored by Alchemy Gas Manager!");
+        console.log(
+          "🎉 Market creation gas fees sponsored by Alchemy Gas Manager!"
+        );
 
         const receipt = await waitForTransactionReceipt(config, {
           hash: txHash as `0x${string}`,
@@ -197,9 +202,8 @@ export const useKuriFactory = () => {
 
         // Handle transaction status and notifications
         await handleTransaction(txHash as `0x${string}`, {
-          loadingMessage: "Creating your Kuri market (gas-sponsored)...",
-          successMessage:
-            "Kuri market created successfully! 🎉 Gas was sponsored!",
+          loadingMessage: "Creating your Kuri market ",
+          successMessage: "Kuri market created successfully! 🎉 ",
           errorMessage: "Failed to create Kuri market (sponsored)",
         });
 
@@ -212,7 +216,14 @@ export const useKuriFactory = () => {
         setIsCreating(false);
       }
     },
-    [address, factoryAddress, handleTransaction, refetchMarkets, paraAccount, signMessageAsync]
+    [
+      address,
+      factoryAddress,
+      handleTransaction,
+      refetchMarkets,
+      paraAccount,
+      signMessageAsync,
+    ]
   );
 
   // Get all deployed Kuri markets using subgraph
