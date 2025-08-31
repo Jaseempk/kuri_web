@@ -104,7 +104,7 @@ interface StatsContainerProps {
 
 const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   if (!marketData) return null;
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -115,9 +115,7 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
           <div className="flex items-center justify-center text-lg">
-            <span className="material-icons mr-1.5 text-xl">
-              groups
-            </span>
+            <span className="material-icons mr-1.5 text-xl">groups</span>
           </div>
           <p className="font-bold text-2xl">
             {marketData.totalActiveParticipantsCount}/
@@ -127,23 +125,16 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
         </div>
         <div>
           <div className="flex items-center justify-center text-lg">
-            <span className="material-icons mr-1.5 text-xl">
-              paid
-            </span>
+            <span className="material-icons mr-1.5 text-xl">paid</span>
           </div>
           <p className="font-bold text-2xl">
-            $
-            {(
-              Number(marketData.kuriAmount) / 1_000_000
-            ).toFixed(0)}
+            ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(0)}
           </p>
           <p className="text-xs opacity-80">Contribution</p>
         </div>
         <div>
           <div className="flex items-center justify-center text-lg">
-            <span className="material-icons mr-1.5 text-xl">
-              savings
-            </span>
+            <span className="material-icons mr-1.5 text-xl">savings</span>
           </div>
           <p className="font-bold text-2xl">
             $
@@ -172,7 +163,11 @@ interface TabContentProps {
   } | null;
   creatorProfile: any;
   creatorProfileLoading: boolean;
-  currentWinner: { intervalIndex: number; winner: string; timestamp: string; } | null;
+  currentWinner: {
+    intervalIndex: number;
+    winner: string;
+    timestamp: string;
+  } | null;
   winnerProfile: any;
   winnerProfileLoading: boolean;
   timeLeft: string;
@@ -232,13 +227,14 @@ const TabContent: React.FC<TabContentProps> = ({
                   </span>
                   <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
                     {metadata?.created_at
-                      ? new Date(
-                          metadata.created_at
-                        ).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
+                      ? new Date(metadata.created_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )
                       : new Date(
                           Number(marketData.startTime) * 1000
                         ).toLocaleDateString("en-US", {
@@ -253,9 +249,7 @@ const TabContent: React.FC<TabContentProps> = ({
                     Payout Frequency
                   </span>
                   <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800 capitalize">
-                    {getIntervalTypeText(
-                      marketData.intervalType
-                    )}
+                    {getIntervalTypeText(marketData.intervalType)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -265,8 +259,7 @@ const TabContent: React.FC<TabContentProps> = ({
                   <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
                     {marketData.state === KuriState.ACTIVE
                       ? new Date(
-                          Number(marketData.nexRaffleTime) *
-                            1000
+                          Number(marketData.nexRaffleTime) * 1000
                         ).toLocaleDateString()
                       : "TBD"}
                   </span>
@@ -291,9 +284,7 @@ const TabContent: React.FC<TabContentProps> = ({
 
             {/* Creator Section */}
             <div className="bg-gray-100 p-6 rounded-2xl">
-              <h3 className="font-bold text-lg text-gray-800 mb-3">
-                Creator
-              </h3>
+              <h3 className="font-bold text-lg text-gray-800 mb-3">Creator</h3>
               {creatorProfileLoading ? (
                 <div className="flex items-center">
                   <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse mr-4" />
@@ -349,7 +340,6 @@ const TabContent: React.FC<TabContentProps> = ({
             </div>
           </div>
 
-
           {/* Desktop Action Section - Only show on desktop */}
           <div className="hidden lg:block bg-orange-50 p-6 rounded-2xl">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -367,34 +357,60 @@ const TabContent: React.FC<TabContentProps> = ({
                             ? timeLeft.split("d")[0].padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Days</span>
+                        <span className="block text-xs text-gray-600">
+                          Days
+                        </span>
                       </div>
-                      <span className="text-4xl font-bold text-orange-500">:</span>
+                      <span className="text-4xl font-bold text-orange-500">
+                        :
+                      </span>
                       <div className="text-center">
                         <span className="text-4xl font-bold text-orange-500">
                           {timeLeft.includes("h")
-                            ? timeLeft.split("h")[0].split(" ").pop()?.padStart(2, "0")
+                            ? timeLeft
+                                .split("h")[0]
+                                .split(" ")
+                                .pop()
+                                ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Hours</span>
+                        <span className="block text-xs text-gray-600">
+                          Hours
+                        </span>
                       </div>
-                      <span className="text-4xl font-bold text-orange-500">:</span>
+                      <span className="text-4xl font-bold text-orange-500">
+                        :
+                      </span>
                       <div className="text-center">
                         <span className="text-4xl font-bold text-orange-500">
                           {timeLeft.includes("m")
-                            ? timeLeft.split("m")[0].split(" ").pop()?.padStart(2, "0")
+                            ? timeLeft
+                                .split("m")[0]
+                                .split(" ")
+                                .pop()
+                                ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Minutes</span>
+                        <span className="block text-xs text-gray-600">
+                          Minutes
+                        </span>
                       </div>
-                      <span className="text-4xl font-bold text-orange-500">:</span>
+                      <span className="text-4xl font-bold text-orange-500">
+                        :
+                      </span>
                       <div className="text-center">
                         <span className="text-4xl font-bold text-orange-500">
                           {timeLeft.includes("s")
-                            ? timeLeft.split("s")[0].split(" ").pop()?.padStart(2, "0")
+                            ? timeLeft
+                                .split("s")[0]
+                                .split(" ")
+                                .pop()
+                                ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Seconds</span>
+                        <span className="block text-xs text-gray-600">
+                          Seconds
+                        </span>
                       </div>
                     </div>
                   </>
@@ -408,7 +424,9 @@ const TabContent: React.FC<TabContentProps> = ({
                     <SequentialCountdown
                       raffleTimestamp={Number(marketData.nexRaffleTime) * 1000}
                       depositTimestamp={0}
-                      raffleDate={new Date(Number(marketData.nexRaffleTime) * 1000).toLocaleString()}
+                      raffleDate={new Date(
+                        Number(marketData.nexRaffleTime) * 1000
+                      ).toLocaleString()}
                       depositDate=""
                     />
                   </>
@@ -432,7 +450,11 @@ const TabContent: React.FC<TabContentProps> = ({
                           {winnerProfile.profile_image_url ? (
                             <img
                               src={winnerProfile.profile_image_url}
-                              alt={winnerProfile.display_name || winnerProfile.username || "Winner"}
+                              alt={
+                                winnerProfile.display_name ||
+                                winnerProfile.username ||
+                                "Winner"
+                              }
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -441,7 +463,9 @@ const TabContent: React.FC<TabContentProps> = ({
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-gray-800 text-sm">
-                            {winnerProfile.display_name || winnerProfile.username || "Anonymous Winner"}
+                            {winnerProfile.display_name ||
+                              winnerProfile.username ||
+                              "Anonymous Winner"}
                           </p>
                         </div>
                       </div>
@@ -454,23 +478,34 @@ const TabContent: React.FC<TabContentProps> = ({
                 {marketData.state === KuriState.COMPLETED && (
                   <div className="text-center">
                     <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
-                    <h3 className="text-xl font-bold text-green-900 mb-1">Circle Completed</h3>
-                    <p className="text-green-700">All members have received their payouts</p>
+                    <h3 className="text-xl font-bold text-green-900 mb-1">
+                      Circle Completed
+                    </h3>
+                    <p className="text-green-700">
+                      All members have received their payouts
+                    </p>
                   </div>
                 )}
 
                 {marketData.state === KuriState.LAUNCHFAILED && (
                   <div className="text-center">
                     <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
-                    <h3 className="text-xl font-bold text-red-900 mb-1">Launch Failed</h3>
-                    <p className="text-red-700">This circle did not reach the minimum requirements</p>
+                    <h3 className="text-xl font-bold text-red-900 mb-1">
+                      Launch Failed
+                    </h3>
+                    <p className="text-red-700">
+                      This circle did not reach the minimum requirements
+                    </p>
                   </div>
                 )}
               </div>
 
               {/* Action Button - Desktop Only */}
               <div className="hidden lg:block flex-shrink-0">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   {renderActionButton()}
                 </motion.div>
               </div>
@@ -532,8 +567,6 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
   }
 };
 
-
-
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
@@ -578,6 +611,7 @@ export default function MarketDetail() {
     checkPaymentStatusIfMember,
     checkHasClaimed,
   } = useKuriCore(address as `0x${string}`);
+  console.log("addresss", address);
 
   // Fetch creator's profile
   const { profile: creatorProfile, isLoading: creatorProfileLoading } =
@@ -790,7 +824,7 @@ export default function MarketDetail() {
     try {
       // 🚀 USE SPONSORED VERSION FOR TESTING
       await requestMembershipSponsored();
-      toast.success("Membership request sent! (Gas was sponsored 🎉)");
+      toast.success("Membership request sent!");
 
       // Track successful market join
       if (marketData) {
@@ -1040,8 +1074,6 @@ export default function MarketDetail() {
     e.stopPropagation();
     setShowShareModal(true);
   };
-
-
 
   if (isLoading) {
     return (
@@ -1349,7 +1381,7 @@ export default function MarketDetail() {
 
                   {/* Tab Content */}
                   <div className="p-8">
-                    <TabContent 
+                    <TabContent
                       activeTab={activeTab}
                       metadata={metadata}
                       marketData={marketData}
@@ -1386,7 +1418,9 @@ export default function MarketDetail() {
                           : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
                       }`}
                     >
-                      <span className="material-icons mr-2 text-xl">visibility</span>
+                      <span className="material-icons mr-2 text-xl">
+                        visibility
+                      </span>
                       Overview
                     </button>
                     <button
@@ -1397,7 +1431,9 @@ export default function MarketDetail() {
                           : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
                       }`}
                     >
-                      <span className="material-icons mr-2 text-xl">timeline</span>
+                      <span className="material-icons mr-2 text-xl">
+                        timeline
+                      </span>
                       Activity
                     </button>
                     <button
@@ -1408,7 +1444,9 @@ export default function MarketDetail() {
                           : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
                       }`}
                     >
-                      <span className="material-icons mr-2 text-xl">groups</span>
+                      <span className="material-icons mr-2 text-xl">
+                        groups
+                      </span>
                       Members
                     </button>
                   </nav>
@@ -1416,7 +1454,7 @@ export default function MarketDetail() {
 
                 {/* Mobile Tab Content */}
                 <div className="p-6">
-                  <TabContent 
+                  <TabContent
                     activeTab={activeTab}
                     metadata={metadata}
                     marketData={marketData}
@@ -1448,14 +1486,16 @@ export default function MarketDetail() {
                       <div>
                         <span className="text-4xl font-bold">
                           {timeLeft.includes("d")
-                            ? timeLeft
-                                .split("d")[0]
-                                .padStart(2, "0")
+                            ? timeLeft.split("d")[0].padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Days</span>
+                        <span className="block text-xs text-gray-600">
+                          Days
+                        </span>
                       </div>
-                      <span className="text-3xl font-bold text-orange-500">:</span>
+                      <span className="text-3xl font-bold text-orange-500">
+                        :
+                      </span>
                       <div>
                         <span className="text-4xl font-bold">
                           {timeLeft.includes("h")
@@ -1466,9 +1506,13 @@ export default function MarketDetail() {
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Hours</span>
+                        <span className="block text-xs text-gray-600">
+                          Hours
+                        </span>
                       </div>
-                      <span className="text-3xl font-bold text-orange-500">:</span>
+                      <span className="text-3xl font-bold text-orange-500">
+                        :
+                      </span>
                       <div>
                         <span className="text-4xl font-bold">
                           {timeLeft.includes("m")
@@ -1479,9 +1523,13 @@ export default function MarketDetail() {
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Minutes</span>
+                        <span className="block text-xs text-gray-600">
+                          Minutes
+                        </span>
                       </div>
-                      <span className="text-3xl font-bold text-orange-500">:</span>
+                      <span className="text-3xl font-bold text-orange-500">
+                        :
+                      </span>
                       <div>
                         <span className="text-4xl font-bold">
                           {timeLeft.includes("s")
@@ -1492,7 +1540,9 @@ export default function MarketDetail() {
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">Seconds</span>
+                        <span className="block text-xs text-gray-600">
+                          Seconds
+                        </span>
                       </div>
                     </div>
                   </>
@@ -1502,10 +1552,7 @@ export default function MarketDetail() {
                   <>
                     <h3 className="text-lg font-semibold text-gray-900 text-center mb-4">
                       {Date.now() <
-                      Number(
-                        marketData.nextIntervalDepositTime
-                      ) *
-                        1000
+                      Number(marketData.nextIntervalDepositTime) * 1000
                         ? "Next Deposit Due In"
                         : "Next Raffle In"}
                     </h3>
@@ -1515,17 +1562,13 @@ export default function MarketDetail() {
                           Number(marketData.nexRaffleTime) * 1000
                         }
                         depositTimestamp={
-                          Number(
-                            marketData.nextIntervalDepositTime
-                          ) * 1000
+                          Number(marketData.nextIntervalDepositTime) * 1000
                         }
                         raffleDate={new Date(
                           Number(marketData.nexRaffleTime) * 1000
                         ).toLocaleString()}
                         depositDate={new Date(
-                          Number(
-                            marketData.nextIntervalDepositTime
-                          ) * 1000
+                          Number(marketData.nextIntervalDepositTime) * 1000
                         ).toLocaleString()}
                       />
                     </div>

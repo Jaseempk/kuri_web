@@ -532,7 +532,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
       // Create sponsored client using the helper
       const sponsoredClient = await createGasSponsoredClient({
-        userAddress,
+        userAddress: paraWalletClient.address as `0x${string}`,
         paraWalletClient,
         signMessageAsync,
       });
@@ -777,7 +777,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
       // Create sponsored client using the helper
       const sponsoredClient = await createGasSponsoredClient({
-        userAddress,
+        userAddress: paraWalletClient.address as `0x${string}`,
         paraWalletClient,
         signMessageAsync,
       });
@@ -1019,7 +1019,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
       // Create sponsored client using the helper
       const sponsoredClient = await createGasSponsoredClient({
-        userAddress,
+        userAddress: paraWalletClient.address as `0x${string}`,
         paraWalletClient,
         signMessageAsync,
       });
