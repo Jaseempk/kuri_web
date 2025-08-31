@@ -1,18 +1,18 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAccount } from "@getpara/react-sdk";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useAuthNavigation } from "../../hooks/useAuthNavigation";
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 export const AuthGuard = ({ children }: AuthGuardProps) => {
-  const navigate = useNavigate();
   const account = useAccount();
   const { profile, isLoading: profileLoading } = useUserProfile();
   const { smartAddress: address, isLoading: addressLoading } = useSmartWallet();
+  const { coordinatedNavigate, isNavigating } = useAuthNavigation();
   const [hasNavigated, setHasNavigated] = useState(false);
   const navigationTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -22,8 +22,8 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
       clearTimeout(navigationTimeoutRef.current);
     }
 
-    // Don't navigate if we already navigated recently
-    if (hasNavigated) {
+    // Don't navigate if we already navigated recently or if navigation is in progress
+    if (hasNavigated || isNavigating) {
       return;
     }
 
@@ -32,32 +32,36 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
       return;
     }
 
-    // Add small delay to prevent rapid navigation and allow state to stabilize
+    // Mobile device detection for adaptive timing
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const authTimeout = isMobile ? 2000 : 500; // Give mobile 4x more time for smart wallet resolution
+
+    // Add delay to prevent rapid navigation and allow state to stabilize
     navigationTimeoutRef.current = setTimeout(() => {
       // If not connected, redirect to onboarding
       if (!account.isConnected || !address) {
-        setHasNavigated(true);
-        navigate("/onboarding", { 
+        const success = coordinatedNavigate("/onboarding", "AuthGuard-auth", { 
           state: { 
             returnUrl: window.location.pathname + window.location.search,
             source: "auth_required" 
           } 
         });
+        if (success) setHasNavigated(true);
         return;
       }
 
       // If connected but no profile, redirect to onboarding
       if (!profile) {
-        setHasNavigated(true);
-        navigate("/onboarding", { 
+        const success = coordinatedNavigate("/onboarding", "AuthGuard-profile", { 
           state: { 
             returnUrl: window.location.pathname + window.location.search,
             source: "profile_required" 
           } 
         });
+        if (success) setHasNavigated(true);
         return;
       }
-    }, 500); // Delay to allow smart wallet resolution and profile loading
+    }, authTimeout); // Mobile-adaptive delay for smart wallet resolution
   }, [account.isConnected, account.isLoading, address, profile, profileLoading, addressLoading]);
 
   // Reset navigation flag when component unmounts or when auth state changes significantly

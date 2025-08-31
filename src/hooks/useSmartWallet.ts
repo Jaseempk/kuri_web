@@ -62,9 +62,21 @@ export const useSmartWallet = (): UseSmartWalletReturn => {
     if (account.isConnected && embeddedAddress) {
       fetchSmartWallet();
     } else if (!account.isConnected && !account.isLoading) {
-      // Only reset if truly disconnected, not just missing embedded address
-      setSmartAddress(null);
-      setError(null);
+      // Add delay before resetting on mobile to handle timing issues
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        setTimeout(() => {
+          // Double-check connection state after delay
+          if (!account.isConnected && !account.isLoading) {
+            setSmartAddress(null);
+            setError(null);
+          }
+        }, 1000);
+      } else {
+        setSmartAddress(null);
+        setError(null);
+      }
     }
   }, [account.isConnected, embeddedAddress, account.isLoading]); // Remove fetchSmartWallet!
 

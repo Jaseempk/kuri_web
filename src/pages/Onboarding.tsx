@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { useAccount, useModal } from "@getpara/react-sdk";
 import { useUserProfile } from "../hooks/useUserProfile";
+import { useAuthNavigation } from "../hooks/useAuthNavigation";
 import { toast } from "sonner";
 import { sanitizeInput } from "../utils/sanitize";
 import { validateImageFile } from "../utils/fileValidation";
@@ -15,7 +16,7 @@ enum OnboardingStep {
 }
 
 export default function Onboarding() {
-  const navigate = useNavigate();
+  const { coordinatedNavigate } = useAuthNavigation();
   const location = useLocation();
   const account = useAccount();
   const { openModal } = useModal();
@@ -38,8 +39,24 @@ export default function Onboarding() {
     imagePreview: null as string | null,
   });
 
-  // Derived state for cleaner auth checks
-  const authDependenciesResolved = !account.isLoading && !profileLoading && !addressLoading;
+  // Derived state for cleaner auth checks with mobile-specific improvements
+  const authDependenciesResolved = useMemo(() => {
+    const basicStatesResolved = !account.isLoading && !profileLoading && !addressLoading;
+    
+    // Additional mobile-specific checks
+    const hasEmbeddedWallet = !!account.embedded.wallets?.[0]?.address;
+    const smartWalletExists = !!smartAddress;
+    
+    // On mobile, ensure smart wallet actually resolved before proceeding
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && account.isConnected && hasEmbeddedWallet && !smartWalletExists) {
+      return false; // Still waiting for smart wallet on mobile
+    }
+    
+    return basicStatesResolved;
+  }, [account.isLoading, profileLoading, addressLoading, account.isConnected, account.embedded.wallets, smartAddress]);
+
   const hasCompleteAuthState = account.isConnected && address && smartAddress;
 
   // Check authentication status and profile existence
@@ -49,7 +66,7 @@ export default function Onboarding() {
     if (hasCompleteAuthState && profile && !loading) {
       // Fully authenticated and not in the middle of profile creation - redirect
       const safeReturnUrl = returnUrl === "/onboarding" ? "/markets" : returnUrl;
-      navigate(safeReturnUrl, { replace: true });
+      coordinatedNavigate(safeReturnUrl, "Onboarding-success", { replace: true });
     } else if (hasCompleteAuthState && !profile) {
       // Need profile creation
       setCurrentStep(OnboardingStep.PROFILE_CREATION);
@@ -57,7 +74,7 @@ export default function Onboarding() {
       // Need authentication  
       setCurrentStep(OnboardingStep.EMAIL_AUTH);
     }
-  }, [authDependenciesResolved, hasCompleteAuthState, profile, navigate, returnUrl, loading]);
+  }, [authDependenciesResolved, hasCompleteAuthState, profile, coordinatedNavigate, returnUrl, loading]);
 
   // Track onboarding start
   useEffect(() => {
@@ -172,7 +189,7 @@ export default function Onboarding() {
       toast.success("Profile created successfully!");
 
       // Direct navigation - don't rely on useEffect
-      navigate(returnUrl, { replace: true });
+      coordinatedNavigate(returnUrl, "Onboarding-profile-complete", { replace: true });
     } catch (error) {
       // Track onboarding failure
       trackError(
@@ -205,10 +222,10 @@ export default function Onboarding() {
     // Navigate back to the return URL, but use history.back() if possible to maintain state
     if (returnUrl && window.history.length > 1) {
       // Go back in history to maintain page state (scroll position, filters, etc.)
-      navigate(-1);
+      coordinatedNavigate(-1 as any, "Onboarding-skip-back", {});
     } else {
       // Fallback to direct navigation if no history or returnUrl
-      navigate(returnUrl || "/markets", { replace: true });
+      coordinatedNavigate(returnUrl || "/markets", "Onboarding-skip-fallback", { replace: true });
     }
   };
 
