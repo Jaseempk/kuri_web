@@ -11,7 +11,7 @@ import { Confetti } from "../ui/Confetti";
 import { trackMarketCreation, trackError } from "../../utils/analytics";
 import { apiClient } from "../../lib/apiClient";
 import { formatErrorForUser } from "../../utils/apiErrors";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { ChevronDown, Check } from "lucide-react";
 
 interface FormData {
@@ -51,7 +51,7 @@ export const CreateMarketForm = ({
   const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
 
   // const navigate = useNavigate();
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address } = useOptimizedAuth();
   const { initialiseKuriMarketSponsored, isCreating } = useKuriFactory();
 
   // Calculate monthly contribution per participant

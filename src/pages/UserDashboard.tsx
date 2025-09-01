@@ -1,11 +1,9 @@
-import { useAccount } from "@getpara/react-sdk";
 import { useUserActivity } from "../hooks/useUserActivity";
-import { useSmartWallet } from "../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
 import { formatEther } from "viem";
 
 export default function UserDashboard() {
-  const account = useAccount();
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address } = useOptimizedAuth();
   const { activity, loading, error } = useUserActivity(address || "");
 
   if (!address) {

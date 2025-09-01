@@ -8,7 +8,7 @@ import { useTransactionStatus } from "../useTransactionStatus";
 
 import { calculateApprovalAmount } from "../../utils/tokenUtils";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
-import { useSmartWallet } from "../useSmartWallet";
+import { useOptimizedAuth } from "../useOptimizedAuth";
 import {
   createGasSponsoredClient,
   executeSponsoredTransaction,
@@ -75,7 +75,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const [currentInterval, setCurrentInterval] = useState<number>(0);
 
   const account = useAccount();
-  const { smartAddress: userAddress } = useSmartWallet();
+  const { smartAddress: userAddress } = useOptimizedAuth();
   const { handleTransaction } = useTransactionStatus();
   const { signMessageAsync } = useSignMessage();
 

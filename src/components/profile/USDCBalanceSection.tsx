@@ -1,9 +1,9 @@
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { formatUnits } from "viem";
 
 export function USDCBalanceSection() {
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address } = useOptimizedAuth();
   const { balance, isLoading, error } = useUserUSDCBalance(address || undefined);
 
   // Format USDC balance with at least 2 decimal places

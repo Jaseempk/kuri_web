@@ -1,10 +1,10 @@
-import { useUserProfile } from "../hooks/useUserProfile";
+import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
 import { Button } from "../components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 
 export default function UserProfile() {
-  const { profile, isLoading } = useUserProfile();
+  const { profile, isLoading } = useOptimizedAuth();
   const navigate = useNavigate();
 
   if (isLoading) {

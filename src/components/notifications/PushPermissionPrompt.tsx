@@ -3,13 +3,11 @@ import { Bell, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { useUserProfile } from '../../hooks/useUserProfile';
-import { useSmartWallet } from '../../hooks/useSmartWallet';
+import { useOptimizedAuth } from '../../hooks/useOptimizedAuth';
 
 export const PushPermissionPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const { smartAddress: address } = useSmartWallet();
-  const { profile } = useUserProfile();
+  const { smartAddress: address, profile } = useOptimizedAuth();
   const { isInitialized, permission, isSubscribed, requestPermission, isSupported, loading } = usePushNotifications();
 
   useEffect(() => {

@@ -1,13 +1,12 @@
-import { useAccount, useModal } from "@getpara/react-sdk";
+import { useModal } from "@getpara/react-sdk";
 import { formatUnits } from "viem";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { Plus, RefreshCw } from "lucide-react";
 
 export const UserBalanceCard = () => {
-  const account = useAccount();
   const { openModal } = useModal();
-  const { smartAddress: userAddress } = useSmartWallet();
+  const { smartAddress: userAddress, account } = useOptimizedAuth();
 
   const {
     balance,

@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useOptimizedMarkets } from "../hooks/useOptimizedMarkets";
+import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
 import { IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "../components/ui/dialog";
@@ -19,7 +20,6 @@ import { useUSDCBalances } from "../hooks/useUSDCBalances";
 import { getAccount } from "@wagmi/core";
 import { config } from "../config/wagmi";
 import { UserBalanceCard } from "../components/ui/UserBalanceCard";
-import { useAccount } from "@getpara/react-sdk";
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -165,12 +165,12 @@ const IntervalTypeFilter = ({
 };
 
 export default function MarketList() {
-  // Use Para SDK for wallet connection status
-  const paraAccount = useAccount();
-  const isWalletConnected = Boolean(
+  // Use optimized auth for stable wallet connection status
+  const { account: paraAccount } = useOptimizedAuth();
+  const isWalletConnected = useMemo(() => Boolean(
     paraAccount.isConnected && 
-    paraAccount.embedded.wallets?.[0]?.address
-  );
+    paraAccount.embedded?.wallets?.[0]?.address
+  ), [paraAccount.isConnected, paraAccount.embedded?.wallets?.[0]?.address]);
   
   // Keep Wagmi account for other features that might need it
   const account = getAccount(config);

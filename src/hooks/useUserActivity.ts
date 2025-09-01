@@ -5,7 +5,7 @@ import {
   UserActivityQueryVariables,
 } from "../graphql/types";
 import { useMemo, useState, useEffect } from "react";
-import { useSmartWallet } from "./useSmartWallet";
+import { useOptimizedAuth } from "./useOptimizedAuth";
 import { resolveMultipleAddressesRobust } from "../utils/addressResolution";
 
 export interface UserActivity {
@@ -31,7 +31,7 @@ export interface UserActivity {
 }
 
 export const useUserActivity = (userAddress: string) => {
-  const { smartAddress } = useSmartWallet();
+  const { smartAddress } = useOptimizedAuth();
   
   // Use smart wallet address if it matches the requested user, otherwise use provided address
   const queryAddress = userAddress && smartAddress && 

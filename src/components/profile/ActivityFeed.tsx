@@ -2,7 +2,7 @@ import { useKuriMarkets } from "../../hooks/useKuriMarkets";
 import { motion } from "framer-motion";
 import { formatEther } from "viem";
 import { useUserActivity } from "../../hooks/useUserActivity";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { ArrowUpIcon, ArrowDownIcon, UserPlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiClient } from "../../lib/apiClient";
@@ -22,7 +22,7 @@ type Activity = {
 };
 
 export function ActivityFeed() {
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address } = useOptimizedAuth();
   const { activity, loading } = useUserActivity(address || "");
   const { markets } = useKuriMarkets();
   const [marketMetadata, setMarketMetadata] = useState<

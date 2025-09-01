@@ -1,14 +1,13 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useAccount, useModal } from "@getpara/react-sdk";
-import { useUserProfile } from "../hooks/useUserProfile";
+import { useAuthenticationService } from "../services/AuthenticationService";
 import { useAuthNavigation } from "../hooks/useAuthNavigation";
 import { toast } from "sonner";
 import { sanitizeInput } from "../utils/sanitize";
 import { validateImageFile } from "../utils/fileValidation";
 import { trackEvent, trackError } from "../utils/analytics";
 import { formatErrorForUser } from "../utils/apiErrors";
-import { useSmartWallet } from "@/hooks/useSmartWallet";
+import { useOptimizedAuth, AuthFlowState } from "../hooks/useOptimizedAuth";
 
 enum OnboardingStep {
   EMAIL_AUTH = "email_auth",
@@ -18,14 +17,24 @@ enum OnboardingStep {
 export default function Onboarding() {
   const { coordinatedNavigate } = useAuthNavigation();
   const location = useLocation();
-  const account = useAccount();
-  const { openModal } = useModal();
-  const address = account.embedded.wallets?.[0]?.address;
-  const { profile, updateProfile, isLoading: profileLoading } = useUserProfile();
-  const { smartAddress, isLoading: addressLoading } = useSmartWallet();
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>(
-    OnboardingStep.EMAIL_AUTH
-  );
+  const authService = useAuthenticationService();
+  const { authState, updateProfile, profile, smartAddress, account } =
+    useOptimizedAuth();
+  const address = account?.embedded?.wallets?.[0]?.address;
+  console.log("addresss:", address);
+  console.log("account:", account);
+
+  // Debug logging to understand the authentication state
+  console.log("🔍 Onboarding Debug:", {
+    authState,
+    hasProfile: !!profile,
+    hasSmartAddress: !!smartAddress,
+    accountConnected: account?.isConnected,
+    accountLoading: account?.isLoading,
+    currentPath: location.pathname,
+    accountHasEmbedded: !!account?.embedded?.wallets?.[0],
+    accountEmbeddedId: account?.embedded?.wallets?.[0]?.id,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [onboardingStartTime] = useState<number>(Date.now());
@@ -39,42 +48,31 @@ export default function Onboarding() {
     imagePreview: null as string | null,
   });
 
-  // Derived state for cleaner auth checks with mobile-specific improvements
-  const authDependenciesResolved = useMemo(() => {
-    const basicStatesResolved = !account.isLoading && !profileLoading && !addressLoading;
-    
-    // Additional mobile-specific checks
-    const hasEmbeddedWallet = !!account.embedded.wallets?.[0]?.address;
-    const smartWalletExists = !!smartAddress;
-    
-    // On mobile, ensure smart wallet actually resolved before proceeding
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile && account.isConnected && hasEmbeddedWallet && !smartWalletExists) {
-      return false; // Still waiting for smart wallet on mobile
-    }
-    
-    return basicStatesResolved;
-  }, [account.isLoading, profileLoading, addressLoading, account.isConnected, account.embedded.wallets, smartAddress]);
-
-  const hasCompleteAuthState = account.isConnected && address && smartAddress;
-
-  // Check authentication status and profile existence
+  // State machine navigation logic
   useEffect(() => {
-    if (!authDependenciesResolved) return; // Wait for all data to stabilize
-
-    if (hasCompleteAuthState && profile && !loading) {
-      // Fully authenticated and not in the middle of profile creation - redirect
-      const safeReturnUrl = returnUrl === "/onboarding" ? "/markets" : returnUrl;
-      coordinatedNavigate(safeReturnUrl, "Onboarding-success", { replace: true });
-    } else if (hasCompleteAuthState && !profile) {
-      // Need profile creation
-      setCurrentStep(OnboardingStep.PROFILE_CREATION);
-    } else if (!account.isConnected) {
-      // Need authentication  
-      setCurrentStep(OnboardingStep.EMAIL_AUTH);
+    switch (authState) {
+      case AuthFlowState.AUTHENTICATED:
+        if (!loading) {
+          const safeReturnUrl =
+            returnUrl === "/onboarding" ? "/markets" : returnUrl;
+          coordinatedNavigate(safeReturnUrl, "Onboarding-success", {
+            replace: true,
+          });
+        }
+        break;
+      case AuthFlowState.PROFILE_REQUIRED:
+        // Profile creation needed - no flash because state is definitive
+        break;
+      case AuthFlowState.INITIALIZING:
+      case AuthFlowState.PARA_LOADING:
+      case AuthFlowState.WALLET_RESOLVING:
+      case AuthFlowState.PROFILE_LOADING:
+        break;
+      case AuthFlowState.ERROR:
+        // Handle errors
+        break;
     }
-  }, [authDependenciesResolved, hasCompleteAuthState, profile, coordinatedNavigate, returnUrl, loading]);
+  }, [authState, returnUrl, coordinatedNavigate, loading]);
 
   // Track onboarding start
   useEffect(() => {
@@ -189,7 +187,9 @@ export default function Onboarding() {
       toast.success("Profile created successfully!");
 
       // Direct navigation - don't rely on useEffect
-      coordinatedNavigate(returnUrl, "Onboarding-profile-complete", { replace: true });
+      coordinatedNavigate(returnUrl, "Onboarding-profile-complete", {
+        replace: true,
+      });
     } catch (error) {
       // Track onboarding failure
       trackError(
@@ -208,14 +208,17 @@ export default function Onboarding() {
   };
 
   const handleEmailAuth = () => {
-    openModal({ step: "AUTH_MAIN" });
+    authService.openAuthModal();
   };
 
   const handleSkip = () => {
     // Track onboarding abandonment
     const duration = Math.floor((Date.now() - onboardingStartTime) / 1000);
     trackEvent("onboarding_abandoned", {
-      step: currentStep,
+      step:
+        authState === AuthFlowState.PROFILE_REQUIRED
+          ? OnboardingStep.PROFILE_CREATION
+          : OnboardingStep.EMAIL_AUTH,
       duration,
     });
 
@@ -225,7 +228,9 @@ export default function Onboarding() {
       coordinatedNavigate(-1 as any, "Onboarding-skip-back", {});
     } else {
       // Fallback to direct navigation if no history or returnUrl
-      coordinatedNavigate(returnUrl || "/markets", "Onboarding-skip-fallback", { replace: true });
+      coordinatedNavigate(returnUrl || "/markets", "Onboarding-skip-fallback", {
+        replace: true,
+      });
     }
   };
 
@@ -245,7 +250,7 @@ export default function Onboarding() {
         <div className="space-y-4">
           <button
             onClick={handleEmailAuth}
-            disabled={account.isLoading}
+            disabled={account?.isLoading}
             className="w-full bg-[#8B735B] text-white py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold flex items-center justify-center hover:bg-[#7a6550] transition-colors duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
@@ -255,7 +260,7 @@ export default function Onboarding() {
             >
               <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
             </svg>
-            {account.isLoading ? "Connecting..." : "Connect with Email"}
+            {account?.isLoading ? "Connecting..." : "Connect with Email"}
           </button>
 
           <p className="text-center text-xs sm:text-sm text-stone-500 mt-4">
@@ -452,6 +457,24 @@ export default function Onboarding() {
     </div>
   );
 
+  // Render based on auth state - no manual step management
+  const renderCurrentStep = () => {
+    switch (authState) {
+      case AuthFlowState.INITIALIZING:
+      case AuthFlowState.PARA_LOADING:
+      case AuthFlowState.WALLET_RESOLVING:
+        return renderEmailAuthStep();
+      case AuthFlowState.PROFILE_REQUIRED:
+        return renderProfileCreationStep();
+      case AuthFlowState.PROFILE_LOADING:
+        return renderEmailAuthStep(); // Show loading during profile fetch
+      case AuthFlowState.ERROR:
+        return renderEmailAuthStep(); // Show auth step for errors
+      default:
+        return renderEmailAuthStep();
+    }
+  };
+
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
@@ -459,9 +482,7 @@ export default function Onboarding() {
         background: "radial-gradient(circle at top left, #FDF6E3, #F5EBE0)",
       }}
     >
-      {currentStep === OnboardingStep.EMAIL_AUTH
-        ? renderEmailAuthStep()
-        : renderProfileCreationStep()}
+      {renderCurrentStep()}
     </div>
   );
 }

@@ -4,11 +4,9 @@ import {
   Tabs,
   TabsContent,
 } from "../components/ui/tabs";
-import { useUserProfile } from "../hooks/useUserProfile";
 import { useUserActivity } from "../hooks/useUserActivity";
 import { LoadingSkeleton } from "../components/ui/loading-states";
-import { useAccount } from "@getpara/react-sdk";
-import { useSmartWallet } from "../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
 import { useKuriMarkets } from "../hooks/useKuriMarkets";
 import { MarketCard } from "../components/markets/MarketCard";
 import { Memberships } from "../components/profile/Memberships";
@@ -24,9 +22,7 @@ import { USDCBalanceSection } from "../components/profile/USDCBalanceSection";
 export default function EnhancedProfile() {
   const { identifier } = useParams();
   const navigate = useNavigate();
-  const account = useAccount();
-  const { smartAddress: address } = useSmartWallet();
-  const { profile, isLoading } = useUserProfile();
+  const { smartAddress: address, profile, isLoading, account } = useOptimizedAuth();
   const { activity } = useUserActivity(identifier || "");
   const { markets, loading: marketsLoading } = useKuriMarkets();
 

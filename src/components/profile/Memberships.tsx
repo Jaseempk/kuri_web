@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useKuriMarkets } from "../../hooks/useKuriMarkets";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { motion } from "framer-motion";
 import { Badge } from "../ui/badge";
 import { formatEther } from "viem";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 
 export function Memberships() {
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address } = useOptimizedAuth();
   const { markets, loading } = useKuriMarkets();
   const { getMemberStatus } = useKuriCore();
 

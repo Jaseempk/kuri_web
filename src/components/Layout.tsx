@@ -5,8 +5,7 @@ import { Logo } from "./ui/Logo";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { useAccount } from "@getpara/react-sdk";
-import { useSmartWallet } from "../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
 import { ProfileButton } from "./ui/ProfileButton";
 
 interface LayoutProps {
@@ -15,8 +14,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const account = useAccount();
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address } = useOptimizedAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigationItems = [

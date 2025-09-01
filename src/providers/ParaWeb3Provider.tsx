@@ -45,12 +45,29 @@ queryClient.setQueryDefaults(["kuriMarkets"], {
   retry: 3,
 });
 
-queryClient.setQueryDefaults(["user-profile-smart"], {
-  staleTime: 10 * 60 * 1000, // 10 minutes - much longer
-  gcTime: 30 * 60 * 1000, // 30 minutes
-  refetchOnWindowFocus: false,
-  retry: 1, // Reduce retries
+// Auth query defaults for optimized auth flow
+queryClient.setQueryDefaults(["auth"], {
+  staleTime: 30 * 1000, // 30 seconds for auth-critical data
+  gcTime: 5 * 60 * 1000, // 5 minutes
+  refetchOnWindowFocus: false, // Prevent excessive refetching
+  retry: (failureCount, error) => failureCount < 2,
 });
+
+// Legacy profile query defaults (for backwards compatibility during migration)
+queryClient.setQueryDefaults(["user-profile-smart"], {
+  staleTime: 30 * 1000, // 30 seconds for auth-critical data
+  gcTime: 5 * 60 * 1000, // 5 minutes
+  refetchOnWindowFocus: false,
+  retry: 2, // More retries for mobile reliability
+});
+
+// Cache invalidation utility for auth flows
+export const invalidateAuthCache = () => {
+  queryClient.invalidateQueries({ queryKey: ['auth'] });
+};
+
+// Export query client for advanced cache operations
+export { queryClient };
 
 export const ParaWeb3Provider = ({
   children,

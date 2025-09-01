@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserProfile } from "./useUserProfile";
+import { useOptimizedAuth } from "./useOptimizedAuth";
 
 type ProfileRequiredOptions = {
   strict?: boolean; // If true, always redirect to onboarding. If false, allow skipping.
@@ -8,7 +8,7 @@ type ProfileRequiredOptions = {
 };
 
 export const useProfileRequired = (options: ProfileRequiredOptions = {}) => {
-  const { profile, isLoading } = useUserProfile();
+  const { profile, isLoading } = useOptimizedAuth();
   const navigate = useNavigate();
   const { strict = false, action } = options;
 

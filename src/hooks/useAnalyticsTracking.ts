@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useAccount } from "@getpara/react-sdk";
 import { useLocation } from "react-router-dom";
-import { useSmartWallet } from "./useSmartWallet";
+import { useOptimizedAuth } from "./useOptimizedAuth";
 import {
   trackWalletConnection,
   trackPageView,
@@ -9,8 +8,7 @@ import {
 } from "../utils/analytics";
 
 export function useAnalyticsTracking() {
-  const account = useAccount();
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address, account } = useOptimizedAuth();
   // Para uses Base Sepolia by default
   const chainId = 84532; // Base Sepolia chain ID
   const connector = { name: 'Para' }; // Para connector info
@@ -20,7 +18,7 @@ export function useAnalyticsTracking() {
 
   // Track wallet connection/disconnection
   useEffect(() => {
-    const currentAddress = address;
+    const currentAddress = address || undefined;
     const prevAddress = previousAddress.current;
 
     if (currentAddress && currentAddress !== prevAddress && connector) {
@@ -69,7 +67,7 @@ export function useAnalyticsTracking() {
       if (profileIdentifier) {
         trackEvent("profile_viewed", {
           profile_address: profileIdentifier,
-          viewer_address: address,
+          viewer_address: address || undefined,
         });
       }
     }

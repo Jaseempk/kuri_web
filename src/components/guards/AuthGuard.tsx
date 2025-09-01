@@ -1,103 +1,59 @@
-import { useEffect, useState, useRef } from "react";
-import { useAccount } from "@getpara/react-sdk";
-import { useUserProfile } from "../../hooks/useUserProfile";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useEffect } from "react";
 import { useAuthNavigation } from "../../hooks/useAuthNavigation";
+import { useOptimizedAuth, AuthFlowState } from "../../hooks/useOptimizedAuth";
+import { LoadingSkeleton } from "../ui/loading-states";
 
 interface AuthGuardProps {
   children: React.ReactNode;
+  requireProfile?: boolean;
 }
 
-export const AuthGuard = ({ children }: AuthGuardProps) => {
-  const account = useAccount();
-  const { profile, isLoading: profileLoading } = useUserProfile();
-  const { smartAddress: address, isLoading: addressLoading } = useSmartWallet();
-  const { coordinatedNavigate, isNavigating } = useAuthNavigation();
-  const [hasNavigated, setHasNavigated] = useState(false);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout>();
+export const AuthGuard = ({ children, requireProfile = true }: AuthGuardProps) => {
+  const { authState } = useOptimizedAuth();
+  const { coordinatedNavigate } = useAuthNavigation();
 
   useEffect(() => {
-    // Clear any pending navigation
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current);
-    }
-
-    // Don't navigate if we already navigated recently or if navigation is in progress
-    if (hasNavigated || isNavigating) {
-      return;
-    }
-
-    // Don't redirect while still loading account, profile, or address data
-    if (account.isLoading || profileLoading || addressLoading) {
-      return;
-    }
-
-    // Mobile device detection for adaptive timing
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const authTimeout = isMobile ? 2000 : 500; // Give mobile 4x more time for smart wallet resolution
-
-    // Add delay to prevent rapid navigation and allow state to stabilize
-    navigationTimeoutRef.current = setTimeout(() => {
-      // If not connected, redirect to onboarding
-      if (!account.isConnected || !address) {
-        const success = coordinatedNavigate("/onboarding", "AuthGuard-auth", { 
-          state: { 
-            returnUrl: window.location.pathname + window.location.search,
-            source: "auth_required" 
-          } 
+    switch (authState) {
+      case AuthFlowState.INITIALIZING:
+      case AuthFlowState.PARA_LOADING:
+        // Still loading, do nothing
+        break;
+      case AuthFlowState.PROFILE_REQUIRED:
+        coordinatedNavigate("/onboarding?step=profile", "AuthGuard-profile", {
+          state: { returnUrl: window.location.pathname }
         });
-        if (success) setHasNavigated(true);
-        return;
-      }
-
-      // If connected but no profile, redirect to onboarding
-      if (!profile) {
-        const success = coordinatedNavigate("/onboarding", "AuthGuard-profile", { 
-          state: { 
-            returnUrl: window.location.pathname + window.location.search,
-            source: "profile_required" 
-          } 
+        break;
+      case AuthFlowState.AUTHENTICATED:
+        // Allow access
+        break;
+      default:
+        coordinatedNavigate("/onboarding", "AuthGuard-auth", {
+          state: { returnUrl: window.location.pathname }
         });
-        if (success) setHasNavigated(true);
-        return;
-      }
-    }, authTimeout); // Mobile-adaptive delay for smart wallet resolution
-  }, [account.isConnected, account.isLoading, address, profile, profileLoading, addressLoading]);
-
-  // Reset navigation flag when component unmounts or when auth state changes significantly
-  useEffect(() => {
-    return () => {
-      setHasNavigated(false);
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Reset navigation flag when user becomes authenticated
-  useEffect(() => {
-    if (account.isConnected && address && profile && hasNavigated) {
-      setHasNavigated(false);
     }
-  }, [account.isConnected, address, profile, hasNavigated]);
+  }, [authState, coordinatedNavigate]);
 
-  // Show loading state while checking authentication
-  if (account.isLoading || profileLoading) {
-    return (
-      <div className="min-h-screen bg-[#F9F5F1] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#8B6F47]/20 border-t-[#8B6F47] mx-auto mb-4" />
-          <p className="text-[#8B6F47]">Loading...</p>
-        </div>
-      </div>
-    );
+  // Simple state-based routing
+  switch (authState) {
+    case AuthFlowState.INITIALIZING:
+    case AuthFlowState.PARA_LOADING:
+    case AuthFlowState.WALLET_RESOLVING:
+    case AuthFlowState.PROFILE_LOADING:
+      return <LoadingSkeleton />;
+      
+    case AuthFlowState.PROFILE_REQUIRED:
+      if (requireProfile) {
+        return null; // Navigation handled in useEffect
+      }
+      return <>{children}</>;
+      
+    case AuthFlowState.AUTHENTICATED:
+      return <>{children}</>;
+      
+    case AuthFlowState.ERROR:
+      return null; // Navigation handled in useEffect
+      
+    default:
+      return null; // Navigation handled in useEffect
   }
-
-  // Don't render children if not authenticated or no profile
-  if (!account.isConnected || !address || !profile) {
-    return null;
-  }
-
-  // User is authenticated and has profile - render protected content
-  return <>{children}</>;
 };

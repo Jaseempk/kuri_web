@@ -9,7 +9,7 @@ import { ShareModal } from "../components/modals/ShareModal";
 import { ManageMembersDialog } from "../components/markets/ManageMembersDialog";
 import { DepositForm } from "../components/markets/DepositForm";
 import { ClaimInterface } from "../components/markets/ClaimInterface";
-import { useSmartWallet } from "../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
 import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -570,7 +570,7 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
-  const { smartAddress: userAddress } = useSmartWallet();
+  const { smartAddress: userAddress } = useOptimizedAuth();
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "activity" | "members"

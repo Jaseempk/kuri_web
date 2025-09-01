@@ -10,7 +10,7 @@ import {
 } from "../ui/table";
 import { Badge } from "../ui/badge";
 import { Loader2, Calendar, User } from "lucide-react";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { UserProfileCell } from "../ui/UserProfileCell";
 import { Checkbox } from "../ui/checkbox";
 import {
@@ -33,7 +33,7 @@ export const ManageMembers = ({
   );
   const [isBatchAccepting, setIsBatchAccepting] = useState(false);
 
-  const { smartAddress: address } = useSmartWallet();
+  const { smartAddress: address } = useOptimizedAuth();
 
   // Use shared hook without filtering (we need all members for management)
   const {

@@ -1,5 +1,5 @@
-import { useModal, useAccount } from "@getpara/react-sdk";
-import { useSmartWallet } from "../../hooks/useSmartWallet";
+import { useAuthenticationService } from "../../services/AuthenticationService";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { Button } from "./button";
 
 const formatAddress = (address: string) => {
@@ -7,15 +7,14 @@ const formatAddress = (address: string) => {
 };
 
 export function ConnectButton() {
-  const { openModal } = useModal();
-  const account = useAccount();
-  const { smartAddress } = useSmartWallet();
+  const authService = useAuthenticationService();
+  const { smartAddress, account } = useOptimizedAuth();
 
   const handleClick = () => {
-    if (account.isConnected) {
-      openModal({ step: "ACCOUNT_MAIN" });
+    if (account?.isConnected) {
+      authService.openAccountModal();
     } else {
-      openModal({ step: "AUTH_MAIN" });
+      authService.openAuthModal();
     }
   };
 
@@ -24,12 +23,12 @@ export function ConnectButton() {
       variant="default"
       size="default"
       onClick={handleClick}
-      disabled={account.isLoading}
+      disabled={account?.isLoading}
       className="hover:bg-white hover:text-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))]"
     >
-      {account.isConnected && smartAddress
+      {account?.isConnected && smartAddress
         ? formatAddress(smartAddress)
-        : account.isLoading
+        : account?.isLoading
         ? "Connecting..."
         : "Connect with Email"}
     </Button>

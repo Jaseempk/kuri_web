@@ -3,14 +3,14 @@ import { Bell, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { useUserProfile } from '../../hooks/useUserProfile';
-import { useSmartWallet } from '../../hooks/useSmartWallet';
+import { useOptimizedAuth } from '../../hooks/useOptimizedAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const FloatingNotificationPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const { smartAddress: address, isLoading: addressLoading } = useSmartWallet();
-  const { profile, isLoading: profileLoading } = useUserProfile();
+  const { smartAddress: address, profile, isLoading } = useOptimizedAuth();
+  const addressLoading = isLoading;
+  const profileLoading = isLoading;
   const { 
     isInitialized, 
     permission, 

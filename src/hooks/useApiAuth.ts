@@ -1,7 +1,8 @@
-import { useAccount, useSignMessage } from "@getpara/react-sdk";
+import { useSignMessage } from "@getpara/react-sdk";
 import { useViemClient } from "@getpara/react-sdk/evm/hooks";
 import { baseSepolia } from "viem/chains";
 import { http } from "viem";
+import { useAuthenticationService } from "../services/AuthenticationService";
 import { apiClient } from "../lib/apiClient";
 import { createGasSponsoredClient, signMessageWithSmartWallet } from "../utils/gasSponsorship";
 
@@ -12,11 +13,12 @@ interface SignedAuth {
 }
 
 export const useApiAuth = () => {
-  const account = useAccount();
+  const authService = useAuthenticationService();
+  const account = authService.getAccount();
   const { signMessageAsync } = useSignMessage();
 
   // Get the wallet address for viem client configuration
-  const walletAddress = account.embedded.wallets?.[0]?.address as
+  const walletAddress = account?.embedded?.wallets?.[0]?.address as
     | `0x${string}`
     | undefined;
 
@@ -43,7 +45,7 @@ export const useApiAuth = () => {
     action: "create_profile" | "create_market",
     targetAddress?: string
   ): Promise<SignedAuth> => {
-    const walletData = account.embedded.wallets?.[0];
+    const walletData = account?.embedded?.wallets?.[0];
 
     if (!walletData?.address) {
       throw new Error("Para wallet not connected");
@@ -113,7 +115,7 @@ export const useApiAuth = () => {
 
   return {
     getSignedAuth,
-    isConnected: !!account.embedded.wallets?.[0]?.address,
+    isConnected: !!account?.embedded?.wallets?.[0]?.address,
     isPending: isViemLoading,
     error: null, // Viem client errors are thrown directly
   };
