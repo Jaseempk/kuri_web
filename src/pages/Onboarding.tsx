@@ -250,17 +250,32 @@ export default function Onboarding() {
         <div className="space-y-4">
           <button
             onClick={handleEmailAuth}
-            disabled={account?.isLoading}
+            disabled={account?.isLoading || authState === AuthFlowState.WALLET_RESOLVING || authState === AuthFlowState.PROFILE_LOADING}
             className="w-full bg-[#8B735B] text-white py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold flex items-center justify-center hover:bg-[#7a6550] transition-colors duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-            </svg>
-            {account?.isLoading ? "Connecting..." : "Connect with Email"}
+            {account?.isLoading || authState === AuthFlowState.WALLET_RESOLVING || authState === AuthFlowState.PROFILE_LOADING ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white/20 border-t-white" />
+                <span>
+                  {authState === AuthFlowState.WALLET_RESOLVING 
+                    ? "Setting up wallet..." 
+                    : authState === AuthFlowState.PROFILE_LOADING 
+                    ? "Loading profile..." 
+                    : "Connecting..."}
+                </span>
+              </div>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                </svg>
+                Connect with Email
+              </>
+            )}
           </button>
 
           <p className="text-center text-xs sm:text-sm text-stone-500 mt-4">
