@@ -1,11 +1,12 @@
-import { useModal } from "@getpara/react-sdk";
+import { useState } from "react";
 import { formatUnits } from "viem";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { Plus, RefreshCw } from "lucide-react";
+import { USDCDepositModal } from "../modals/USDCDepositModal";
 
 export const UserBalanceCard = () => {
-  const { openModal } = useModal();
+  const [showDepositModal, setShowDepositModal] = useState(false);
   const { smartAddress: userAddress, account } = useOptimizedAuth();
 
   const {
@@ -21,8 +22,7 @@ export const UserBalanceCard = () => {
   }
 
   const handleDeposit = () => {
-    // Open Para's account modal for deposit functionality
-    openModal({ step: "ACCOUNT_MAIN" });
+    setShowDepositModal(true);
   };
 
   const formatBalance = (balance: bigint) => {
@@ -118,6 +118,13 @@ export const UserBalanceCard = () => {
           Add USDC
         </button>
       </div>
+
+      {/* Custom USDC Deposit Modal */}
+      <USDCDepositModal
+        isOpen={showDepositModal}
+        onClose={() => setShowDepositModal(false)}
+        smartWalletAddress={userAddress}
+      />
     </div>
   );
 };

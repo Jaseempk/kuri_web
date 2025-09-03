@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { formatUnits } from "viem";
+import { USDCDepositModal } from "../modals/USDCDepositModal";
 
 export function USDCBalanceSection() {
+  const [showDepositModal, setShowDepositModal] = useState(false);
   const { smartAddress: address } = useOptimizedAuth();
   const { balance, isLoading, error } = useUserUSDCBalance(address || undefined);
 
@@ -22,7 +25,7 @@ export function USDCBalanceSection() {
   };
 
   const handleDeposit = () => {
-    console.log("Deposit button clicked");
+    setShowDepositModal(true);
   };
 
   const handleWithdraw = () => {
@@ -70,17 +73,24 @@ export function USDCBalanceSection() {
           onClick={handleDeposit}
           className="w-full bg-primary text-white font-semibold py-3 px-4 rounded-full shadow-md hover:bg-opacity-90 transition duration-300 flex items-center justify-center"
         >
-          <span className="material-icons mr-2 text-base">south_west</span>
           Deposit
         </button>
         <button 
           onClick={handleWithdraw}
           className="w-full bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-full hover:bg-gray-300 transition duration-300 flex items-center justify-center"
         >
-          <span className="material-icons mr-2 text-base">north_east</span>
           Withdraw
         </button>
       </div>
+
+      {/* Custom USDC Deposit Modal */}
+      {address && (
+        <USDCDepositModal
+          isOpen={showDepositModal}
+          onClose={() => setShowDepositModal(false)}
+          smartWalletAddress={address}
+        />
+      )}
     </div>
   );
 }
