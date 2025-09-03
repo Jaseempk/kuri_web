@@ -72,13 +72,7 @@ export function useMarketTimers(marketData: KuriData | null) {
           );
           const seconds = Math.floor((raffleDiff % (1000 * 60)) / 1000);
 
-          if (days > 0) {
-            setRaffleTimeLeft(`${days}d ${hours}h ${minutes}m`);
-          } else if (hours > 0) {
-            setRaffleTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
-          } else {
-            setRaffleTimeLeft(`${minutes}m ${seconds}s`);
-          }
+          setRaffleTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
         }
 
         // Deposit countdown
@@ -97,13 +91,7 @@ export function useMarketTimers(marketData: KuriData | null) {
           );
           const seconds = Math.floor((depositDiff % (1000 * 60)) / 1000);
 
-          if (days > 0) {
-            setDepositTimeLeft(`${days}d ${hours}h ${minutes}m`);
-          } else if (hours > 0) {
-            setDepositTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
-          } else {
-            setDepositTimeLeft(`${minutes}m ${seconds}s`);
-          }
+          setDepositTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
         }
       }
     };

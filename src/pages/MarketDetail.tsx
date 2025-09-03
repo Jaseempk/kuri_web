@@ -105,6 +105,8 @@ interface StatsContainerProps {
 const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   if (!marketData) return null;
 
+  console.log("maarketData:", marketData);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -159,6 +161,7 @@ interface TabContentProps {
     intervalType: number;
     state: KuriState;
     nexRaffleTime: bigint;
+    nextIntervalDepositTime: bigint;
     creator: string;
   } | null;
   creatorProfile: any;
@@ -171,7 +174,12 @@ interface TabContentProps {
   winnerProfile: any;
   winnerProfileLoading: boolean;
   timeLeft: string;
+  raffleTimeLeft: string;
+  depositTimeLeft: string;
   address: string;
+  membershipStatus: number;
+  shouldShowClaimCard: boolean;
+  handleClaimSuccess: () => void;
   renderActionButton: () => React.ReactNode;
 }
 
@@ -185,10 +193,16 @@ const TabContent: React.FC<TabContentProps> = ({
   winnerProfile,
   winnerProfileLoading,
   timeLeft,
+  raffleTimeLeft,
+  depositTimeLeft,
   address,
+  membershipStatus,
+  shouldShowClaimCard,
+  handleClaimSuccess,
   renderActionButton,
 }) => {
   if (!marketData) return null;
+  console.log("TiemLeft:", timeLeft);
 
   return (
     <AnimatePresence mode="wait">
@@ -260,7 +274,11 @@ const TabContent: React.FC<TabContentProps> = ({
                     {marketData.state === KuriState.ACTIVE
                       ? new Date(
                           Number(marketData.nexRaffleTime) * 1000
-                        ).toLocaleDateString()
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
                       : "TBD"}
                   </span>
                 </div>
@@ -419,16 +437,84 @@ const TabContent: React.FC<TabContentProps> = ({
                 {marketData.state === KuriState.ACTIVE && (
                   <>
                     <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      Next Raffle In
+                      {Date.now() <
+                      Number(marketData.nextIntervalDepositTime) * 1000
+                        ? "Next Deposit Due In"
+                        : "Next Raffle In"}
                     </h3>
-                    <SequentialCountdown
-                      raffleTimestamp={Number(marketData.nexRaffleTime) * 1000}
-                      depositTimestamp={0}
-                      raffleDate={new Date(
-                        Number(marketData.nexRaffleTime) * 1000
-                      ).toLocaleString()}
-                      depositDate=""
-                    />
+                    <div className="flex items-end gap-x-3">
+                      {(() => {
+                        const activeTimer = Date.now() < Number(marketData.nextIntervalDepositTime) * 1000 
+                          ? depositTimeLeft 
+                          : raffleTimeLeft;
+                        
+                        return (
+                          <>
+                            <div className="text-center">
+                              <span className="text-4xl font-bold text-orange-500">
+                                {activeTimer.includes("d")
+                                  ? activeTimer.split("d")[0].padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Days
+                              </span>
+                            </div>
+                            <span className="text-4xl font-bold text-orange-500">
+                              :
+                            </span>
+                            <div className="text-center">
+                              <span className="text-4xl font-bold text-orange-500">
+                                {activeTimer.includes("h")
+                                  ? activeTimer
+                                      .split("h")[0]
+                                      .split(" ")
+                                      .pop()
+                                      ?.padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Hours
+                              </span>
+                            </div>
+                            <span className="text-4xl font-bold text-orange-500">
+                              :
+                            </span>
+                            <div className="text-center">
+                              <span className="text-4xl font-bold text-orange-500">
+                                {activeTimer.includes("m")
+                                  ? activeTimer
+                                      .split("m")[0]
+                                      .split(" ")
+                                      .pop()
+                                      ?.padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Minutes
+                              </span>
+                            </div>
+                            <span className="text-4xl font-bold text-orange-500">
+                              :
+                            </span>
+                            <div className="text-center">
+                              <span className="text-4xl font-bold text-orange-500">
+                                {activeTimer.includes("s")
+                                  ? activeTimer
+                                      .split("s")[0]
+                                      .split(" ")
+                                      .pop()
+                                      ?.padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Seconds
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
                   </>
                 )}
 
@@ -502,12 +588,17 @@ const TabContent: React.FC<TabContentProps> = ({
 
               {/* Action Button - Desktop Only */}
               <div className="hidden lg:block flex-shrink-0">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {renderActionButton()}
-                </motion.div>
+                {membershipStatus === 1 &&
+                marketData.state === KuriState.ACTIVE ? (
+                  <div className="w-full">{renderActionButton()}</div>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {renderActionButton()}
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
@@ -628,7 +719,7 @@ export default function MarketDetail() {
   const { marketDetail } = useKuriMarketDetail(address || "");
 
   // Use custom timer hook
-  const { timeLeft } = useMarketTimers(marketData);
+  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimers(marketData);
 
   // Determine current winner logic
   const currentWinner = useMemo(() => {
@@ -1022,6 +1113,30 @@ export default function MarketDetail() {
         );
 
       case 1: // ACCEPTED
+        if (marketData?.state === KuriState.ACTIVE) {
+          return (
+            <div
+              className={`grid grid-cols-1 ${
+                shouldShowClaimCard ? "lg:grid-cols-2" : "lg:grid-cols-1"
+              } gap-4 lg:gap-6 w-full`}
+            >
+              {/* Deposit Card */}
+              <DepositForm
+                marketData={marketData}
+                kuriAddress={address as `0x${string}`}
+              />
+
+              {/* Claim Card - Only show to winners who haven't claimed */}
+              {shouldShowClaimCard && (
+                <ClaimInterface
+                  marketData={marketData}
+                  kuriAddress={address as `0x${string}`}
+                  onClaimSuccess={handleClaimSuccess}
+                />
+              )}
+            </div>
+          );
+        }
         return (
           <button
             disabled
@@ -1391,7 +1506,12 @@ export default function MarketDetail() {
                       winnerProfile={winnerProfile}
                       winnerProfileLoading={winnerProfileLoading}
                       timeLeft={timeLeft}
+                      raffleTimeLeft={raffleTimeLeft}
+                      depositTimeLeft={depositTimeLeft}
                       address={address || ""}
+                      membershipStatus={membershipStatus}
+                      shouldShowClaimCard={shouldShowClaimCard}
+                      handleClaimSuccess={handleClaimSuccess}
                       renderActionButton={renderActionButton}
                     />
                   </div>
@@ -1464,7 +1584,12 @@ export default function MarketDetail() {
                     winnerProfile={winnerProfile}
                     winnerProfileLoading={winnerProfileLoading}
                     timeLeft={timeLeft}
+                    raffleTimeLeft={raffleTimeLeft}
+                    depositTimeLeft={depositTimeLeft}
                     address={address || ""}
+                    membershipStatus={membershipStatus}
+                    shouldShowClaimCard={shouldShowClaimCard}
+                    handleClaimSuccess={handleClaimSuccess}
                     renderActionButton={renderActionButton}
                   />
                 </div>
@@ -1556,21 +1681,78 @@ export default function MarketDetail() {
                         ? "Next Deposit Due In"
                         : "Next Raffle In"}
                     </h3>
-                    <div className="flex justify-center mb-6">
-                      <SequentialCountdown
-                        raffleTimestamp={
-                          Number(marketData.nexRaffleTime) * 1000
-                        }
-                        depositTimestamp={
-                          Number(marketData.nextIntervalDepositTime) * 1000
-                        }
-                        raffleDate={new Date(
-                          Number(marketData.nexRaffleTime) * 1000
-                        ).toLocaleString()}
-                        depositDate={new Date(
-                          Number(marketData.nextIntervalDepositTime) * 1000
-                        ).toLocaleString()}
-                      />
+                    <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
+                      {(() => {
+                        const activeTimer = Date.now() < Number(marketData.nextIntervalDepositTime) * 1000 
+                          ? depositTimeLeft 
+                          : raffleTimeLeft;
+                        
+                        return (
+                          <>
+                            <div>
+                              <span className="text-4xl font-bold">
+                                {activeTimer.includes("d")
+                                  ? activeTimer.split("d")[0].padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Days
+                              </span>
+                            </div>
+                            <span className="text-3xl font-bold text-orange-500">
+                              :
+                            </span>
+                            <div>
+                              <span className="text-4xl font-bold">
+                                {activeTimer.includes("h")
+                                  ? activeTimer
+                                      .split("h")[0]
+                                      .split(" ")
+                                      .pop()
+                                      ?.padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Hours
+                              </span>
+                            </div>
+                            <span className="text-3xl font-bold text-orange-500">
+                              :
+                            </span>
+                            <div>
+                              <span className="text-4xl font-bold">
+                                {activeTimer.includes("m")
+                                  ? activeTimer
+                                      .split("m")[0]
+                                      .split(" ")
+                                      .pop()
+                                      ?.padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Minutes
+                              </span>
+                            </div>
+                            <span className="text-3xl font-bold text-orange-500">
+                              :
+                            </span>
+                            <div>
+                              <span className="text-4xl font-bold">
+                                {activeTimer.includes("s")
+                                  ? activeTimer
+                                      .split("s")[0]
+                                      .split(" ")
+                                      .pop()
+                                      ?.padStart(2, "0")
+                                  : "00"}
+                              </span>
+                              <span className="block text-xs text-gray-600">
+                                Seconds
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </>
                 )}
@@ -1609,64 +1791,6 @@ export default function MarketDetail() {
                 </motion.div>
               </motion.div>
             </div>
-
-            {/* Member Actions for Active Members - Integrated into main layout */}
-            {membershipStatus === 1 &&
-              marketData.state === KuriState.ACTIVE && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="mt-8 bg-white rounded-2xl lg:rounded-3xl shadow-lg p-6 lg:p-8"
-                >
-                  <div className="flex items-center justify-center mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E67A50] to-orange-400 flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-white" />
-                      </div>
-                      <h3 className="text-xl font-bold text-[#E67A50]">
-                        Member Actions
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Action Cards Grid */}
-                  <div
-                    className={`grid grid-cols-1 ${
-                      shouldShowClaimCard ? "lg:grid-cols-2" : "lg:grid-cols-1"
-                    } gap-4 lg:gap-6`}
-                  >
-                    {/* Deposit Card */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1.0 }}
-                      className="bg-orange-50 p-4 lg:p-6 rounded-2xl"
-                    >
-                      <DepositForm
-                        marketData={marketData}
-                        kuriAddress={address as `0x${string}`}
-                      />
-                    </motion.div>
-
-                    {/* Claim Card - Only show to winners who haven't claimed */}
-                    {shouldShowClaimCard && (
-                      <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1.2 }}
-                        className="bg-green-50 p-4 lg:p-6 rounded-2xl"
-                      >
-                        <ClaimInterface
-                          marketData={marketData}
-                          kuriAddress={address as `0x${string}`}
-                          onClaimSuccess={handleClaimSuccess}
-                        />
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
           </div>
         </div>
       </div>

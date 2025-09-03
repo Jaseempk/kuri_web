@@ -248,11 +248,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   };
 
   return (
-    <div>
-      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-        Make Deposit
-      </h2>
-      <div className="relative rounded-2xl p-4 sm:p-6 md:p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[160px] sm:min-h-[200px]">
+    <div className="relative rounded-2xl p-4 sm:p-6 md:p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[160px] sm:min-h-[200px]">
         {/* Gradient overlay for subtle color hint */}
         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--terracotta))]/20 to-[hsl(var(--ochre))]/20 rounded-2xl" />
 
@@ -265,49 +261,47 @@ export const DepositForm: React.FC<DepositFormProps> = ({
           }}
         />
 
-        <div className="relative z-10 flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-1">
-              {isFirstDeposit ? (
-                <div>
-                  <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
-                    First Deposit Breakdown
-                  </h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>Kuri Amount:</span>
-                      <span>${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-orange-600">
-                      <span>Platform Fee (1%):</span>
-                      <span>${(Number(marketData.kuriAmount) / 100_000_000).toFixed(2)}</span>
-                    </div>
-                    <hr className="border-gray-300" />
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total:</span>
-                      <span>${((Number(marketData.kuriAmount) * 1.01) / 1_000_000).toFixed(2)}</span>
-                    </div>
-                  </div>
+        <div className="relative z-10 flex flex-col h-full">
+          {isFirstDeposit ? (
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
+                First Deposit Breakdown
+              </h3>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span>Kuri Amount:</span>
+                  <span>${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}</span>
                 </div>
-              ) : (
-                <div>
-                  <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
-                    Required Amount
-                  </h3>
-                  <p className="text-2xl sm:text-3xl font-bold text-[hsl(var(--foreground))]">
-                    ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
-                  </p>
+                <div className="flex justify-between text-orange-600">
+                  <span>Platform Fee (1%):</span>
+                  <span>${(Number(marketData.kuriAmount) / 100_000_000).toFixed(2)}</span>
                 </div>
-              )}
+                <hr className="border-gray-300" />
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total:</span>
+                  <span>${((Number(marketData.kuriAmount) * 1.01) / 1_000_000).toFixed(2)}</span>
+                </div>
+              </div>
             </div>
+          ) : (
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-[hsl(var(--terracotta))] mb-2">
+                Required Amount
+              </h3>
+              <p className="text-2xl sm:text-3xl font-bold text-[hsl(var(--foreground))]">
+                ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(2)}
+              </p>
+            </div>
+          )}
 
+          <div className="mt-auto">
             {canDeposit ? (
-              <div className="flex flex-col items-start sm:items-end gap-2 sm:flex-shrink-0">
+              <div className="flex flex-col gap-2">
                 {getStatusMessage()}
                 {renderActionButton()}
               </div>
             ) : (
-              <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm cursor-not-allowed self-start sm:self-auto">
+              <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm cursor-not-allowed">
                 <span className="hidden sm:inline">
                   Next deposit window opens in{" "}
                   {daysUntilDeposit > 0 ? `${daysUntilDeposit} days` : "soon"}
@@ -338,17 +332,16 @@ export const DepositForm: React.FC<DepositFormProps> = ({
             </div>
           </div>
         )}
-      </div>
 
-      {/* Insufficient Balance Modal */}
-      <InsufficientBalanceModal
-        isOpen={showInsufficientBalanceModal}
-        onClose={() => setShowInsufficientBalanceModal(false)}
-        userBalance={userBalance}
-        requiredAmount={requiredAmount}
-        onRefreshBalance={handleRefreshBalance}
-        isRefreshing={isRefreshingBalance}
-      />
-    </div>
+        {/* Insufficient Balance Modal */}
+        <InsufficientBalanceModal
+          isOpen={showInsufficientBalanceModal}
+          onClose={() => setShowInsufficientBalanceModal(false)}
+          userBalance={userBalance}
+          requiredAmount={requiredAmount}
+          onRefreshBalance={handleRefreshBalance}
+          isRefreshing={isRefreshingBalance}
+        />
+      </div>
   );
 };

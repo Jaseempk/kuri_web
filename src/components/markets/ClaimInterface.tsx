@@ -79,11 +79,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
   );
 
   return (
-    <div>
-      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-        Claim Winnings
-      </h2>
-      <div className="relative rounded-2xl p-4 sm:p-6 md:p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[160px] sm:min-h-[200px]">
+    <div className="relative rounded-2xl p-4 sm:p-6 md:p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[160px] sm:min-h-[200px]">
         {/* Gradient overlay for subtle color hint */}
         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--forest))]/20 to-[hsl(var(--forest))]/10 rounded-2xl" />
 
@@ -96,8 +92,8 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
           }}
         />
 
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 h-full">
-          <div className="flex-1">
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="mb-4">
             <h3 className="text-lg text-[hsl(var(--forest))] mb-2 font-semibold">
               Claimable Amount
             </h3>
@@ -106,7 +102,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
             </p>
           </div>
 
-          <div className="sm:flex-shrink-0">
+          <div className="mt-auto">
             {canClaim && isRaffleDue ? (
               <button
                 onClick={handleClaim}
@@ -158,7 +154,6 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 };
