@@ -466,6 +466,12 @@ export default function Onboarding() {
 
   // Render based on auth state - no manual step management
   const renderCurrentStep = () => {
+    // 🔑 KEY FIX: If we're in the middle of profile creation (loading=true),
+    // keep showing the profile form even if optimistic update changed authState to AUTHENTICATED
+    if (loading && authState === AuthFlowState.AUTHENTICATED) {
+      return renderProfileCreationStep();
+    }
+
     switch (authState) {
       case AuthFlowState.INITIALIZING:
       case AuthFlowState.PARA_LOADING:
