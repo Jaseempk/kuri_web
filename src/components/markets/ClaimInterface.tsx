@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import {
-  useKuriCore,
   KuriState,
   IntervalType,
 } from "../../hooks/contracts/useKuriCore";
+import { useMarketContext } from "../../contexts/MarketContext";
 
 import { AlertTriangle } from "lucide-react";
 
@@ -33,8 +33,16 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
   kuriAddress,
   onClaimSuccess,
 }) => {
-  const { claimKuriAmountSponsored, isLoading, error, checkPaymentStatusIfMember } =
-    useKuriCore(kuriAddress);
+  // Use consolidated MarketContext instead of direct useKuriCore call
+  const { 
+    claimKuriAmountSponsored, 
+    isLoadingCore, 
+    errorCore, 
+    checkPaymentStatusIfMember 
+  } = useMarketContext();
+  
+  const isLoading = isLoadingCore;
+  const error = errorCore;
   const [currentInterval] = useState(0);
 
   // 🔥 NEW: Explicitly check payment status when component mounts (lazy loading)

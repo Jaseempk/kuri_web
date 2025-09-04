@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import {
-  useKuriCore,
   KuriState,
   IntervalType,
 } from "../../hooks/contracts/useKuriCore";
+import { useMarketContext } from "../../contexts/MarketContext";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { formatEther, formatUnits } from "viem";
@@ -45,18 +45,23 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   marketData,
   kuriAddress,
 }) => {
+  // Use consolidated MarketContext instead of direct useKuriCore call
   const {
     depositSponsored,
-    isLoading,
-    error,
+    isLoadingCore,
+    errorCore,
     isApproving,
     userPaymentStatus,
     userBalance,
     currentInterval,
     checkUserBalance,
     refreshUserData,
-    checkPaymentStatusIfMember, // 🔥 NEW: Explicit payment status check
-  } = useKuriCore(kuriAddress);
+    checkPaymentStatusIfMember,
+  } = useMarketContext();
+  
+  // Map context values to component expectations
+  const isLoading = isLoadingCore;
+  const error = errorCore;
 
   const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] =
     useState(false);

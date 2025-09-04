@@ -7,7 +7,7 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { ManageMembers } from "./ManageMembers";
-import { useKuriCore } from "../../hooks/contracts/useKuriCore";
+import { useMarketContext } from "../../contexts/MarketContext";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -29,9 +29,9 @@ export const ManageMembersDialog = ({
   onOpenChange,
   onMemberActionComplete,
 }: ManageMembersDialogProps) => {
-  const { requestMembershipSponsored, isRequesting, marketData } = useKuriCore(
-    market.address as `0x${string}`
-  );
+  // Use consolidated MarketContext instead of direct useKuriCore call
+  const { requestMembershipSponsored, isLoadingCore, marketData } = useMarketContext();
+  const isRequesting = isLoadingCore;
   const { smartAddress: address } = useAuthContext();
   const [refreshKey, setRefreshKey] = useState(0);
 

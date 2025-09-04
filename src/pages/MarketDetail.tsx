@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useKuriCore, KuriState } from "../hooks/contracts/useKuriCore";
+import { KuriState } from "../hooks/contracts/useKuriCore";
 import { KuriState as GraphQLKuriState } from "../graphql/types";
-import { useKuriMarketDetail } from "../hooks/useKuriMarketDetail";
+import { MarketProvider, useMarketContext } from "../contexts/MarketContext";
 import { Button } from "../components/ui/button";
 import { MarketSEO } from "../components/seo/MarketSEO";
 import { ShareModal } from "../components/modals/ShareModal";
@@ -29,7 +29,6 @@ import { useUserProfileByAddress } from "../hooks/useUserProfile";
 import { isUserRejection } from "../utils/errors";
 import { trackEvent, trackError } from "../utils/analytics";
 import { CircleMembersDisplay } from "../components/markets/CircleMembersDisplay";
-import { useMarketTimers } from "../hooks/useMarketTimers";
 import { apiClient } from "../lib/apiClient";
 
 // Available circle images
@@ -657,7 +656,7 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
   }
 };
 
-export default function MarketDetail() {
+function MarketDetailInner() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
   const { smartAddress: userAddress } = useAuthContext();
@@ -690,17 +689,22 @@ export default function MarketDetail() {
     }
   }, [address, navigate]);
 
+  // Get ALL data and actions from MarketContext (no more duplicate subscriptions!)
   const {
     marketData,
-    isLoading,
-    error,
+    isLoadingCore,
+    errorCore,
+    marketDetail,
+    timeLeft,
+    raffleTimeLeft,
+    depositTimeLeft,
+    getMemberStatus,
     requestMembershipSponsored,
     initializeKuriSponsored,
-    getMemberStatus,
     fetchMarketData,
     checkPaymentStatusIfMember,
     checkHasClaimed,
-  } = useKuriCore(address as `0x${string}`);
+  } = useMarketContext();
   console.log("addresss", address);
 
   // Fetch creator's profile
@@ -714,12 +718,9 @@ export default function MarketDetail() {
     enabled: !!address,
   });
 
-  // Fetch market detail with winners data
-  const { marketDetail } = useKuriMarketDetail(address || "");
-
-  // Use custom timer hook
-  const { timeLeft, raffleTimeLeft, depositTimeLeft } =
-    useMarketTimers(marketData);
+  // Map context loading states to component expectations
+  const isLoading = isLoadingCore;
+  const error = errorCore;
 
   // Determine current winner logic
   const currentWinner = useMemo(() => {
@@ -831,17 +832,15 @@ export default function MarketDetail() {
     );
   }, [marketData, userAddress]);
 
-  // Check if market can be initialized - V1 Flexible Initialization
+  // Check if market can be initialized - Circle must be full
   const canInitialize = useMemo(() => {
     if (!marketData || marketData.state !== KuriState.INLAUNCH) return false;
 
     const isFull =
       marketData.totalActiveParticipantsCount ===
       marketData.totalParticipantsCount;
-    const launchPeriodEnded =
-      Date.now() > Number(marketData.launchPeriod) * 1000;
 
-    return isFull || launchPeriodEnded; // V1: Initialize when full OR launch period ended
+    return isFull; // Initialize only when circle is full
   }, [marketData]);
 
   // Get initialization reason for user messaging
@@ -855,8 +854,8 @@ export default function MarketDetail() {
       Date.now() > Number(marketData.launchPeriod) * 1000;
 
     if (isFull && !launchPeriodEnded) return "Circle is full - ready to start!";
-    if (launchPeriodEnded) return "Launch period completed";
-    return "Waiting for more members or launch period end";
+    if (isFull && launchPeriodEnded) return "Circle is full - launch period completed";
+    return "Waiting for more members to fill the circle";
   }, [marketData]);
 
   // Determine if claim card should be visible
@@ -1007,10 +1006,10 @@ export default function MarketDetail() {
       return (
         <button
           disabled
-          className="w-full bg-gray-400 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-70 flex items-center justify-center"
+          className="w-full bg-gray-400 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-70 flex items-center justify-center"
         >
           <svg
-            className="w-5 h-5 mr-2"
+            className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -1022,32 +1021,88 @@ export default function MarketDetail() {
               d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 0h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
             />
           </svg>
-          Connect Wallet to Join
+          <span className="hidden sm:inline">Connect Wallet to Join</span>
+          <span className="sm:hidden">Connect Wallet</span>
         </button>
       );
     }
 
     if (isCreator) {
+      // During launch phase, show initialization button
       if (canInitialize) {
         return (
           <button
             onClick={handleInitialize}
             disabled={isInitializing || !canInitialize}
-            className="w-full bg-[#E67A50] text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-70"
+            className="w-full bg-[#E67A50] text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-70"
           >
             {isInitializing ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
             ) : (
-              <span className="material-icons mr-2">add_circle_outline</span>
+              <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">add_circle_outline</span>
             )}
-            {isInitializing
-              ? "Initializing Circle..."
-              : initializationReason.includes("full")
-              ? "Start Circle Now"
-              : "Initialize Circle"}
+            {isInitializing ? (
+              <>
+                <span className="hidden sm:inline">Initializing Circle...</span>
+                <span className="sm:hidden">Initializing...</span>
+              </>
+            ) : initializationReason.includes("full") ? (
+              <>
+                <span className="hidden sm:inline">Start Circle Now</span>
+                <span className="sm:hidden">Start Now</span>
+              </>
+            ) : (
+              <>
+                <span className="hidden sm:inline">Initialize Circle</span>
+                <span className="sm:hidden">Initialize</span>
+              </>
+            )}
           </button>
         );
       }
+
+      // After initialization, check if creator is also a member
+      if (marketData?.state === KuriState.ACTIVE) {
+        if (membershipStatus === 1) {
+          // Creator is also a member - show same interface as other members
+          return (
+            <div
+              className={`grid grid-cols-1 ${
+                shouldShowClaimCard ? "lg:grid-cols-2" : "lg:grid-cols-1"
+              } gap-4 lg:gap-6 w-full`}
+            >
+              {/* Deposit Card */}
+              <DepositForm
+                marketData={marketData}
+                kuriAddress={address as `0x${string}`}
+              />
+
+              {/* Claim Card - Only show to winners who haven't claimed */}
+              {shouldShowClaimCard && (
+                <ClaimInterface
+                  marketData={marketData}
+                  kuriAddress={address as `0x${string}`}
+                  onClaimSuccess={handleClaimSuccess}
+                />
+              )}
+            </div>
+          );
+        } else {
+          // Creator is not a member - show non-clickable status
+          return (
+            <button
+              disabled
+              className="w-full bg-blue-600 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            >
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline">Circle is Active</span>
+              <span className="sm:hidden">Active</span>
+            </button>
+          );
+        }
+      }
+
+      // For other states (COMPLETED, LAUNCHFAILED), show manage members
       return (
         <ManageMembersDialog
           market={{
@@ -1074,10 +1129,16 @@ export default function MarketDetail() {
           onOpenChange={setIsDialogOpen}
           onMemberActionComplete={handleMemberActionComplete}
         >
-          <button className="w-full bg-[#E67A50] text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
-            <span className="material-icons mr-2">people_outline</span>
-            Manage Members ({marketData?.totalActiveParticipantsCount || 0}/
-            {marketData?.totalParticipantsCount || 0})
+          <button className="w-full bg-[#E67A50] text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
+            <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">people_outline</span>
+            <span className="hidden sm:inline">
+              Manage Members ({marketData?.totalActiveParticipantsCount || 0}/
+              {marketData?.totalParticipantsCount || 0})
+            </span>
+            <span className="sm:hidden">
+              Members ({marketData?.totalActiveParticipantsCount || 0}/
+              {marketData?.totalParticipantsCount || 0})
+            </span>
           </button>
         </ManageMembersDialog>
       );
@@ -1090,7 +1151,7 @@ export default function MarketDetail() {
           <button
             onClick={handleJoinRequest}
             disabled={isRequesting || isMarketFull}
-            className={`w-full font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
+            className={`w-full font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
               isMarketFull
                 ? "bg-gray-400 text-white cursor-not-allowed opacity-70"
                 : "bg-[#E67A50] text-white hover:bg-orange-600"
@@ -1098,17 +1159,28 @@ export default function MarketDetail() {
             title={isMarketFull ? "This circle is already full" : undefined}
           >
             {isRequesting ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
             ) : isMarketFull ? (
-              <XCircle className="w-5 h-5 mr-2" />
+              <XCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
             ) : (
-              <span className="material-icons mr-2">add_circle_outline</span>
+              <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">add_circle_outline</span>
             )}
-            {isRequesting
-              ? "Sending Request..."
-              : isMarketFull
-              ? "Circle Full"
-              : "Request to Join"}
+            {isRequesting ? (
+              <>
+                <span className="hidden sm:inline">Sending Request...</span>
+                <span className="sm:hidden">Sending...</span>
+              </>
+            ) : isMarketFull ? (
+              <>
+                <span className="hidden sm:inline">Circle Full</span>
+                <span className="sm:hidden">Full</span>
+              </>
+            ) : (
+              <>
+                <span className="hidden sm:inline">Request to Join</span>
+                <span className="sm:hidden">Join</span>
+              </>
+            )}
           </button>
         );
 
@@ -1140,10 +1212,11 @@ export default function MarketDetail() {
         return (
           <button
             disabled
-            className="w-full bg-green-600 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            className="w-full bg-green-600 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
-            <CheckCircle className="w-5 h-5 mr-2" />
-            Active Member
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Active Member</span>
+            <span className="sm:hidden">Member</span>
           </button>
         );
 
@@ -1151,10 +1224,11 @@ export default function MarketDetail() {
         return (
           <button
             disabled
-            className="w-full bg-red-500 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            className="w-full bg-red-500 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
-            <XCircle className="w-5 h-5 mr-2" />
-            Application Rejected
+            <XCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Application Rejected</span>
+            <span className="sm:hidden">Rejected</span>
           </button>
         );
 
@@ -1162,10 +1236,11 @@ export default function MarketDetail() {
         return (
           <button
             disabled
-            className="w-full bg-red-500 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            className="w-full bg-red-500 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
-            <AlertCircle className="w-5 h-5 mr-2" />
-            Account Flagged
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Account Flagged</span>
+            <span className="sm:hidden">Flagged</span>
           </button>
         );
 
@@ -1173,10 +1248,11 @@ export default function MarketDetail() {
         return (
           <button
             disabled
-            className="w-full bg-yellow-500 text-white font-bold py-3 px-8 rounded-xl lg:rounded-full text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
+            className="w-full bg-yellow-500 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
-            <Clock className="w-5 h-5 mr-2" />
-            Application Pending
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Application Pending</span>
+            <span className="sm:hidden">Pending</span>
           </button>
         );
 
@@ -1819,5 +1895,19 @@ export default function MarketDetail() {
         }}
       />
     </>
+  );
+}
+
+export default function MarketDetail() {
+  const { address } = useParams<{ address: string }>();
+  
+  if (!address) {
+    return null;
+  }
+  
+  return (
+    <MarketProvider marketAddress={address}>
+      <MarketDetailInner />
+    </MarketProvider>
   );
 }

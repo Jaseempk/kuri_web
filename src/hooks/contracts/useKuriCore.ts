@@ -208,8 +208,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           operationName: "token approval",
         });
 
-        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
-
         await handleTransaction(txHash as `0x${string}`, {
           loadingMessage: "Approving tokens (gas-sponsored)...",
           successMessage: "Token approval successful! 🎉 Gas was sponsored!",
@@ -708,8 +706,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           operationName: "claimKuriAmount",
         });
 
-        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
-
         await handleTransaction(txHash as `0x${string}`, {
           loadingMessage: "Claiming amount (gas-sponsored)...",
           successMessage: "Amount claimed successfully! 🎉 Gas was sponsored!",
@@ -797,8 +793,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         operationName: "requestMembership",
       });
 
-      console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
-
       await handleTransaction(txHash as `0x${string}`, {
         loadingMessage: "Requesting membership (gas-sponsored)...",
         successMessage:
@@ -856,8 +850,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           callData,
           operationName: "acceptMember",
         });
-
-        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
 
         await handleTransaction(txHash as `0x${string}`, {
           loadingMessage: "Accepting member (gas-sponsored)...",
@@ -917,8 +909,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           callData,
           operationName: "rejectMember",
         });
-
-        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
 
         await handleTransaction(txHash as `0x${string}`, {
           loadingMessage: "Rejecting member (gas-sponsored)...",
@@ -980,8 +970,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           operationName: "acceptMultipleMembers",
         });
 
-        console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
-
         await handleTransaction(txHash as `0x${string}`, {
           loadingMessage: `Accepting ${addresses.length} members (gas-sponsored)...`,
           successMessage: `Successfully accepted ${addresses.length} members! 🎉 Gas was sponsored!`,
@@ -1038,8 +1026,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         callData,
         operationName: "initializeKuri",
       });
-
-      console.log("🎉 Gas fees sponsored by Alchemy Gas Manager!");
 
       await handleTransaction(txHash as `0x${string}`, {
         loadingMessage: "Initializing market (gas-sponsored)...",
