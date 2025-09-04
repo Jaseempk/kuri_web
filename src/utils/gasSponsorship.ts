@@ -1,6 +1,6 @@
 import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts";
 import { WalletClientSigner } from "@aa-sdk/core";
-import { alchemy } from "@account-kit/infra";
+import { alchemy, base, baseSepolia } from "@account-kit/infra";
 import { createWalletClient, http } from "viem";
 import { customSignMessage, customSignTypedData } from "./customSignMessage";
 import { generateSalt } from "./generateSalt";
@@ -29,6 +29,9 @@ export async function createGasSponsoredClient({
   signMessageAsync,
 }: GasSponsorshipParams): Promise<SponsoredClient> {
   const defaultChain = getDefaultChain();
+  
+  // Get the appropriate Alchemy chain object based on the current network
+  const alchemyChain = defaultChain.id === 84532 ? baseSepolia : base;
 
   // Create Para-compatible LocalAccount
   const customAccount = {
@@ -80,7 +83,7 @@ export async function createGasSponsoredClient({
     transport: alchemy({
       rpcUrl,
     }),
-    chain: defaultChain,
+    chain: alchemyChain, // Use Alchemy's chain object here
     signer: walletClientSigner,
     policyId: import.meta.env.VITE_ALCHEMY_GAS_POLICY_ID,
     salt,

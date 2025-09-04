@@ -1,6 +1,6 @@
 import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts";
 import { WalletClientSigner } from "@aa-sdk/core";
-import { alchemy } from "@account-kit/infra";
+import { alchemy, base, baseSepolia } from "@account-kit/infra";
 import { createWalletClient, http } from "viem";
 import { generateSalt } from "./generateSalt";
 import { customSignMessage } from "./customSignMessage";
@@ -14,6 +14,9 @@ export async function getSmartWalletAddressForEOA(
   try {
     const defaultChain = getDefaultChain();
     
+    // Get the appropriate Alchemy chain object based on the current network
+    const alchemyChain = defaultChain.id === 84532 ? baseSepolia : base;
+
     const customAccount = {
       address: eoaAddress,
       type: "local" as const,
@@ -30,9 +33,9 @@ export async function getSmartWalletAddressForEOA(
       publicKey: eoaAddress,
     };
 
-    const rpcUrl = `https://${defaultChain.id === 84532 ? 'base-sepolia' : 'base-mainnet'}.g.alchemy.com/v2/${
-      import.meta.env.VITE_ALCHEMY_API_KEY
-    }`;
+    const rpcUrl = `https://${
+      defaultChain.id === 84532 ? "base-sepolia" : "base-mainnet"
+    }.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`;
 
     const viemWalletClient = createWalletClient({
       account: customAccount as any,
@@ -44,7 +47,7 @@ export async function getSmartWalletAddressForEOA(
       transport: alchemy({
         rpcUrl,
       }),
-      chain: defaultChain,
+      chain: alchemyChain, // Use Alchemy's chain object here
       signer: new WalletClientSigner(viemWalletClient, "wallet"),
       policyId: import.meta.env.VITE_ALCHEMY_GAS_POLICY_ID,
       salt: generateSalt(paraWalletId, 0),
@@ -66,12 +69,16 @@ export async function getSmartWalletAddressCached(
   signMessageAsync: any
 ): Promise<`0x${string}`> {
   const cacheKey = `${paraWalletId}-${eoaAddress}`;
-  
+
   if (smartWalletCache.has(cacheKey)) {
     return smartWalletCache.get(cacheKey) as `0x${string}`;
   }
-  
-  const smartWalletAddress = await getSmartWalletAddressForEOA(paraWalletId, eoaAddress, signMessageAsync);
+
+  const smartWalletAddress = await getSmartWalletAddressForEOA(
+    paraWalletId,
+    eoaAddress,
+    signMessageAsync
+  );
   const normalizedAddress = smartWalletAddress.toLowerCase() as `0x${string}`;
   smartWalletCache.set(cacheKey, normalizedAddress);
   return normalizedAddress;
