@@ -375,7 +375,7 @@ const TabContent: React.FC<TabContentProps> = ({
                             ? timeLeft.split("d")[0].padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Days
                         </span>
                       </div>
@@ -392,7 +392,7 @@ const TabContent: React.FC<TabContentProps> = ({
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Hours
                         </span>
                       </div>
@@ -409,7 +409,7 @@ const TabContent: React.FC<TabContentProps> = ({
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Minutes
                         </span>
                       </div>
@@ -426,7 +426,7 @@ const TabContent: React.FC<TabContentProps> = ({
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Seconds
                         </span>
                       </div>
@@ -456,7 +456,7 @@ const TabContent: React.FC<TabContentProps> = ({
                                   ? activeTimer.split("d")[0].padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Days
                               </span>
                             </div>
@@ -473,7 +473,7 @@ const TabContent: React.FC<TabContentProps> = ({
                                       ?.padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Hours
                               </span>
                             </div>
@@ -490,7 +490,7 @@ const TabContent: React.FC<TabContentProps> = ({
                                       ?.padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Minutes
                               </span>
                             </div>
@@ -507,7 +507,7 @@ const TabContent: React.FC<TabContentProps> = ({
                                       ?.padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Seconds
                               </span>
                             </div>
@@ -1609,12 +1609,12 @@ export default function MarketDetail() {
                     </h3>
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
                       <div>
-                        <span className="text-4xl font-bold">
+                        <span className="text-4xl font-bold text-orange-500">
                           {timeLeft.includes("d")
                             ? timeLeft.split("d")[0].padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Days
                         </span>
                       </div>
@@ -1622,7 +1622,7 @@ export default function MarketDetail() {
                         :
                       </span>
                       <div>
-                        <span className="text-4xl font-bold">
+                        <span className="text-4xl font-bold text-orange-500">
                           {timeLeft.includes("h")
                             ? timeLeft
                                 .split("h")[0]
@@ -1631,7 +1631,7 @@ export default function MarketDetail() {
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Hours
                         </span>
                       </div>
@@ -1639,7 +1639,7 @@ export default function MarketDetail() {
                         :
                       </span>
                       <div>
-                        <span className="text-4xl font-bold">
+                        <span className="text-4xl font-bold text-orange-500">
                           {timeLeft.includes("m")
                             ? timeLeft
                                 .split("m")[0]
@@ -1648,7 +1648,7 @@ export default function MarketDetail() {
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Minutes
                         </span>
                       </div>
@@ -1656,7 +1656,7 @@ export default function MarketDetail() {
                         :
                       </span>
                       <div>
-                        <span className="text-4xl font-bold">
+                        <span className="text-4xl font-bold text-orange-500">
                           {timeLeft.includes("s")
                             ? timeLeft
                                 .split("s")[0]
@@ -1665,7 +1665,7 @@ export default function MarketDetail() {
                                 ?.padStart(2, "0")
                             : "00"}
                         </span>
-                        <span className="block text-xs text-gray-600">
+                        <span className="block text-xs text-gray-900">
                           Seconds
                         </span>
                       </div>
@@ -1690,12 +1690,12 @@ export default function MarketDetail() {
                         return (
                           <>
                             <div>
-                              <span className="text-4xl font-bold">
+                              <span className="text-4xl font-bold text-orange-500">
                                 {activeTimer.includes("d")
                                   ? activeTimer.split("d")[0].padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Days
                               </span>
                             </div>
@@ -1703,7 +1703,7 @@ export default function MarketDetail() {
                               :
                             </span>
                             <div>
-                              <span className="text-4xl font-bold">
+                              <span className="text-4xl font-bold text-orange-500">
                                 {activeTimer.includes("h")
                                   ? activeTimer
                                       .split("h")[0]
@@ -1712,7 +1712,7 @@ export default function MarketDetail() {
                                       ?.padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Hours
                               </span>
                             </div>
@@ -1720,7 +1720,7 @@ export default function MarketDetail() {
                               :
                             </span>
                             <div>
-                              <span className="text-4xl font-bold">
+                              <span className="text-4xl font-bold text-orange-500">
                                 {activeTimer.includes("m")
                                   ? activeTimer
                                       .split("m")[0]
@@ -1729,7 +1729,7 @@ export default function MarketDetail() {
                                       ?.padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Minutes
                               </span>
                             </div>
@@ -1737,7 +1737,7 @@ export default function MarketDetail() {
                               :
                             </span>
                             <div>
-                              <span className="text-4xl font-bold">
+                              <span className="text-4xl font-bold text-orange-500">
                                 {activeTimer.includes("s")
                                   ? activeTimer
                                       .split("s")[0]
@@ -1746,7 +1746,7 @@ export default function MarketDetail() {
                                       ?.padStart(2, "0")
                                   : "00"}
                               </span>
-                              <span className="block text-xs text-gray-600">
+                              <span className="block text-xs text-gray-900">
                                 Seconds
                               </span>
                             </div>
