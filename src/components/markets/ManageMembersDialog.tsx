@@ -9,7 +9,7 @@ import {
 import { ManageMembers } from "./ManageMembers";
 import { useMarketContext } from "../../contexts/MarketContext";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Loader2 } from "lucide-react";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
 import { Button } from "../ui/button";
@@ -29,8 +29,22 @@ export const ManageMembersDialog = ({
   onOpenChange,
   onMemberActionComplete,
 }: ManageMembersDialogProps) => {
-  // Use consolidated MarketContext instead of direct useKuriCore call
-  const { requestMembershipSponsored, isLoadingCore, marketData } = useMarketContext();
+  // Conditionally use MarketContext - only when available (within MarketProvider)
+  let marketContext = null;
+  let requestMembershipSponsored = null;
+  let isLoadingCore = false;
+  let marketData = null;
+  
+  try {
+    marketContext = useMarketContext();
+    requestMembershipSponsored = marketContext.requestMembershipSponsored;
+    isLoadingCore = marketContext.isLoadingCore;
+    marketData = marketContext.marketData;
+  } catch (error) {
+    // Context not available - component is being used outside MarketProvider
+    // Use fallback behavior for market list contexts
+  }
+  
   const isRequesting = isLoadingCore;
   const { smartAddress: address } = useAuthContext();
   const [refreshKey, setRefreshKey] = useState(0);
@@ -38,6 +52,11 @@ export const ManageMembersDialog = ({
   const isCreator = address?.toLowerCase() === market.creator.toLowerCase();
 
   const handleRequestMembership = async () => {
+    if (!requestMembershipSponsored) {
+      console.warn("requestMembershipSponsored not available - component used outside MarketProvider");
+      return;
+    }
+    
     try {
       await requestMembershipSponsored();
       onMemberActionComplete?.();
@@ -146,7 +165,7 @@ export const ManageMembersDialog = ({
               </div>
               <Button
                 onClick={handleRequestMembership}
-                disabled={isRequesting || !address}
+                disabled={isRequesting || !address || !requestMembershipSponsored}
                 className="w-full max-w-xs sm:max-w-sm py-3 sm:py-4 md:py-6 text-sm sm:text-base md:text-lg font-semibold rounded-xl sm:rounded-2xl bg-gradient-to-r from-[hsl(var(--terracotta))] to-[hsl(var(--ochre))] hover:from-[hsl(var(--ochre))] hover:to-[hsl(var(--terracotta))] text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
                 {isRequesting ? (
@@ -176,6 +195,11 @@ export const ManageMembersDialog = ({
               {!address && (
                 <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] text-center">
                   Please connect your wallet to request membership
+                </p>
+              )}
+              {!requestMembershipSponsored && (
+                <p className="text-xs sm:text-sm text-[hsl(var(--muted-foreground))] text-center">
+                  Please visit the market detail page to request membership
                 </p>
               )}
             </div>
