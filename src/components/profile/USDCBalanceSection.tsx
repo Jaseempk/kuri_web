@@ -3,11 +3,13 @@ import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { formatUnits } from "viem";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
+import { USDCWithdrawModal } from "../modals/USDCWithdrawModal";
 
 export function USDCBalanceSection() {
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const { smartAddress: address } = useOptimizedAuth();
-  const { balance, isLoading, error } = useUserUSDCBalance(address || undefined);
+  const { balance, isLoading, error, refetch } = useUserUSDCBalance(address || undefined);
 
   // Format USDC balance with at least 2 decimal places
   const formatUSDCDisplay = (amount: bigint): string => {
@@ -29,7 +31,11 @@ export function USDCBalanceSection() {
   };
 
   const handleWithdraw = () => {
-    console.log("Withdraw button clicked");
+    setShowWithdrawModal(true);
+  };
+
+  const handleWithdrawSuccess = () => {
+    refetch();
   };
 
   if (!address) {
@@ -89,6 +95,16 @@ export function USDCBalanceSection() {
           isOpen={showDepositModal}
           onClose={() => setShowDepositModal(false)}
           smartWalletAddress={address}
+        />
+      )}
+
+      {/* USDC Withdraw Modal */}
+      {address && balance !== undefined && (
+        <USDCWithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          userBalance={balance}
+          onWithdrawSuccess={handleWithdrawSuccess}
         />
       )}
     </div>

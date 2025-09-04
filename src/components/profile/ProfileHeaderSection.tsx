@@ -5,6 +5,7 @@ import { KuriUserProfile } from "../../types/user";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
+import { USDCWithdrawModal } from "../modals/USDCWithdrawModal";
 
 interface ProfileHeaderSectionProps {
   profile: KuriUserProfile;
@@ -13,8 +14,9 @@ interface ProfileHeaderSectionProps {
 
 export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeaderSectionProps) {
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const { smartAddress } = useOptimizedAuth();
-  const { balance, isLoading: isLoadingBalance, error: balanceError } = useUserUSDCBalance(smartAddress || undefined);
+  const { balance, isLoading: isLoadingBalance, error: balanceError, refetch } = useUserUSDCBalance(smartAddress || undefined);
 
 
   const formatDateMobile = (date: Date) => {
@@ -44,7 +46,11 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
   };
 
   const handleWithdraw = () => {
-    console.log("Withdraw button clicked");
+    setShowWithdrawModal(true);
+  };
+
+  const handleWithdrawSuccess = () => {
+    refetch();
   };
 
   const statsMobile = [
@@ -162,6 +168,16 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
           isOpen={showDepositModal}
           onClose={() => setShowDepositModal(false)}
           smartWalletAddress={smartAddress}
+        />
+      )}
+
+      {/* USDC Withdraw Modal */}
+      {smartAddress && balance !== undefined && (
+        <USDCWithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          userBalance={balance}
+          onWithdrawSuccess={handleWithdrawSuccess}
         />
       )}
     </motion.div>
