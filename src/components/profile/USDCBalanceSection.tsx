@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { formatUnits } from "viem";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
 import { USDCWithdrawModal } from "../modals/USDCWithdrawModal";
@@ -8,21 +8,23 @@ import { USDCWithdrawModal } from "../modals/USDCWithdrawModal";
 export function USDCBalanceSection() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const { smartAddress: address } = useOptimizedAuth();
-  const { balance, isLoading, error, refetch } = useUserUSDCBalance(address || undefined);
+  const { smartAddress: address } = useAuthContext();
+  const { balance, isLoading, error, refetch } = useUserUSDCBalance(
+    address && address.startsWith("0x") ? (address as `0x${string}`) : undefined
+  );
 
   // Format USDC balance with at least 2 decimal places
   const formatUSDCDisplay = (amount: bigint): string => {
     const formatted = formatUnits(amount, 6);
     const num = parseFloat(formatted);
-    
+
     // If it's a whole number, show .00
     if (num % 1 === 0) {
       return num.toFixed(2);
     }
-    
+
     // If it has decimals, show at least 2 decimal places
-    const decimalPlaces = formatted.split('.')[1]?.length || 0;
+    const decimalPlaces = formatted.split(".")[1]?.length || 0;
     return num.toFixed(Math.max(2, Math.min(decimalPlaces, 6)));
   };
 
@@ -45,11 +47,13 @@ export function USDCBalanceSection() {
   return (
     <div className="mt-6 bg-white rounded-2xl shadow-lg p-6 mx-4 md:hidden">
       <h2 className="text-lg font-bold text-gray-800 mb-4">USDC Balance</h2>
-      
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="h-10 w-10 mr-3 bg-blue-500 rounded-full flex items-center justify-center">
-            <span className="material-icons text-white">account_balance_wallet</span>
+            <span className="material-icons text-white">
+              account_balance_wallet
+            </span>
           </div>
           <div>
             {isLoading ? (
@@ -65,9 +69,14 @@ export function USDCBalanceSection() {
             ) : (
               <div>
                 <p className="text-2xl font-bold text-gray-800">
-                  {formatUSDCDisplay(balance)} <span className="text-base font-medium text-gray-500">USDC</span>
+                  {formatUSDCDisplay(balance)}{" "}
+                  <span className="text-base font-medium text-gray-500">
+                    USDC
+                  </span>
                 </p>
-                <p className="text-sm text-gray-500">≈ ${formatUSDCDisplay(balance)}</p>
+                <p className="text-sm text-gray-500">
+                  ≈ ${formatUSDCDisplay(balance)}
+                </p>
               </div>
             )}
           </div>
@@ -75,13 +84,13 @@ export function USDCBalanceSection() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <button 
+        <button
           onClick={handleDeposit}
           className="w-full bg-primary text-white font-semibold py-3 px-4 rounded-full shadow-md hover:bg-opacity-90 transition duration-300 flex items-center justify-center"
         >
           Deposit
         </button>
-        <button 
+        <button
           onClick={handleWithdraw}
           className="w-full bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-full hover:bg-gray-300 transition duration-300 flex items-center justify-center"
         >

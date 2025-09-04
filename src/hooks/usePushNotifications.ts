@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useOptimizedAuth } from "./useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import {
   OneSignalHelper,
   NotificationPreferences,
@@ -29,7 +29,7 @@ export const usePushNotifications = () => {
     loading: true,
   });
 
-  const { smartAddress } = useOptimizedAuth();
+  const { smartAddress } = useAuthContext();
 
   // Wait for OneSignal to initialize
   useEffect(() => {

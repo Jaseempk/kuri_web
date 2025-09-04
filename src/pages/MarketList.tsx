@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useOptimizedMarkets } from "../hooks/useOptimizedMarkets";
-import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "../components/ui/dialog";
@@ -166,7 +166,7 @@ const IntervalTypeFilter = ({
 
 export default function MarketList() {
   // Use optimized auth for stable wallet connection status
-  const { account: paraAccount } = useOptimizedAuth();
+  const { account: paraAccount } = useAuthContext();
   const isWalletConnected = useMemo(() => Boolean(
     paraAccount.isConnected && 
     paraAccount.embedded?.wallets?.[0]?.address

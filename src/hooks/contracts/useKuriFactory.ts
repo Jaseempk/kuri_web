@@ -7,7 +7,7 @@ import {
 } from "@wagmi/core";
 import { decodeEventLog, encodeFunctionData } from "viem";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
-import { useOptimizedAuth } from "../useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { KuriFactoryABI } from "../../contracts/abis/KuriFactoryV1";
 import { getContractAddress } from "../../config/contracts";
 import { handleContractError } from "../../utils/errors";
@@ -24,7 +24,7 @@ export const useKuriFactory = () => {
   const [isCreating, setIsCreating] = useState(false);
   const paraAccount = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const { smartAddress: address } = useOptimizedAuth();
+  const { smartAddress: address } = useAuthContext();
   const chainId = baseSepolia.id; // Use Para with Base Sepolia
   const factoryAddress = getContractAddress(
     chainId ?? baseSepolia.id,

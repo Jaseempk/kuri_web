@@ -8,6 +8,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { ParaWeb3Provider } from "./providers/ParaWeb3Provider";
 import { ParaErrorBoundary } from "./components/providers/ParaErrorBoundary";
 import { ToastProvider } from "./components/providers/ToastProvider";
+import { AuthProvider } from "./contexts/AuthContext";
 import { FarcasterProvider } from "./contexts/FarcasterContext";
 import { FarcasterAwareLayout } from "./components/layouts/FarcasterAwareLayout";
 import { PostCreationModalProvider } from "./components/modals/PostCreationModalProvider";
@@ -66,19 +67,21 @@ function App() {
     <ParaErrorBoundary>
       <ParaWeb3Provider>
       <ApolloProvider>
-        <FarcasterProvider>
-          <ToastProvider />
-          <Analytics debug={false} />
-          <NetworkStatus />
-          <Router future={{ v7_relativeSplatPath: true }}>
-            <PostCreationModalProvider>
-              <NotificationHandler />
-              <RoutesWithAnalytics />
-            </PostCreationModalProvider>
-          </Router>
-          <InstallPrompt />
-          <FloatingNotificationPrompt />
-        </FarcasterProvider>
+        <AuthProvider>
+          <FarcasterProvider>
+            <ToastProvider />
+            <Analytics debug={false} />
+            <NetworkStatus />
+            <Router future={{ v7_relativeSplatPath: true }}>
+              <PostCreationModalProvider>
+                <NotificationHandler />
+                <RoutesWithAnalytics />
+              </PostCreationModalProvider>
+            </Router>
+            <InstallPrompt />
+            <FloatingNotificationPrompt />
+          </FarcasterProvider>
+        </AuthProvider>
       </ApolloProvider>
     </ParaWeb3Provider>
     </ParaErrorBoundary>

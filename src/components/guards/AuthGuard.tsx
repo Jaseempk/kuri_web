@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAuthNavigation } from "../../hooks/useAuthNavigation";
-import { useOptimizedAuth, AuthFlowState } from "../../hooks/useOptimizedAuth";
+import { useAuthContext, AuthFlowState } from "../../contexts/AuthContext";
 import { LoadingSkeleton } from "../ui/loading-states";
 
 interface AuthGuardProps {
@@ -9,7 +9,7 @@ interface AuthGuardProps {
 }
 
 export const AuthGuard = ({ children, requireProfile = true }: AuthGuardProps) => {
-  const { authState } = useOptimizedAuth();
+  const { authState } = useAuthContext();
   const { coordinatedNavigate } = useAuthNavigation();
 
   useEffect(() => {

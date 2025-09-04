@@ -5,7 +5,7 @@ import { Logo } from "./ui/Logo";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { ProfileButton } from "./ui/ProfileButton";
 
 interface LayoutProps {
@@ -14,7 +14,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { smartAddress: address } = useOptimizedAuth();
+  const { smartAddress: address } = useAuthContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigationItems = [

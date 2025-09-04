@@ -8,7 +8,7 @@ import { useTransactionStatus } from "../useTransactionStatus";
 
 import { calculateApprovalAmount } from "../../utils/tokenUtils";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
-import { useOptimizedAuth } from "../useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import {
   createGasSponsoredClient,
   executeSponsoredTransaction,
@@ -75,7 +75,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const [currentInterval, setCurrentInterval] = useState<number>(0);
 
   const account = useAccount();
-  const { smartAddress: userAddress } = useOptimizedAuth();
+  const { smartAddress: userAddress } = useAuthContext();
   const { handleTransaction } = useTransactionStatus();
   const { signMessageAsync } = useSignMessage();
 
@@ -106,7 +106,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: tokenAddress,
         abi: ERC20ABI,
         functionName: "allowance",
-        args: [userAddress, kuriAddress],
+        args: [userAddress as `0x${string}`, kuriAddress as `0x${string}`],
       });
       return allowance as bigint;
     } catch (err) {
@@ -126,7 +126,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: tokenAddress,
         abi: ERC20ABI,
         functionName: "balanceOf",
-        args: [userAddress],
+        args: [userAddress as `0x${string}`],
       });
 
       const balanceAmount = balance as bigint;
@@ -262,7 +262,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: kuriAddress,
         abi: KuriCoreABI,
         functionName: "userToData",
-        args: [userAddress],
+        args: [userAddress as `0x${string}`],
       });
 
       const membershipStatus = (userData as any)[0];
@@ -302,7 +302,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: kuriAddress,
         abi: KuriCoreABI,
         functionName: "hasPaid",
-        args: [userAddress, currentIntervalIndex],
+        args: [userAddress as `0x${string}`, currentIntervalIndex],
       })) as boolean;
 
       setUserPaymentStatus(hasPaid);

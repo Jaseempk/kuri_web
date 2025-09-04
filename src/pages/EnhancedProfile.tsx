@@ -8,7 +8,7 @@ import {
 } from "../components/ui/tabs";
 import { useUserActivity } from "../hooks/useUserActivity";
 import { LoadingSkeleton } from "../components/ui/loading-states";
-import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useKuriMarkets } from "../hooks/useKuriMarkets";
 import { MarketCard } from "../components/markets/MarketCard";
 import { Memberships } from "../components/profile/Memberships";
@@ -48,7 +48,7 @@ const myCirclesSections = [
 export default function EnhancedProfile() {
   const { identifier } = useParams();
   const navigate = useNavigate();
-  const { smartAddress: address, profile, isLoading, account } = useOptimizedAuth();
+  const { smartAddress: address, profile, isLoading, account } = useAuthContext();
   const { activity } = useUserActivity(identifier || "");
   const { markets, loading: marketsLoading } = useKuriMarkets();
   

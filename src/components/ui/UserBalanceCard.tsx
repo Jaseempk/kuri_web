@@ -1,20 +1,24 @@
 import { useState } from "react";
 import { formatUnits } from "viem";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { Plus, RefreshCw } from "lucide-react";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
 
 export const UserBalanceCard = () => {
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const { smartAddress: userAddress, account } = useOptimizedAuth();
+  const { smartAddress: userAddress, account } = useAuthContext();
 
   const {
     balance,
     isLoading: isLoadingBalance,
     error: balanceError,
     refetch: refetchBalance,
-  } = useUserUSDCBalance(userAddress || undefined);
+  } = useUserUSDCBalance(
+    userAddress && userAddress.startsWith("0x")
+      ? (userAddress as `0x${string}`)
+      : undefined
+  );
 
   // Don't render if user is not connected
   if (!account.isConnected || !userAddress) {

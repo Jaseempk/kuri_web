@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { useOptimizedAuth } from "./useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import {
   trackWalletConnection,
   trackPageView,
@@ -8,7 +8,7 @@ import {
 } from "../utils/analytics";
 
 export function useAnalyticsTracking() {
-  const { smartAddress: address, account } = useOptimizedAuth();
+  const { smartAddress: address, account } = useAuthContext();
   // Para uses Base Sepolia by default
   const chainId = 84532; // Base Sepolia chain ID
   const connector = { name: 'Para' }; // Para connector info

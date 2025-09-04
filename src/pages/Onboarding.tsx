@@ -7,7 +7,7 @@ import { sanitizeInput } from "../utils/sanitize";
 import { validateImageFile } from "../utils/fileValidation";
 import { trackEvent, trackError } from "../utils/analytics";
 import { formatErrorForUser } from "../utils/apiErrors";
-import { useOptimizedAuth, AuthFlowState } from "../hooks/useOptimizedAuth";
+import { useAuthContext, AuthFlowState } from "../contexts/AuthContext";
 
 enum OnboardingStep {
   EMAIL_AUTH = "email_auth",
@@ -19,7 +19,7 @@ export default function Onboarding() {
   const location = useLocation();
   const authService = useAuthenticationService();
   const { authState, updateProfile, profile, smartAddress, account } =
-    useOptimizedAuth();
+    useAuthContext();
   const address = account?.embedded?.wallets?.[0]?.address;
   console.log("addresss:", address);
   console.log("account:", account);

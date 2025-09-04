@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { User } from "lucide-react";
 import { Button } from "./button";
 
@@ -9,7 +9,7 @@ const formatAddress = (address: string) => {
 
 export function ProfileButton() {
   const location = useLocation();
-  const { profile, smartAddress: address, account } = useOptimizedAuth();
+  const { profile, smartAddress: address, account } = useAuthContext();
   const email = account?.user?.email;
 
   const isProfilePath =

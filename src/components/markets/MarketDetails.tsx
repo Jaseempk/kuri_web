@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { Button } from "../ui/button";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { KuriState } from "../../types/market";
 
 interface MarketDetailsProps {
@@ -9,7 +9,7 @@ interface MarketDetailsProps {
 }
 
 export const MarketDetails = ({ marketAddress }: MarketDetailsProps) => {
-  const { smartAddress: address, account } = useOptimizedAuth();
+  const { smartAddress: address, account } = useAuthContext();
   const {
     marketData,
     isLoading,

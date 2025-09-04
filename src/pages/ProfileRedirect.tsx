@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 
 export default function ProfileRedirect() {
   const navigate = useNavigate();
-  const { profile, smartAddress: address, isLoading } = useOptimizedAuth();
+  const { profile, smartAddress: address, isLoading } = useAuthContext();
 
   useEffect(() => {
     if (!isLoading && (profile?.username || address)) {

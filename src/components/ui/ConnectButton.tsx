@@ -1,5 +1,5 @@
 import { useAuthenticationService } from "../../services/AuthenticationService";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { Button } from "./button";
 
 const formatAddress = (address: string) => {
@@ -8,7 +8,7 @@ const formatAddress = (address: string) => {
 
 export function ConnectButton() {
   const authService = useAuthenticationService();
-  const { smartAddress, account } = useOptimizedAuth();
+  const { smartAddress, account } = useAuthContext();
 
   const handleClick = () => {
     if (account?.isConnected) {

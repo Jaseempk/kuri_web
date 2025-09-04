@@ -5,7 +5,7 @@ import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
 import { getAccount } from "@wagmi/core";
 import { config } from "../../config/wagmi";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
@@ -124,7 +124,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   className,
 }) => {
   const navigate = useNavigate();
-  const { smartAddress: address, account: paraAccount } = useOptimizedAuth();
+  const { smartAddress: address, account: paraAccount } = useAuthContext();
 
   // Only use KuriCore for active markets or if user is the creator
   const shouldUseCore = shouldUseKuriCore(market, address || undefined);

@@ -9,7 +9,7 @@ import { ShareModal } from "../components/modals/ShareModal";
 import { ManageMembersDialog } from "../components/markets/ManageMembersDialog";
 import { DepositForm } from "../components/markets/DepositForm";
 import { ClaimInterface } from "../components/markets/ClaimInterface";
-import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,7 +27,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { useUserProfileByAddress } from "../hooks/useUserProfile";
 import { isUserRejection } from "../utils/errors";
-import { SequentialCountdown } from "../components/ui/SequentialCountdown";
 import { trackEvent, trackError } from "../utils/analytics";
 import { CircleMembersDisplay } from "../components/markets/CircleMembersDisplay";
 import { useMarketTimers } from "../hooks/useMarketTimers";
@@ -444,10 +443,12 @@ const TabContent: React.FC<TabContentProps> = ({
                     </h3>
                     <div className="flex items-end gap-x-3">
                       {(() => {
-                        const activeTimer = Date.now() < Number(marketData.nextIntervalDepositTime) * 1000 
-                          ? depositTimeLeft 
-                          : raffleTimeLeft;
-                        
+                        const activeTimer =
+                          Date.now() <
+                          Number(marketData.nextIntervalDepositTime) * 1000
+                            ? depositTimeLeft
+                            : raffleTimeLeft;
+
                         return (
                           <>
                             <div className="text-center">
@@ -661,7 +662,7 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
-  const { smartAddress: userAddress } = useOptimizedAuth();
+  const { smartAddress: userAddress } = useAuthContext();
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "activity" | "members"
@@ -719,7 +720,8 @@ export default function MarketDetail() {
   const { marketDetail } = useKuriMarketDetail(address || "");
 
   // Use custom timer hook
-  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimers(marketData);
+  const { timeLeft, raffleTimeLeft, depositTimeLeft } =
+    useMarketTimers(marketData);
 
   // Determine current winner logic
   const currentWinner = useMemo(() => {
@@ -1683,10 +1685,12 @@ export default function MarketDetail() {
                     </h3>
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
                       {(() => {
-                        const activeTimer = Date.now() < Number(marketData.nextIntervalDepositTime) * 1000 
-                          ? depositTimeLeft 
-                          : raffleTimeLeft;
-                        
+                        const activeTimer =
+                          Date.now() <
+                          Number(marketData.nextIntervalDepositTime) * 1000
+                            ? depositTimeLeft
+                            : raffleTimeLeft;
+
                         return (
                           <>
                             <div>

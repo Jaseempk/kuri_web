@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useOptimizedAuth } from "./useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { KuriMarket } from "./useKuriMarkets";
 import {
   batchUserMarketData,
@@ -31,7 +31,7 @@ export const useUserMarketData = (
   markets: KuriMarket[],
   options: UseUserMarketDataOptions = {}
 ): UseUserMarketDataResult => {
-  const { smartAddress } = useOptimizedAuth();
+  const { smartAddress } = useAuthContext();
 
   const {
     enabled = true,
@@ -111,7 +111,7 @@ export const useUserMarketDataForMarket = (
  * Hook to check if user has relevant data for any markets
  */
 export const useHasUserMarketData = (markets: KuriMarket[]): boolean => {
-  const { smartAddress } = useOptimizedAuth();
+  const { smartAddress } = useAuthContext();
 
   if (!smartAddress) return false;
 

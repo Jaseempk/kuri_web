@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { formatUnits } from "viem";
 import { KuriUserProfile } from "../../types/user";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
 import { USDCWithdrawModal } from "../modals/USDCWithdrawModal";
 
@@ -12,32 +12,43 @@ interface ProfileHeaderSectionProps {
   totalCircles?: number;
 }
 
-export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeaderSectionProps) {
+export function ProfileHeaderSection({
+  profile,
+  totalCircles = 0,
+}: ProfileHeaderSectionProps) {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const { smartAddress } = useOptimizedAuth();
-  const { balance, isLoading: isLoadingBalance, error: balanceError, refetch } = useUserUSDCBalance(smartAddress || undefined);
-
+  const { smartAddress } = useAuthContext();
+  const validSmartAddress =
+    typeof smartAddress === "string" && smartAddress.startsWith("0x")
+      ? (smartAddress as `0x${string}`)
+      : undefined;
+  const {
+    balance,
+    isLoading: isLoadingBalance,
+    error: balanceError,
+    refetch,
+  } = useUserUSDCBalance(validSmartAddress);
 
   const formatDateMobile = (date: Date) => {
-    const formatted = new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      year: 'numeric'
+    const formatted = new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
     });
     // Convert to lowercase month and 2-digit year (e.g., "jan 25")
-    const [month, year] = formatted.split(' ');
+    const [month, year] = formatted.split(" ");
     return `${month.toLowerCase()} ${year.slice(-2)}`;
   };
 
   const formatUSDCDisplay = (amount: bigint): string => {
     const formatted = formatUnits(amount, 6);
     const num = parseFloat(formatted);
-    
+
     if (num % 1 === 0) {
       return num.toFixed(2);
     }
-    
-    const decimalPlaces = formatted.split('.')[1]?.length || 0;
+
+    const decimalPlaces = formatted.split(".")[1]?.length || 0;
     return num.toFixed(Math.max(2, Math.min(decimalPlaces, 6)));
   };
 
@@ -56,16 +67,16 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
   const statsMobile = [
     {
       value: profile.reputation_score || 0,
-      label: "Reputation"
+      label: "Reputation",
     },
     {
       value: totalCircles,
-      label: "Total Circles"
+      label: "Total Circles",
     },
     {
       value: formatDateMobile(profile.created_at),
-      label: "Member Since"
-    }
+      label: "Member Since",
+    },
   ];
 
   return (
@@ -88,7 +99,7 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
           {/* Online indicator for mobile/tablet */}
           <span className="absolute bottom-1 right-1 bg-green-500 h-4 w-4 rounded-full border-2 border-white md:hidden"></span>
         </div>
-        
+
         {/* Profile Info */}
         <div className="text-center md:text-left">
           <h1 className="text-2xl font-bold text-gray-800 mb-1 md:text-3xl lg:text-4xl md:text-foreground">
@@ -99,7 +110,7 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
           </p>
         </div>
       </div>
-      
+
       {/* Mobile/Tablet Stats (integrated into profile card) */}
       <div className="mt-8 grid grid-cols-3 gap-2 text-center border-t pt-6 md:hidden">
         {statsMobile.map((stat) => (
@@ -107,9 +118,7 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
             <p className="text-xl font-bold text-gray-800 break-words">
               {stat.value}
             </p>
-            <p className="text-xs text-gray-500">
-              {stat.label}
-            </p>
+            <p className="text-xs text-gray-500">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -121,10 +130,14 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
             {/* Balance Display */}
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="material-icons text-primary">account_balance_wallet</span>
+                <span className="material-icons text-primary">
+                  account_balance_wallet
+                </span>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">USDC Balance</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  USDC Balance
+                </p>
                 {isLoadingBalance ? (
                   <div className="animate-pulse">
                     <div className="h-6 bg-gray-200 rounded w-24"></div>
@@ -134,7 +147,10 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
                 ) : (
                   <div>
                     <p className="text-2xl font-bold text-foreground">
-                      {formatUSDCDisplay(balance)} <span className="text-base font-medium text-muted-foreground">USDC</span>
+                      {formatUSDCDisplay(balance)}{" "}
+                      <span className="text-base font-medium text-muted-foreground">
+                        USDC
+                      </span>
                     </p>
                   </div>
                 )}
@@ -143,18 +159,22 @@ export function ProfileHeaderSection({ profile, totalCircles = 0 }: ProfileHeade
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={handleDeposit}
                 className="bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-full shadow-md hover:bg-primary transition duration-300 flex items-center"
               >
-                <span className="material-icons mr-2 text-base">south_west</span>
+                <span className="material-icons mr-2 text-base">
+                  south_west
+                </span>
                 Deposit
               </button>
-              <button 
+              <button
                 onClick={handleWithdraw}
                 className="bg-muted text-foreground font-semibold py-3 px-6 rounded-full hover:bg-muted/80 transition duration-300 flex items-center"
               >
-                <span className="material-icons mr-2 text-base">north_east</span>
+                <span className="material-icons mr-2 text-base">
+                  north_east
+                </span>
                 Withdraw
               </button>
             </div>

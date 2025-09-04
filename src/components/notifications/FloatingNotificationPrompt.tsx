@@ -3,12 +3,12 @@ import { Bell, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { useOptimizedAuth } from '../../hooks/useOptimizedAuth';
+import { useAuthContext } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const FloatingNotificationPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const { smartAddress: address, profile, isLoading } = useOptimizedAuth();
+  const { smartAddress: address, profile, isLoading } = useAuthContext();
   const addressLoading = isLoading;
   const profileLoading = isLoading;
   const { 

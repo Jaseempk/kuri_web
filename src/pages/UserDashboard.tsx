@@ -1,9 +1,9 @@
 import { useUserActivity } from "../hooks/useUserActivity";
-import { useOptimizedAuth } from "../hooks/useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { formatEther } from "viem";
 
 export default function UserDashboard() {
-  const { smartAddress: address } = useOptimizedAuth();
+  const { smartAddress: address } = useAuthContext();
   const { activity, loading, error } = useUserActivity(address || "");
 
   if (!address) {

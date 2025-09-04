@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { writeContract, simulateContract } from "@wagmi/core";
 import { ERC20ABI } from "../contracts/abis/ERC20";
 import { config } from "../config/wagmi";
-import { useOptimizedAuth } from "./useOptimizedAuth";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
 import { handleContractError } from "../utils/errors";
 import { useTransactionStatus } from "./useTransactionStatus";
@@ -17,7 +17,7 @@ const USDC_CONTRACT_ADDRESS =
 
 export const useUSDCWithdraw = () => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const { smartAddress: userAddress } = useOptimizedAuth();
+  const { smartAddress: userAddress } = useAuthContext();
   const account = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { handleTransaction } = useTransactionStatus();

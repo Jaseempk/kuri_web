@@ -8,7 +8,7 @@ import { config } from "../../config/wagmi";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
 import { OptimizedKuriMarket } from "../../hooks/useOptimizedMarkets";
-import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import {
   Clock,
   Loader2,
@@ -93,7 +93,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   className,
 }) => {
   const navigate = useNavigate();
-  const { account: paraAccount } = useOptimizedAuth();
+  const { account: paraAccount } = useAuthContext();
   const address = paraAccount.embedded?.wallets?.[0]?.address;
 
   // Get user data from the optimized market object instead of individual hook calls
