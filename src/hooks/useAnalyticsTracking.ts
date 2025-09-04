@@ -6,11 +6,12 @@ import {
   trackPageView,
   trackEvent,
 } from "../utils/analytics";
+import { getDefaultChainId } from "../config/contracts";
 
 export function useAnalyticsTracking() {
   const { smartAddress: address, account } = useAuthContext();
-  // Para uses Base Sepolia by default
-  const chainId = 84532; // Base Sepolia chain ID
+  // Dynamic chain ID based on environment
+  const chainId = getDefaultChainId();
   const connector = { name: 'Para' }; // Para connector info
   const location = useLocation();
   const previousAddress = useRef<string | undefined>();

@@ -1,10 +1,10 @@
 import { useSignMessage } from "@getpara/react-sdk";
 import { useViemClient } from "@getpara/react-sdk/evm/hooks";
-import { baseSepolia } from "viem/chains";
 import { http } from "viem";
 import { useAuthenticationService } from "../services/AuthenticationService";
 import { apiClient } from "../lib/apiClient";
 import { createGasSponsoredClient, signMessageWithSmartWallet } from "../utils/gasSponsorship";
+import { getDefaultChain } from "../config/contracts";
 
 interface SignedAuth {
   message: string;
@@ -22,13 +22,14 @@ export const useApiAuth = () => {
     | `0x${string}`
     | undefined;
 
-  // Initialize Viem client with Base Sepolia configuration
+  // Initialize Viem client with dynamic chain configuration
+  const defaultChain = getDefaultChain();
   const { viemClient, isLoading: isViemLoading } = useViemClient({
     address: walletAddress,
     walletClientConfig: {
-      chain: baseSepolia,
+      chain: defaultChain,
       transport: http(
-        `https://base-sepolia.g.alchemy.com/v2/${
+        `https://${defaultChain.id === 84532 ? 'base-sepolia' : 'base-mainnet'}.g.alchemy.com/v2/${
           import.meta.env.VITE_ALCHEMY_API_KEY
         }`
       ),

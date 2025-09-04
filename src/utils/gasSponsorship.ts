@@ -1,9 +1,10 @@
 import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts";
 import { WalletClientSigner } from "@aa-sdk/core";
-import { alchemy, baseSepolia } from "@account-kit/infra";
+import { alchemy } from "@account-kit/infra";
 import { createWalletClient, http } from "viem";
 import { customSignMessage, customSignTypedData } from "./customSignMessage";
 import { generateSalt } from "./generateSalt";
+import { getDefaultChain } from "../config/contracts";
 
 export interface GasSponsorshipParams {
   userAddress: `0x${string}`;
@@ -27,6 +28,7 @@ export async function createGasSponsoredClient({
   paraWalletClient,
   signMessageAsync,
 }: GasSponsorshipParams): Promise<SponsoredClient> {
+  const defaultChain = getDefaultChain();
 
   // Create Para-compatible LocalAccount
   const customAccount = {
@@ -53,16 +55,15 @@ export async function createGasSponsoredClient({
     publicKey: userAddress as `0x${string}`,
   };
 
+  const rpcUrl = `https://${defaultChain.id === 84532 ? 'base-sepolia' : 'base-mainnet'}.g.alchemy.com/v2/${
+    import.meta.env.VITE_ALCHEMY_API_KEY
+  }`;
 
   // Create viem WalletClient with custom Para account
   const viemWalletClient = createWalletClient({
     account: customAccount as any,
-    chain: baseSepolia,
-    transport: http(
-      `https://base-sepolia.g.alchemy.com/v2/${
-        import.meta.env.VITE_ALCHEMY_API_KEY
-      }`
-    ),
+    chain: defaultChain,
+    transport: http(rpcUrl),
   });
 
   // Create Alchemy-compatible signer from viem client
@@ -71,23 +72,19 @@ export async function createGasSponsoredClient({
     "wallet"
   );
 
-
   // Generate proper deterministic salt using wallet ID
   const salt = generateSalt(paraWalletClient.id, 0);
 
   // Create Alchemy client with gas sponsorship enabled
   const sponsoredClient = await createModularAccountAlchemyClient({
     transport: alchemy({
-      rpcUrl: `https://base-sepolia.g.alchemy.com/v2/${
-        import.meta.env.VITE_ALCHEMY_API_KEY
-      }`,
+      rpcUrl,
     }),
-    chain: baseSepolia,
+    chain: defaultChain,
     signer: walletClientSigner,
     policyId: import.meta.env.VITE_ALCHEMY_GAS_POLICY_ID,
     salt,
   });
-
 
   return sponsoredClient;
 }

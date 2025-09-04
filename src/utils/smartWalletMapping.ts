@@ -1,9 +1,10 @@
 import { createModularAccountAlchemyClient } from "@account-kit/smart-contracts";
 import { WalletClientSigner } from "@aa-sdk/core";
-import { alchemy, baseSepolia } from "@account-kit/infra";
+import { alchemy } from "@account-kit/infra";
 import { createWalletClient, http } from "viem";
 import { generateSalt } from "./generateSalt";
 import { customSignMessage } from "./customSignMessage";
+import { getDefaultChain } from "../config/contracts";
 
 export async function getSmartWalletAddressForEOA(
   paraWalletId: string,
@@ -11,6 +12,8 @@ export async function getSmartWalletAddressForEOA(
   signMessageAsync: any
 ): Promise<`0x${string}`> {
   try {
+    const defaultChain = getDefaultChain();
+    
     const customAccount = {
       address: eoaAddress,
       type: "local" as const,
@@ -27,23 +30,21 @@ export async function getSmartWalletAddressForEOA(
       publicKey: eoaAddress,
     };
 
+    const rpcUrl = `https://${defaultChain.id === 84532 ? 'base-sepolia' : 'base-mainnet'}.g.alchemy.com/v2/${
+      import.meta.env.VITE_ALCHEMY_API_KEY
+    }`;
+
     const viemWalletClient = createWalletClient({
       account: customAccount as any,
-      chain: baseSepolia,
-      transport: http(
-        `https://base-sepolia.g.alchemy.com/v2/${
-          import.meta.env.VITE_ALCHEMY_API_KEY
-        }`
-      ),
+      chain: defaultChain,
+      transport: http(rpcUrl),
     });
 
     const sponsoredClient = await createModularAccountAlchemyClient({
       transport: alchemy({
-        rpcUrl: `https://base-sepolia.g.alchemy.com/v2/${
-          import.meta.env.VITE_ALCHEMY_API_KEY
-        }`,
+        rpcUrl,
       }),
-      chain: baseSepolia,
+      chain: defaultChain,
       signer: new WalletClientSigner(viemWalletClient, "wallet"),
       policyId: import.meta.env.VITE_ALCHEMY_GAS_POLICY_ID,
       salt: generateSalt(paraWalletId, 0),

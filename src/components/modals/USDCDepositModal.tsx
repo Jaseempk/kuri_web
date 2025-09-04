@@ -10,6 +10,7 @@ import {
   DialogClose,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { getCurrentNetworkConfig, getContractAddress, getDefaultChainId } from "../../config/contracts";
 
 interface USDCDepositModalProps {
   isOpen: boolean;
@@ -17,9 +18,10 @@ interface USDCDepositModalProps {
   smartWalletAddress: string;
 }
 
-const USDC_CONTRACT_ADDRESS = "0xC129124eA2Fd4D63C1Fc64059456D8f231eBbed1";
-const NETWORK_NAME = "Base Sepolia";
-const BLOCK_EXPLORER_URL = `https://sepolia.basescan.org/address/${USDC_CONTRACT_ADDRESS}`;
+const networkConfig = getCurrentNetworkConfig();
+const USDC_CONTRACT_ADDRESS = getContractAddress(getDefaultChainId(), 'USDC');
+const NETWORK_NAME = networkConfig.name;
+const BLOCK_EXPLORER_URL = `${networkConfig.blockExplorer}/address/${USDC_CONTRACT_ADDRESS}`;
 
 export const USDCDepositModal = ({
   isOpen,

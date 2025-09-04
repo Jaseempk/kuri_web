@@ -8,6 +8,7 @@ const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 const WALLET_CONNECT_PROJECT_ID = import.meta.env
   .VITE_WALLET_CONNECT_PROJECT_ID;
 const PARA_API_KEY = import.meta.env.VITE_PARA_API_KEY;
+const NETWORK = import.meta.env.VITE_NETWORK || 'mainnet';
 
 if (!ALCHEMY_API_KEY) {
   throw new Error("Missing ALCHEMY_API_KEY environment variable");
@@ -19,7 +20,7 @@ if (!WALLET_CONNECT_PROJECT_ID) {
 
 const para = new ParaWeb(PARA_API_KEY);
 
-// Define chains you want to support
+// Define chains you want to support - always include both for flexibility
 const chains = [baseSepolia, base] as const;
 
 // Create Para connector with required parameters
@@ -35,12 +36,13 @@ export const config = createConfig({
   chains,
   connectors: [connector as any],
   transports: {
-    // Public testnet RPC endpoints
+    // Testnet RPC
     [baseSepolia.id]: http(
       `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
     ),
+    // Mainnet RPC - using same API key for both
     [base.id]: http(
-      "https://base-mainnet.g.alchemy.com/v2/txntl9XYKWyIkkmj1p0JcecUKxqt9327"
+      `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
     ),
   },
 });
