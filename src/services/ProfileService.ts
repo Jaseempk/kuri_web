@@ -16,8 +16,13 @@ export interface ProfileService {
   fetchProfile(address: string): Promise<KuriUserProfile | null>;
   fetchProfileSilent(address: string): Promise<KuriUserProfile | null>;
   createProfile(data: ProfileCreateData): Promise<KuriUserProfile>;
-  updateProfile(address: string, data: ProfileUpdateData): Promise<KuriUserProfile>;
-  onProfileChange(callback: (profile: KuriUserProfile | null) => void): () => void;
+  updateProfile(
+    address: string,
+    data: ProfileUpdateData
+  ): Promise<KuriUserProfile>;
+  onProfileChange(
+    callback: (profile: KuriUserProfile | null) => void
+  ): () => void;
 }
 
 export class KuriProfileService implements ProfileService {
@@ -29,30 +34,36 @@ export class KuriProfileService implements ProfileService {
     console.log(`🔍 PROFILE SERVICE: Fetching profile for address: ${address}`);
     try {
       const profile = await apiClient.getUserProfile(address);
-      console.log(`✅ PROFILE SERVICE: Successfully fetched profile for ${address}:`, profile);
-      
+      console.log(
+        `✅ PROFILE SERVICE: Successfully fetched profile for ${address}:`,
+        profile
+      );
+
       // Update current profile and notify listeners if address matches
       if (address.toLowerCase() === this.currentAddress?.toLowerCase()) {
         this.currentProfile = profile;
         this.notifyListeners();
       }
-      
+
       return profile;
     } catch (error) {
       const isNotFound = (error as any)?.response?.status === 404;
-      
-      console.log(`❌ PROFILE SERVICE: Error fetching profile for ${address}:`, {
-        error,
-        status: (error as any)?.response?.status,
-        statusText: (error as any)?.response?.statusText,
-        data: (error as any)?.response?.data,
-        isNotFound
-      });
-      
+
+      console.log(
+        `❌ PROFILE SERVICE: Error fetching profile for ${address}:`,
+        {
+          error,
+          status: (error as any)?.response?.status,
+          statusText: (error as any)?.response?.statusText,
+          data: (error as any)?.response?.data,
+          isNotFound,
+        }
+      );
+
       // Clear current profile on error if address matches
       if (address.toLowerCase() === this.currentAddress?.toLowerCase()) {
         this.currentProfile = null;
-        
+
         // 🔑 KEY FIX: Only notify listeners for non-404 errors
         // 404 = expected (new user), don't trigger invalidation
         // Other errors = unexpected, should trigger retry
@@ -60,25 +71,27 @@ export class KuriProfileService implements ProfileService {
           this.notifyListeners();
         }
       }
-      
+
       return null;
     }
   }
 
   async fetchProfileSilent(address: string): Promise<KuriUserProfile | null> {
-    console.log(`🔍 PROFILE SERVICE (SILENT): Fetching profile for address: ${address}`);
     try {
       const profile = await apiClient.getUserProfile(address);
-      console.log(`✅ PROFILE SERVICE (SILENT): Successfully fetched profile for ${address}:`, profile);
+
       return profile;
     } catch (error) {
       const isNotFound = (error as any)?.response?.status === 404;
-      console.log(`❌ PROFILE SERVICE (SILENT): Error fetching profile for ${address}:`, {
-        error,
-        status: (error as any)?.response?.status,
-        statusText: (error as any)?.response?.statusText,
-        isNotFound
-      });
+      console.log(
+        `❌ PROFILE SERVICE (SILENT): Error fetching profile for ${address}:`,
+        {
+          error,
+          status: (error as any)?.response?.status,
+          statusText: (error as any)?.response?.statusText,
+          isNotFound,
+        }
+      );
       return null;
     }
   }
@@ -94,12 +107,12 @@ export class KuriProfileService implements ProfileService {
         message: data.message || "",
         signature: data.signature || "",
       });
-      
+
       // Update current profile and notify listeners
       this.currentAddress = data.userAddress.toLowerCase();
       this.currentProfile = profile;
       this.notifyListeners();
-      
+
       return profile;
     } catch (error) {
       console.error("Failed to create profile:", error);
@@ -107,7 +120,10 @@ export class KuriProfileService implements ProfileService {
     }
   }
 
-  async updateProfile(address: string, data: ProfileUpdateData): Promise<KuriUserProfile> {
+  async updateProfile(
+    address: string,
+    data: ProfileUpdateData
+  ): Promise<KuriUserProfile> {
     try {
       // Use the same createOrUpdateProfile method for updates
       const profile = await apiClient.createOrUpdateProfile({
@@ -118,13 +134,13 @@ export class KuriProfileService implements ProfileService {
         message: "", // Auth will be handled elsewhere
         signature: "",
       });
-      
+
       // Update current profile and notify listeners if address matches
       if (address.toLowerCase() === this.currentAddress?.toLowerCase()) {
         this.currentProfile = profile;
         this.notifyListeners();
       }
-      
+
       return profile;
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -132,12 +148,14 @@ export class KuriProfileService implements ProfileService {
     }
   }
 
-  onProfileChange(callback: (profile: KuriUserProfile | null) => void): () => void {
+  onProfileChange(
+    callback: (profile: KuriUserProfile | null) => void
+  ): () => void {
     this.listeners.add(callback);
-    
+
     // REMOVED: Immediate callback to prevent infinite invalidation loops
     // Components should handle initial loading states properly
-    
+
     // Return cleanup function
     return () => {
       this.listeners.delete(callback);
@@ -145,11 +163,11 @@ export class KuriProfileService implements ProfileService {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(callback => {
+    this.listeners.forEach((callback) => {
       try {
         callback(this.currentProfile);
       } catch (error) {
-        console.error('ProfileService listener error:', error);
+        console.error("ProfileService listener error:", error);
       }
     });
   }

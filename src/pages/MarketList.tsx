@@ -4,21 +4,31 @@ import { useOptimizedMarkets } from "../hooks/useOptimizedMarkets";
 import { useAuthContext } from "../contexts/AuthContext";
 import { IntervalType } from "../graphql/types";
 import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "../components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription,
+} from "../components/ui/dialog";
 import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
 import { OptimizedMarketCard } from "../components/markets/OptimizedMarketCard";
 import { OptimizedKuriMarket } from "../hooks/useOptimizedMarkets";
-import { Search, SlidersHorizontal, Check, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  Check,
+  ChevronDown,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 import { formatUnits } from "viem";
 import { apiClient } from "../lib/apiClient";
 import { MarketMetadata } from "../components/markets/MarketCard";
 import { useProfileRequired } from "../hooks/useProfileRequired";
-import { useNavigate } from "react-router-dom";
 import { usePostCreationShareReplacement } from "../components/modals/PostCreationModalProvider";
 import { useUSDCBalances } from "../hooks/useUSDCBalances";
-import { getAccount } from "@wagmi/core";
-import { config } from "../config/wagmi";
 import { UserBalanceCard } from "../components/ui/UserBalanceCard";
 
 const INTERVAL_TYPE = {
@@ -53,7 +63,7 @@ const StatsCard = ({
   change: string;
 }) => {
   const isPositive = parseFloat(change) >= 0;
-  
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex justify-between items-start">
@@ -62,14 +72,19 @@ const StatsCard = ({
           <p className="text-3xl font-bold text-gray-800 mt-2">{value}</p>
         </div>
         <div className="text-right">
-          <div className={`flex items-center ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+          <div
+            className={`flex items-center ${
+              isPositive ? "text-green-500" : "text-red-500"
+            }`}
+          >
             {isPositive ? (
               <TrendingUp className="h-4 w-4" />
             ) : (
               <TrendingDown className="h-4 w-4" />
             )}
             <span className="text-lg font-semibold ml-1">
-              {isPositive ? '+' : ''}{change}%
+              {isPositive ? "+" : ""}
+              {change}%
             </span>
           </div>
           <p className="text-xs text-gray-400 mt-1">vs last period</p>
@@ -126,7 +141,9 @@ const IntervalTypeFilter = ({
         className="flex items-center gap-1 xs:gap-2 px-2 xs:px-3 py-2 xs:py-2.5 bg-white text-[hsl(var(--terracotta))] hover:bg-[hsl(var(--terracotta))] hover:text-white border border-[hsl(var(--terracotta))] rounded-full transition-all duration-200 min-w-0 whitespace-nowrap"
       >
         <SlidersHorizontal className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
-        <span className="text-xs xs:text-sm font-medium truncate hidden xs:inline">{selectedOption?.label}</span>
+        <span className="text-xs xs:text-sm font-medium truncate hidden xs:inline">
+          {selectedOption?.label}
+        </span>
         <span className="text-xs font-medium truncate xs:hidden">Filter</span>
         <ChevronDown
           className={`h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0 transition-transform ${
@@ -145,8 +162,8 @@ const IntervalTypeFilter = ({
                 setIsOpen(false);
               }}
               className={`w-full px-3 xs:px-4 py-2 xs:py-2 text-left transition-colors text-sm xs:text-sm ${
-                value === option.value 
-                  ? "bg-[hsl(var(--terracotta))] text-white" 
+                value === option.value
+                  ? "bg-[hsl(var(--terracotta))] text-white"
                   : "hover:bg-[hsl(var(--terracotta))]/10"
               }`}
             >
@@ -167,13 +184,13 @@ const IntervalTypeFilter = ({
 export default function MarketList() {
   // Use optimized auth for stable wallet connection status
   const { account: paraAccount } = useAuthContext();
-  const isWalletConnected = useMemo(() => Boolean(
-    paraAccount.isConnected && 
-    paraAccount.embedded?.wallets?.[0]?.address
-  ), [paraAccount.isConnected, paraAccount.embedded?.wallets?.[0]?.address]);
-  
-  // Keep Wagmi account for other features that might need it
-  const account = getAccount(config);
+  const isWalletConnected = useMemo(
+    () =>
+      Boolean(
+        paraAccount.isConnected && paraAccount.embedded?.wallets?.[0]?.address
+      ),
+    [paraAccount.isConnected, paraAccount.embedded?.wallets?.[0]?.address]
+  );
 
   // Replace useKuriMarkets with useOptimizedMarkets
   const {
@@ -202,15 +219,9 @@ export default function MarketList() {
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeStatsCard, setActiveStatsCard] = useState(0);
-  const { 
-    showShareModal, 
-    onSuccess, 
-    onClose, 
-    onViewMarket,
-    setShowShareModal 
-  } = usePostCreationShareReplacement();
+  const { onSuccess } = usePostCreationShareReplacement();
   const [isInitialized, setIsInitialized] = useState(false);
-  const navigate = useNavigate();
+
   const { requireProfile } = useProfileRequired({
     strict: false, // Don't enforce on page load - AuthGuard handles this
     action: "market_action",
@@ -268,8 +279,10 @@ export default function MarketList() {
 
       try {
         // Fetch metadata only for current market addresses (much more efficient than fetching all)
-        const marketAddresses = markets.map(m => m.address);
-        const metadataArray = await apiClient.getBulkMarketMetadata(marketAddresses);
+        const marketAddresses = markets.map((m) => m.address);
+        const metadataArray = await apiClient.getBulkMarketMetadata(
+          marketAddresses
+        );
 
         // Create a lookup map by market address
         const metadataMap: Record<string, MarketMetadata> = {};
@@ -414,10 +427,10 @@ export default function MarketList() {
   const handleMarketCreated = (market: any) => {
     // The new system handles everything automatically
     onSuccess(market);
-    
+
     // Close the create form (since CreateMarketForm no longer closes itself)
     setShowCreateForm(false);
-    
+
     // Refresh market data (keep existing refetch logic)
     refetch();
   };
@@ -434,24 +447,27 @@ export default function MarketList() {
         {/* Stats Section with Headers */}
         <div className="py-8">
           <div className="container mx-auto px-3 xs:px-4 space-y-8">
-            
             {/* Your Wallet Section */}
             {isWalletConnected && (
               <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Wallet</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Your Wallet
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1">
                   <UserBalanceCard />
                 </div>
               </div>
             )}
-            
+
             {/* Market Statistics Section */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Market Statistics</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Market Statistics
+              </h2>
+
               {/* Mobile: One card at a time swipe */}
               <div className="sm:hidden">
-                <div 
+                <div
                   className="overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
                   onScroll={(e) => {
                     const scrollLeft = e.currentTarget.scrollLeft;
@@ -486,20 +502,22 @@ export default function MarketList() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Swipe indicators */}
                 <div className="flex justify-center mt-4 space-x-2">
                   {[0, 1, 2].map((index) => (
                     <div
                       key={index}
                       className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                        activeStatsCard === index ? 'bg-gray-800' : 'bg-gray-300'
+                        activeStatsCard === index
+                          ? "bg-gray-800"
+                          : "bg-gray-300"
                       }`}
                     />
                   ))}
                 </div>
               </div>
-              
+
               {/* Desktop: Grid layout */}
               <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatsCard
@@ -521,7 +539,6 @@ export default function MarketList() {
                 />
               </div>
             </div>
-            
           </div>
         </div>
 
@@ -545,9 +562,12 @@ export default function MarketList() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
-                  <DialogTitle className="sr-only">Create New Circle</DialogTitle>
+                  <DialogTitle className="sr-only">
+                    Create New Circle
+                  </DialogTitle>
                   <DialogDescription className="sr-only">
-                    Create a new savings circle by setting up the basic details, participation options, and circle information.
+                    Create a new savings circle by setting up the basic details,
+                    participation options, and circle information.
                   </DialogDescription>
                   <CreateMarketForm
                     onSuccess={handleMarketCreated}
@@ -555,7 +575,7 @@ export default function MarketList() {
                   />
                 </DialogContent>
               </Dialog>
-              
+
               <div className="text-left">
                 <h1 className="text-2xl font-bold text-[#8B6F47]">
                   Explore Circles
@@ -565,7 +585,7 @@ export default function MarketList() {
                 </p>
               </div>
             </div>
-            
+
             {/* Desktop: Original layout */}
             <div className="hidden xs:flex xs:flex-row justify-between items-start xs:items-center gap-4">
               <div className="text-left">
@@ -590,9 +610,12 @@ export default function MarketList() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
-                  <DialogTitle className="sr-only">Create New Circle</DialogTitle>
+                  <DialogTitle className="sr-only">
+                    Create New Circle
+                  </DialogTitle>
                   <DialogDescription className="sr-only">
-                    Create a new savings circle by setting up the basic details, participation options, and circle information.
+                    Create a new savings circle by setting up the basic details,
+                    participation options, and circle information.
                   </DialogDescription>
                   <CreateMarketForm
                     onSuccess={handleMarketCreated}
@@ -621,7 +644,7 @@ export default function MarketList() {
                 />
               </div>
             </div>
-            
+
             {/* Desktop: Original layout */}
             <div className="hidden xs:flex xs:flex-row gap-4 items-center">
               <div className="flex-1">

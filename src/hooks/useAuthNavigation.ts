@@ -16,50 +16,51 @@ export const useAuthNavigation = () => {
   });
   const resetTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const coordinatedNavigate = useCallback((
-    to: string, 
-    source: string, 
-    options?: any
-  ): boolean => {
-    // Prevent multiple simultaneous navigations
-    if (navigationState.isNavigating) {
-      console.log(`Navigation blocked: already navigating from ${navigationState.source} to ${to}`);
-      return false;
-    }
+  const coordinatedNavigate = useCallback(
+    (to: string, source: string, options?: any): boolean => {
+      // Prevent multiple simultaneous navigations
+      if (navigationState.isNavigating) {
+        console.log(
+          `Navigation blocked: already navigating from ${navigationState.source} to ${to}`
+        );
+        return false;
+      }
 
-    // Prevent rapid successive navigations (within 200ms)
-    const now = Date.now();
-    if (navigationState.timestamp && (now - navigationState.timestamp) < 200) {
-      console.log(`Navigation blocked: too soon after previous navigation from ${navigationState.source}`);
-      return false;
-    }
+      // Prevent rapid successive navigations (within 200ms)
+      const now = Date.now();
+      if (navigationState.timestamp && now - navigationState.timestamp < 200) {
+        console.log(
+          `Navigation blocked: too soon after previous navigation from ${navigationState.source}`
+        );
+        return false;
+      }
 
-    console.log(`Navigation initiated: ${source} -> ${to}`);
-    
-    setNavigationState({
-      isNavigating: true,
-      source,
-      timestamp: now,
-    });
-
-    // Perform the navigation
-    navigate(to, options);
-
-    // Reset navigation state after completion
-    if (resetTimeoutRef.current) {
-      clearTimeout(resetTimeoutRef.current);
-    }
-    
-    resetTimeoutRef.current = setTimeout(() => {
       setNavigationState({
-        isNavigating: false,
-        source: null,
+        isNavigating: true,
+        source,
         timestamp: now,
       });
-    }, 100);
 
-    return true;
-  }, [navigate, navigationState]);
+      // Perform the navigation
+      navigate(to, options);
+
+      // Reset navigation state after completion
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
+
+      resetTimeoutRef.current = setTimeout(() => {
+        setNavigationState({
+          isNavigating: false,
+          source: null,
+          timestamp: now,
+        });
+      }, 100);
+
+      return true;
+    },
+    [navigate, navigationState]
+  );
 
   const resetNavigation = useCallback(() => {
     setNavigationState({

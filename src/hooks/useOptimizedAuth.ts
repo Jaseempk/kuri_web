@@ -51,8 +51,6 @@ export const useOptimizedAuth = () => {
   const { getSignedAuth } = useApiAuth();
   const account = useAccount(); // ✅ Use live Para SDK state directly
 
-  console.log("useOptimizedAuth - account:", account);
-
   // Performance monitoring - track render frequency
   const renderCount = useRef(0);
   renderCount.current++;
@@ -70,18 +68,19 @@ export const useOptimizedAuth = () => {
   const accountUserEmail = account?.user?.email;
   const embeddedWalletId = account?.embedded?.wallets?.[0]?.id;
   const embeddedWalletAddress = account?.embedded?.wallets?.[0]?.address;
-  
+
   // Create stable references for complex objects using serialized keys
-  const accountUserKey = useMemo(() => 
-    JSON.stringify({ email: accountUserEmail }), 
+  const accountUserKey = useMemo(
+    () => JSON.stringify({ email: accountUserEmail }),
     [accountUserEmail]
   );
-  
-  const accountEmbeddedKey = useMemo(() => 
-    JSON.stringify({ 
-      walletId: embeddedWalletId, 
-      walletAddress: embeddedWalletAddress 
-    }), 
+
+  const accountEmbeddedKey = useMemo(
+    () =>
+      JSON.stringify({
+        walletId: embeddedWalletId,
+        walletAddress: embeddedWalletAddress,
+      }),
     [embeddedWalletId, embeddedWalletAddress]
   );
 
@@ -97,11 +96,13 @@ export const useOptimizedAuth = () => {
         isConnected: accountIsConnected,
         isLoading: accountIsLoading,
         user: { email: accountUserEmail },
-        embedded: { 
-          wallets: [{ 
-            id: embeddedWalletId, 
-            address: embeddedWalletAddress 
-          }] 
+        embedded: {
+          wallets: [
+            {
+              id: embeddedWalletId,
+              address: embeddedWalletAddress,
+            },
+          ],
         },
       };
       return walletService.resolveSmartWallet(
@@ -122,17 +123,11 @@ export const useOptimizedAuth = () => {
       if (!walletQuery.data?.address) {
         throw new Error("Smart wallet address not available");
       }
-      console.log("🔍 Fetching profile for address:", walletQuery.data.address);
-      
-      console.log("🔍 Using silent fetch to avoid listener conflicts");
+
       const profile = await profileService.fetchProfileSilent(
         walletQuery.data.address
       );
-      console.log(
-        "📋 Profile fetch result:",
-        profile ? "Found" : "Not found",
-        profile
-      );
+
       return profile;
     },
     enabled: !!walletQuery.data?.address,
@@ -159,7 +154,6 @@ export const useOptimizedAuth = () => {
     }
   }, [walletQuery.data?.address, profileQuery.status]);
 
-
   // Derive auth state using stable primitive values
   const authState = useMemo(() => {
     // Handle query errors
@@ -176,11 +170,15 @@ export const useOptimizedAuth = () => {
       isConnected: accountIsConnected,
       isLoading: accountIsLoading,
       user: { email: accountUserEmail },
-      embedded: { 
-        wallets: embeddedWalletId ? [{ 
-          id: embeddedWalletId, 
-          address: embeddedWalletAddress 
-        }] : undefined 
+      embedded: {
+        wallets: embeddedWalletId
+          ? [
+              {
+                id: embeddedWalletId,
+                address: embeddedWalletAddress,
+              },
+            ]
+          : undefined,
       },
     };
 
@@ -192,18 +190,6 @@ export const useOptimizedAuth = () => {
       walletQuery.isLoading,
       profileQuery.isLoading
     );
-
-    // Debug logging for state transitions
-    console.log("🔄 Auth State:", {
-      state,
-      hasParaAccount: !!account,
-      paraConnected: accountIsConnected,
-      paraLoading: accountIsLoading,
-      hasSmartAddress: !!walletQuery.data?.address,
-      walletLoading: walletQuery.isLoading,
-      hasProfile: !!profileQuery.data,
-      profileLoading: profileQuery.isLoading,
-    });
 
     return state;
   }, [
@@ -288,11 +274,15 @@ export const useOptimizedAuth = () => {
       isConnected: accountIsConnected,
       isLoading: accountIsLoading,
       user: { email: accountUserEmail },
-      embedded: { 
-        wallets: embeddedWalletId ? [{ 
-          id: embeddedWalletId, 
-          address: embeddedWalletAddress 
-        }] : undefined 
+      embedded: {
+        wallets: embeddedWalletId
+          ? [
+              {
+                id: embeddedWalletId,
+                address: embeddedWalletAddress,
+              },
+            ]
+          : undefined,
       },
     }),
     [accountIsConnected, accountIsLoading, accountUserKey, accountEmbeddedKey]

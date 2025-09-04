@@ -196,8 +196,6 @@ const TabContent: React.FC<TabContentProps> = ({
   depositTimeLeft,
   address,
   membershipStatus,
-  shouldShowClaimCard,
-  handleClaimSuccess,
   renderActionButton,
 }) => {
   if (!marketData) return null;

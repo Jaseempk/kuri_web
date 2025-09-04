@@ -18,23 +18,9 @@ export default function Onboarding() {
   const { coordinatedNavigate } = useAuthNavigation();
   const location = useLocation();
   const authService = useAuthenticationService();
-  const { authState, updateProfile, profile, smartAddress, account } =
-    useAuthContext();
+  const { authState, updateProfile, account } = useAuthContext();
   const address = account?.embedded?.wallets?.[0]?.address;
-  console.log("addresss:", address);
-  console.log("account:", account);
 
-  // Debug logging to understand the authentication state
-  console.log("🔍 Onboarding Debug:", {
-    authState,
-    hasProfile: !!profile,
-    hasSmartAddress: !!smartAddress,
-    accountConnected: account?.isConnected,
-    accountLoading: account?.isLoading,
-    currentPath: location.pathname,
-    accountHasEmbedded: !!account?.embedded?.wallets?.[0],
-    accountEmbeddedId: account?.embedded?.wallets?.[0]?.id,
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [onboardingStartTime] = useState<number>(Date.now());
@@ -250,17 +236,23 @@ export default function Onboarding() {
         <div className="space-y-4">
           <button
             onClick={handleEmailAuth}
-            disabled={account?.isLoading || authState === AuthFlowState.WALLET_RESOLVING || authState === AuthFlowState.PROFILE_LOADING}
+            disabled={
+              account?.isLoading ||
+              authState === AuthFlowState.WALLET_RESOLVING ||
+              authState === AuthFlowState.PROFILE_LOADING
+            }
             className="w-full bg-[#8B735B] text-white py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold flex items-center justify-center hover:bg-[#7a6550] transition-colors duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {account?.isLoading || authState === AuthFlowState.WALLET_RESOLVING || authState === AuthFlowState.PROFILE_LOADING ? (
+            {account?.isLoading ||
+            authState === AuthFlowState.WALLET_RESOLVING ||
+            authState === AuthFlowState.PROFILE_LOADING ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white/20 border-t-white" />
                 <span>
-                  {authState === AuthFlowState.WALLET_RESOLVING 
-                    ? "Setting up wallet..." 
-                    : authState === AuthFlowState.PROFILE_LOADING 
-                    ? "Loading profile..." 
+                  {authState === AuthFlowState.WALLET_RESOLVING
+                    ? "Setting up wallet..."
+                    : authState === AuthFlowState.PROFILE_LOADING
+                    ? "Loading profile..."
                     : "Connecting..."}
                 </span>
               </div>
