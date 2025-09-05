@@ -43,7 +43,6 @@ export class AlchemyWalletService implements WalletService {
         eoaAddress,
         signMessageAsync
       );
-      console.log("Resolved smart wallet address:", smartAddress);
 
       const smartWallet: SmartWallet = {
         address: smartAddress,
