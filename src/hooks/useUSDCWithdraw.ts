@@ -11,9 +11,12 @@ import {
   executeSponsoredTransaction,
 } from "../utils/gasSponsorship";
 import { encodeFunctionData } from "viem";
+import { getContractAddress, getDefaultChainId } from "../config/contracts";
 
-const USDC_CONTRACT_ADDRESS =
-  "0xC129124eA2Fd4D63C1Fc64059456D8f231eBbed1" as `0x${string}`;
+// Use dynamic USDC address based on network configuration
+const getUSDCAddress = (): `0x${string}` => {
+  return getContractAddress(getDefaultChainId(), 'USDC');
+};
 
 export const useUSDCWithdraw = () => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -53,7 +56,7 @@ export const useUSDCWithdraw = () => {
         // Execute sponsored transaction
         const txHash = await executeSponsoredTransaction({
           sponsoredClient,
-          target: USDC_CONTRACT_ADDRESS,
+          target: getUSDCAddress(),
           callData,
           operationName: "USDC withdrawal",
         });
@@ -90,7 +93,7 @@ export const useUSDCWithdraw = () => {
 
       try {
         const { request } = await simulateContract(config, {
-          address: USDC_CONTRACT_ADDRESS,
+          address: getUSDCAddress(),
           abi: ERC20ABI,
           functionName: "transfer",
           args: [destinationAddress, amount],

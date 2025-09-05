@@ -2,8 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { readContract } from "@wagmi/core";
 import { config } from "../config/wagmi";
 import { ERC20ABI } from "../contracts/abis/ERC20";
+import { getContractAddress, getDefaultChainId } from "../config/contracts";
 
-const USDC_ADDRESS = "0xC129124eA2Fd4D63C1Fc64059456D8f231eBbed1" as const;
+// Use dynamic USDC address based on network configuration
+const getUSDCAddress = (): `0x${string}` => {
+  return getContractAddress(getDefaultChainId(), 'USDC');
+};
 
 export interface USDCBalance {
   contractAddress: string;
@@ -45,7 +49,7 @@ export const useUSDCBalances = (
           }
 
           const balance = await readContract(config, {
-            address: USDC_ADDRESS,
+            address: getUSDCAddress(),
             abi: ERC20ABI,
             functionName: "balanceOf",
             args: [address],
@@ -127,7 +131,7 @@ export const useUserUSDCBalance = (userAddress: `0x${string}` | undefined) => {
       }
 
       const balance = await readContract(config, {
-        address: USDC_ADDRESS,
+        address: getUSDCAddress(),
         abi: ERC20ABI,
         functionName: "balanceOf",
         args: [userAddress],
