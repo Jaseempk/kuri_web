@@ -79,6 +79,21 @@ export const useApiAuth = () => {
             signMessageAsync,
           });
 
+          // Check if smart wallet is deployed, deploy if needed  
+          const isDeployed = await sponsoredClient.account.isAccountDeployed();
+          if (!isDeployed) {
+            console.log("Smart wallet not deployed, deploying...");
+            // Deploy the smart wallet by sending a minimal transaction to self
+            await sponsoredClient.sendUserOperation({
+              uo: {
+                target: targetAddress as `0x${string}`,
+                data: "0x", // empty data
+                value: 0n, // no value
+              },
+            });
+            console.log("Smart wallet deployed successfully");
+          }
+
           // Try signing with smart wallet
           signature = await signMessageWithSmartWallet({
             sponsoredClient,

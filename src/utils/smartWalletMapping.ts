@@ -13,7 +13,7 @@ export async function getSmartWalletAddressForEOA(
 ): Promise<`0x${string}`> {
   try {
     const defaultChain = getDefaultChain();
-    
+
     // Get the appropriate Alchemy chain object based on the current network
     const alchemyChain = defaultChain.id === 84532 ? baseSepolia : base;
 
@@ -33,13 +33,15 @@ export async function getSmartWalletAddressForEOA(
       publicKey: eoaAddress,
     };
 
+    console.log("alchemyChain:", alchemyChain);
+
     const rpcUrl = `https://${
       defaultChain.id === 84532 ? "base-sepolia" : "base-mainnet"
     }.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`;
 
     const viemWalletClient = createWalletClient({
       account: customAccount as any,
-      chain: defaultChain,
+      chain: alchemyChain,
       transport: http(rpcUrl),
     });
 
@@ -52,6 +54,7 @@ export async function getSmartWalletAddressForEOA(
       policyId: import.meta.env.VITE_ALCHEMY_GAS_POLICY_ID,
       salt: generateSalt(paraWalletId, 0),
     });
+    console.log("Sponsored client created:", sponsoredClient);
 
     return sponsoredClient.account.address;
   } catch (error) {
@@ -79,6 +82,7 @@ export async function getSmartWalletAddressCached(
     eoaAddress,
     signMessageAsync
   );
+  console.log("Generated smart wallet address:", smartWalletAddress);
   const normalizedAddress = smartWalletAddress.toLowerCase() as `0x${string}`;
   smartWalletCache.set(cacheKey, normalizedAddress);
   return normalizedAddress;

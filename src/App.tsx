@@ -76,10 +76,10 @@ function App() {
               <PostCreationModalProvider>
                 <NotificationHandler />
                 <RoutesWithAnalytics />
+                <InstallPrompt />
+                <FloatingNotificationPrompt />
               </PostCreationModalProvider>
             </Router>
-            <InstallPrompt />
-            <FloatingNotificationPrompt />
           </FarcasterProvider>
         </AuthProvider>
       </ApolloProvider>

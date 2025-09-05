@@ -2,11 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { readContract } from "@wagmi/core";
 import { config } from "../config/wagmi";
 import { ERC20ABI } from "../contracts/abis/ERC20";
-import { getContractAddress, getDefaultChainId } from "../config/contracts";
+import {
+  getContractAddress,
+  getDefaultChainId,
+  getDefaultChain,
+} from "../config/contracts";
 
 // Use dynamic USDC address based on network configuration
 const getUSDCAddress = (): `0x${string}` => {
-  return getContractAddress(getDefaultChainId(), 'USDC');
+  return getContractAddress(getDefaultChainId(), "USDC");
 };
 
 export interface USDCBalance {
@@ -40,7 +44,7 @@ export const useUSDCBalances = (
       const balancePromises = contractAddresses.map(async (address, index) => {
         try {
           // Add additional validation for the contract address
-          if (!address || !address.startsWith('0x') || address.length !== 42) {
+          if (!address || !address.startsWith("0x") || address.length !== 42) {
             console.warn(`Invalid contract address: ${address}`);
             return {
               contractAddress: address,
@@ -53,6 +57,7 @@ export const useUSDCBalances = (
             abi: ERC20ABI,
             functionName: "balanceOf",
             args: [address],
+            chainId: getDefaultChainId() as 84532 | 8453, // ✅ Explicitly specify chain
           });
 
           return {
@@ -126,7 +131,7 @@ export const useUserUSDCBalance = (userAddress: `0x${string}` | undefined) => {
 
     try {
       // Validate user address
-      if (!userAddress.startsWith('0x') || userAddress.length !== 42) {
+      if (!userAddress.startsWith("0x") || userAddress.length !== 42) {
         throw new Error(`Invalid user address: ${userAddress}`);
       }
 
@@ -135,6 +140,7 @@ export const useUserUSDCBalance = (userAddress: `0x${string}` | undefined) => {
         abi: ERC20ABI,
         functionName: "balanceOf",
         args: [userAddress],
+        chainId: getDefaultChainId() as 84532 | 8453, // ✅ Explicitly specify chain
       });
 
       setBalance(balance as bigint);
@@ -144,7 +150,10 @@ export const useUserUSDCBalance = (userAddress: `0x${string}` | undefined) => {
         console.warn("User rejected USDC balance request:", err);
         setBalance(BigInt(0));
       } else {
-        console.error(`Error fetching user USDC balance for ${userAddress}:`, err);
+        console.error(
+          `Error fetching user USDC balance for ${userAddress}:`,
+          err
+        );
         setError(err as Error);
       }
     } finally {

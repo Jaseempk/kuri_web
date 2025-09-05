@@ -1,6 +1,6 @@
-import { 
-  getSmartWalletAddressCached, 
-  clearSmartWalletCache 
+import {
+  getSmartWalletAddressCached,
+  clearSmartWalletCache,
 } from "../utils/smartWalletMapping";
 import type { ParaAccount } from "./AuthenticationService";
 
@@ -11,7 +11,10 @@ export interface SmartWallet {
 }
 
 export interface WalletService {
-  resolveSmartWallet(paraAccount: ParaAccount, signMessageAsync: any): Promise<SmartWallet>;
+  resolveSmartWallet(
+    paraAccount: ParaAccount,
+    signMessageAsync: any
+  ): Promise<SmartWallet>;
   getCachedAddress(walletId: string): `0x${string}` | null;
   clearCache(): void;
   onWalletResolved(callback: (wallet: SmartWallet | null) => void): () => void;
@@ -21,7 +24,10 @@ export class AlchemyWalletService implements WalletService {
   private listeners = new Set<(wallet: SmartWallet | null) => void>();
   private currentWallet: SmartWallet | null = null;
 
-  async resolveSmartWallet(paraAccount: ParaAccount, signMessageAsync: any): Promise<SmartWallet> {
+  async resolveSmartWallet(
+    paraAccount: ParaAccount,
+    signMessageAsync: any
+  ): Promise<SmartWallet> {
     if (!paraAccount.embedded?.wallets?.[0]) {
       throw new Error("No embedded wallet found in Para account");
     }
@@ -37,6 +43,7 @@ export class AlchemyWalletService implements WalletService {
         eoaAddress,
         signMessageAsync
       );
+      console.log("Resolved smart wallet address:", smartAddress);
 
       const smartWallet: SmartWallet = {
         address: smartAddress,
@@ -51,11 +58,11 @@ export class AlchemyWalletService implements WalletService {
       return smartWallet;
     } catch (error) {
       console.error("Failed to resolve smart wallet:", error);
-      
+
       // Clear current wallet on error and notify
       this.currentWallet = null;
       this.notifyListeners();
-      
+
       throw error;
     }
   }
@@ -74,7 +81,7 @@ export class AlchemyWalletService implements WalletService {
 
   onWalletResolved(callback: (wallet: SmartWallet | null) => void): () => void {
     this.listeners.add(callback);
-    
+
     // Return cleanup function
     return () => {
       this.listeners.delete(callback);
@@ -82,11 +89,11 @@ export class AlchemyWalletService implements WalletService {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(callback => {
+    this.listeners.forEach((callback) => {
       try {
         callback(this.currentWallet);
       } catch (error) {
-        console.error('WalletService listener error:', error);
+        console.error("WalletService listener error:", error);
       }
     });
   }

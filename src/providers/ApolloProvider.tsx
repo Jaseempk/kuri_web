@@ -2,6 +2,7 @@ import {
   ApolloClient,
   InMemoryCache,
   ApolloProvider as BaseApolloProvider,
+  createHttpLink,
 } from "@apollo/client";
 import { useState } from "react";
 
@@ -12,27 +13,31 @@ const SUBGRAPH_URL =
 //https://youtu.be/VSVOQl-vFKk?si=-9Dd7_bHAK_TiAY8
 
 export function ApolloProvider({ children }: { children: React.ReactNode }) {
-  const [client] = useState(
-    () =>
-      new ApolloClient({
-        uri: SUBGRAPH_URL,
-        cache: new InMemoryCache({
-          typePolicies: {
-            Query: {
-              fields: {
-                markets: {
-                  // Merge function for pagination
-                  keyArgs: false,
-                  merge(existing = [], incoming) {
-                    return [...existing, ...incoming];
-                  },
+  const [client] = useState(() => {
+    const httpLink = createHttpLink({
+      uri: SUBGRAPH_URL,
+    });
+
+    return new ApolloClient({
+      link: httpLink,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              markets: {
+                keyArgs: false,
+                merge(existing = [], incoming) {
+                  return [...existing, ...incoming];
                 },
               },
             },
           },
-        }),
-      })
-  );
+        },
+      }),
+      // Reset cache on hot reload in development
+      ...(import.meta.env.DEV && { defaultOptions: { watchQuery: { errorPolicy: 'all' } } }),
+    });
+  });
 
   return <BaseApolloProvider client={client}>{children}</BaseApolloProvider>;
 }
