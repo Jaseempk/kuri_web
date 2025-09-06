@@ -3,24 +3,15 @@ import { ProcessedMarketData, TemplateType } from '../types';
 import { BaseTemplate } from './BaseTemplate';
 import { CelebrationHeroTemplate } from './CelebrationHeroTemplate';
 
-// Template factory for creating different template instances
+// Template factory for creating the single enhanced template
 export const createTemplate = (
-  type: TemplateType,
+  _type: TemplateType, // Kept for backward compatibility but unused
   canvas: fabric.Canvas,
   data: ProcessedMarketData
 ): BaseTemplate => {
-  switch (type) {
-    case 'hero':
-      return new CelebrationHeroTemplate(canvas, data);
-    case 'stats':
-      // TODO: Implement StatsShowcaseTemplate
-      return new CelebrationHeroTemplate(canvas, data); // Fallback to hero for now
-    case 'minimal':
-      // TODO: Implement MinimalistTemplate
-      return new CelebrationHeroTemplate(canvas, data); // Fallback to hero for now
-    default:
-      return new CelebrationHeroTemplate(canvas, data);
-  }
+  // Always use the enhanced CelebrationHeroTemplate
+  // Template selection has been removed to eliminate decision overload
+  return new CelebrationHeroTemplate(canvas, data);
 };
 
 // Get template configuration without instantiating

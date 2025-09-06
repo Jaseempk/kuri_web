@@ -1,6 +1,7 @@
 import { readContract } from "@wagmi/core";
 import { KuriCoreABI } from "../contracts/abis/KuriCore";
 import { config } from "../config/wagmi";
+import { getDefaultChainId } from "../config/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 interface KuriData {
@@ -24,6 +25,7 @@ export const useMultipleKuriData = (marketAddresses: `0x${string}`[]) => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const chainId = getDefaultChainId(); // Use environment-configured chain (mainnet/testnet)
 
   const fetchKuriData = useCallback(async () => {
     if (!marketAddresses.length) {
@@ -43,6 +45,7 @@ export const useMultipleKuriData = (marketAddresses: `0x${string}`[]) => {
               address,
               abi: KuriCoreABI,
               functionName: "kuriData",
+              chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
             });
 
             return {
@@ -72,7 +75,7 @@ export const useMultipleKuriData = (marketAddresses: `0x${string}`[]) => {
     } finally {
       setIsLoading(false);
     }
-  }, [marketAddresses]);
+  }, [marketAddresses, chainId]);
 
   useEffect(() => {
     fetchKuriData();

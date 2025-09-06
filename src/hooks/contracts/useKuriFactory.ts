@@ -9,10 +9,9 @@ import { decodeEventLog, encodeFunctionData } from "viem";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { KuriFactoryABI } from "../../contracts/abis/KuriFactoryV1";
-import { getContractAddress } from "../../config/contracts";
+import { getContractAddress, getDefaultChainId } from "../../config/contracts";
 import { handleContractError } from "../../utils/errors";
 import { config } from "../../config/wagmi";
-import { baseSepolia } from "viem/chains";
 import { useTransactionStatus } from "../useTransactionStatus";
 import { useKuriMarkets } from "../useKuriMarkets";
 import {
@@ -25,11 +24,8 @@ export const useKuriFactory = () => {
   const paraAccount = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { smartAddress: address } = useAuthContext();
-  const chainId = baseSepolia.id; // Use Para with Base Sepolia
-  const factoryAddress = getContractAddress(
-    chainId ?? baseSepolia.id,
-    "KuriFactory"
-  );
+  const chainId = getDefaultChainId(); // Use environment-configured chain (mainnet/testnet)
+  const factoryAddress = getContractAddress(chainId, "KuriFactory");
   const { handleTransaction, isSuccess: isCreationSuccess } =
     useTransactionStatus();
   const {
@@ -76,6 +72,7 @@ export const useKuriFactory = () => {
         // Wait for the transaction to be mined
         const receipt = await waitForTransactionReceipt(config, {
           hash: txHash,
+          chainId: chainId as 84532 | 8453, // Ensure we wait on the correct network
         });
         // Parse logs for the KuriMarketDeployed event
         let marketAddress = undefined;
@@ -175,6 +172,7 @@ export const useKuriFactory = () => {
 
         const receipt = await waitForTransactionReceipt(config, {
           hash: txHash as `0x${string}`,
+          chainId: chainId as 84532 | 8453, // Ensure we wait on the correct network
         });
 
         // Parse logs for the KuriMarketDeployed event

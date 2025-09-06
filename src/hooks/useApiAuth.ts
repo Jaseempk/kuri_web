@@ -3,7 +3,10 @@ import { useViemClient } from "@getpara/react-sdk/evm/hooks";
 import { http } from "viem";
 import { useAuthenticationService } from "../services/AuthenticationService";
 import { apiClient } from "../lib/apiClient";
-import { createGasSponsoredClient, signMessageWithSmartWallet } from "../utils/gasSponsorship";
+import {
+  createGasSponsoredClient,
+  signMessageWithSmartWallet,
+} from "../utils/gasSponsorship";
 import { getDefaultChain } from "../config/contracts";
 
 interface SignedAuth {
@@ -29,9 +32,9 @@ export const useApiAuth = () => {
     walletClientConfig: {
       chain: defaultChain,
       transport: http(
-        `https://${defaultChain.id === 84532 ? 'base-sepolia' : 'base-mainnet'}.g.alchemy.com/v2/${
-          import.meta.env.VITE_ALCHEMY_API_KEY
-        }`
+        `https://${
+          defaultChain.id === 84532 ? "base-sepolia" : "base-mainnet"
+        }.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`
       ),
     },
   });
@@ -59,19 +62,17 @@ export const useApiAuth = () => {
     try {
       // Use smart wallet address if provided, otherwise use embedded wallet address
       const addressForAuth = targetAddress || walletData.address;
-      
+
       const { message } = await apiClient.getAuthMessage(
         action,
         addressForAuth
       );
-
 
       let signature: string;
 
       // If target address is provided (smart wallet), try smart wallet signing first
       if (targetAddress) {
         try {
-          
           // Create sponsored client for smart wallet signing
           const sponsoredClient = await createGasSponsoredClient({
             userAddress: walletData.address as `0x${string}`,
@@ -79,7 +80,7 @@ export const useApiAuth = () => {
             signMessageAsync,
           });
 
-          // Check if smart wallet is deployed, deploy if needed  
+          // Check if smart wallet is deployed, deploy if needed
           const isDeployed = await sponsoredClient.account.isAccountDeployed();
           if (!isDeployed) {
             console.log("Smart wallet not deployed, deploying...");
@@ -99,24 +100,18 @@ export const useApiAuth = () => {
             sponsoredClient,
             message,
           });
-
-
         } catch (smartWalletError) {
-          
           // Fallback: Sign with embedded wallet for smart wallet
           signature = await viemClient.signMessage({
             message: message,
           });
-
         }
       } else {
         // Standard embedded wallet signing
         signature = await viemClient.signMessage({
           message: message,
         });
-
       }
-
 
       return {
         message,

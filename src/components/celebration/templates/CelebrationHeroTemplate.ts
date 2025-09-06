@@ -15,8 +15,8 @@ export class CelebrationHeroTemplate extends BaseTemplate {
   }
 
   async renderBackground(): Promise<void> {
-    // Create gradient background
-    const gradientColors = createBrandGradient('warm');
+    // Create enhanced gradient background inspired by new design
+    const gradientColors = createBrandGradient('celebration');
     const gradient = createGradient(gradientColors, [0, 0, this.config.width, this.config.height]);
     
     const background = createRectangle(this.config.width, this.config.height, {
@@ -28,71 +28,75 @@ export class CelebrationHeroTemplate extends BaseTemplate {
 
     this.canvas.add(background);
 
-    // Add subtle geometric patterns
-    await this.addGeometricPatterns();
+    // Add enhanced subtle patterns
+    await this.addEnhancedBackgroundElements();
   }
 
   async renderMainContent(): Promise<void> {
     const center = this.getCenter();
-    let currentY = 80;
+    let currentY = 60;
 
-    // Main celebration title
-    const titleText = createText('🎉 Circle Created!', {
+    // Add celebration icon/logo at the top
+    await this.renderCelebrationIcon(center.x, currentY);
+    currentY += 80;
+
+    // Main celebration title - enhanced typography
+    const titleText = createText('Circle Created!', {
       left: center.x,
       top: currentY,
-      fontSize: 48,
+      fontSize: 52,
       fontWeight: 'bold',
-      fill: BRAND_COLORS.highlight,
+      fill: BRAND_COLORS.white,
       textAlign: 'center',
       originX: 'center',
       fontFamily: 'Arial, sans-serif'
     });
     
     addDropShadow(titleText, {
-      color: 'rgba(0, 0, 0, 0.1)',
-      blur: 4,
-      offsetX: 2,
-      offsetY: 2
+      color: 'rgba(0, 0, 0, 0.2)',
+      blur: 6,
+      offsetX: 0,
+      offsetY: 3
     });
 
-    // Enable object caching for performance
     titleText.set({ objectCaching: true });
     this.canvas.add(titleText);
-    currentY += 80;
+    currentY += 70;
 
-    // Circle name
+    // Add subtitle inspired by new design
+    const subtitleText = createText("You're all set to go!", {
+      left: center.x,
+      top: currentY,
+      fontSize: 20,
+      fontWeight: 'normal',
+      fill: BRAND_COLORS.white,
+      textAlign: 'center',
+      originX: 'center',
+      fontFamily: 'Arial, sans-serif',
+      opacity: 0.9
+    });
+
+    this.canvas.add(subtitleText);
+    currentY += 60;
+
+    // Circle name with enhanced styling
     const circleNameText = createText(this.truncateText(this.data.circleName, 40), {
       left: center.x,
       top: currentY,
-      fontSize: 36,
+      fontSize: 32,
       fontWeight: 'bold',
-      fill: BRAND_COLORS.primary,
+      fill: BRAND_COLORS.white,
       textAlign: 'center',
       originX: 'center',
       fontFamily: 'Arial, sans-serif'
     });
 
-    // Enable object caching for performance
     circleNameText.set({ objectCaching: true });
     this.canvas.add(circleNameText);
     currentY += 80;
 
-    // Creator info
-    const creatorText = createText(`Created by ${this.data.creatorAddress}`, {
-      left: center.x,
-      top: currentY,
-      fontSize: 18,
-      fill: BRAND_COLORS.text.secondary,
-      textAlign: 'center',
-      originX: 'center',
-      fontFamily: 'Arial, sans-serif'
-    });
-
-    this.canvas.add(creatorText);
-    currentY += 60;
-
-    // Stats grid
-    await this.renderStatsGrid(currentY);
+    // Stats grid with enhanced styling
+    await this.renderEnhancedStatsGrid(currentY);
   }
 
   async renderDecorations(): Promise<void> {
@@ -337,5 +341,217 @@ export class CelebrationHeroTemplate extends BaseTemplate {
 
       this.canvas.add(icon);
     }
+  }
+
+  /**
+   * Render celebration icon with Kuri logo
+   */
+  private async renderCelebrationIcon(centerX: number, y: number): Promise<void> {
+    try {
+      // Create a circular background for the celebration icon
+      const iconBg = createCircle(30, {
+        left: centerX,
+        top: y,
+        fill: BRAND_COLORS.white,
+        originX: 'center',
+        originY: 'center',
+        opacity: 0.9
+      });
+
+      addDropShadow(iconBg, {
+        color: 'rgba(0, 0, 0, 0.15)',
+        blur: 8,
+        offsetX: 0,
+        offsetY: 4
+      });
+
+      this.canvas.add(iconBg);
+
+      // Add celebration emoji in the center
+      const celebrationEmoji = createText('🎉', {
+        left: centerX,
+        top: y,
+        fontSize: 36,
+        originX: 'center',
+        originY: 'center'
+      });
+
+      this.canvas.add(celebrationEmoji);
+    } catch (error) {
+      console.warn('Failed to render celebration icon:', error);
+      // Fallback to simple emoji
+      const fallbackEmoji = createText('🎉', {
+        left: centerX,
+        top: y,
+        fontSize: 40,
+        originX: 'center',
+        originY: 'center'
+      });
+      this.canvas.add(fallbackEmoji);
+    }
+  }
+
+  /**
+   * Enhanced background elements inspired by new design
+   */
+  private async addEnhancedBackgroundElements(): Promise<void> {
+    // Add subtle overlay pattern for texture
+    const overlayPattern = createRectangle(this.config.width, this.config.height, {
+      left: 0,
+      top: 0,
+      fill: 'rgba(255, 255, 255, 0.03)',
+      selectable: false
+    });
+    
+    this.canvas.add(overlayPattern);
+
+    // Add corner accent elements
+    await this.addCornerAccents();
+  }
+
+  /**
+   * Add corner accent elements
+   */
+  private async addCornerAccents(): Promise<void> {
+    // Top-left accent
+    const topLeftAccent = createCircle(4, {
+      left: 40,
+      top: 40,
+      fill: BRAND_COLORS.white,
+      opacity: 0.3
+    });
+    
+    // Top-right accent
+    const topRightAccent = createCircle(6, {
+      left: this.config.width - 40,
+      top: 40,
+      fill: BRAND_COLORS.white,
+      opacity: 0.2
+    });
+
+    // Bottom accents with different sizes
+    const bottomLeftAccent = createCircle(3, {
+      left: 60,
+      top: this.config.height - 60,
+      fill: BRAND_COLORS.white,
+      opacity: 0.25
+    });
+
+    this.canvas.add(topLeftAccent);
+    this.canvas.add(topRightAccent);
+    this.canvas.add(bottomLeftAccent);
+  }
+
+  /**
+   * Enhanced stats grid with improved styling
+   */
+  private async renderEnhancedStatsGrid(startY: number): Promise<void> {
+    const center = this.getCenter();
+    const cardWidth = 280;
+    const cardHeight = 90;
+    const spacing = 30;
+
+    // Create stats with enhanced data presentation
+    const stats = [
+      { label: 'Total Pool', value: this.data.totalAmount, icon: '💰' },
+      { label: 'Participants', value: this.data.participantCount.toString(), icon: '👥' },
+      { label: 'Contribution', value: this.data.contribution, icon: '📈' }
+    ];
+
+    const totalWidth = (cardWidth * 3) + (spacing * 2);
+    const startX = center.x - (totalWidth / 2);
+
+    for (let i = 0; i < stats.length; i++) {
+      const stat = stats[i];
+      const x = startX + (i * (cardWidth + spacing));
+      
+      await this.createEnhancedStatsCard(stat.label, stat.value, stat.icon, x, startY, cardWidth, cardHeight);
+    }
+
+    // Enhanced interval badge
+    const intervalBadge = this.createTextWithBackground(
+      `${this.data.interval} Deposits`,
+      {
+        left: center.x,
+        top: startY + cardHeight + 40,
+        fontSize: 18,
+        fontFamily: 'Arial, sans-serif',
+        textColor: BRAND_COLORS.white,
+        backgroundColor: BRAND_COLORS.highlight,
+        padding: 16
+      }
+    );
+
+    this.canvas.add(intervalBadge);
+  }
+
+  /**
+   * Create enhanced stats card with better styling
+   */
+  private async createEnhancedStatsCard(
+    label: string, 
+    value: string,
+    icon: string,
+    x: number, 
+    y: number, 
+    width: number, 
+    height: number
+  ): Promise<void> {
+    // Enhanced card background with gradient
+    const cardBg = createRectangle(width, height, {
+      left: x,
+      top: y,
+      fill: BRAND_COLORS.white,
+      rx: 16,
+      ry: 16,
+      selectable: false,
+      opacity: 0.95
+    });
+
+    addDropShadow(cardBg, {
+      color: 'rgba(0, 0, 0, 0.15)',
+      blur: 12,
+      offsetX: 0,
+      offsetY: 6
+    });
+
+    // Icon
+    const iconText = createText(icon, {
+      left: x + 20,
+      top: y + height / 2,
+      fontSize: 24,
+      originY: 'center'
+    });
+
+    // Value text with enhanced styling
+    const valueText = createText(value, {
+      left: x + width / 2,
+      top: y + 25,
+      fontSize: 28,
+      fontWeight: 'bold',
+      fill: BRAND_COLORS.primary,
+      textAlign: 'center',
+      originX: 'center'
+    });
+
+    // Label text
+    const labelText = createText(label, {
+      left: x + width / 2,
+      top: y + 60,
+      fontSize: 14,
+      fill: BRAND_COLORS.text.secondary,
+      textAlign: 'center',
+      originX: 'center'
+    });
+
+    // Enable object caching for performance
+    cardBg.set({ objectCaching: true });
+    valueText.set({ objectCaching: true });
+    labelText.set({ objectCaching: true });
+
+    this.canvas.add(cardBg);
+    this.canvas.add(iconText);
+    this.canvas.add(valueText);
+    this.canvas.add(labelText);
   }
 }

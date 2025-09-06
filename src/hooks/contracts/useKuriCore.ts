@@ -4,6 +4,7 @@ import { KuriCoreABI } from "../../contracts/abis/KuriCoreV1";
 import { ERC20ABI } from "../../contracts/abis/ERC20";
 import { handleContractError } from "../../utils/errors";
 import { config } from "../../config/wagmi";
+import { getDefaultChainId } from "../../config/contracts";
 import { useTransactionStatus } from "../useTransactionStatus";
 
 import { calculateApprovalAmount } from "../../utils/tokenUtils";
@@ -78,6 +79,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const { smartAddress: userAddress } = useAuthContext();
   const { handleTransaction } = useTransactionStatus();
   const { signMessageAsync } = useSignMessage();
+  const chainId = getDefaultChainId(); // Use environment-configured chain (mainnet/testnet)
 
   // Fetch token address from the contract
   const fetchTokenAddress = useCallback(async () => {
@@ -88,12 +90,13 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: kuriAddress,
         abi: KuriCoreABI,
         functionName: "circleCurrency",
+        chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       });
       setTokenAddress(address as `0x${string}`);
     } catch (err) {
       console.error("Failed to fetch token address:", err);
     }
-  }, [kuriAddress]);
+  }, [kuriAddress, chainId]);
 
   // Check token allowance
   const checkAllowance = useCallback(async (): Promise<bigint> => {
@@ -107,6 +110,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         abi: ERC20ABI,
         functionName: "allowance",
         args: [userAddress as `0x${string}`, kuriAddress as `0x${string}`],
+        chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       });
       return allowance as bigint;
     } catch (err) {
@@ -127,6 +131,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         abi: ERC20ABI,
         functionName: "balanceOf",
         args: [userAddress as `0x${string}`],
+        chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       });
 
       const balanceAmount = balance as bigint;
@@ -137,7 +142,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       setUserBalance(BigInt(0));
       return BigInt(0);
     }
-  }, [userAddress, tokenAddress]);
+  }, [userAddress, tokenAddress, chainId]);
 
   // Approve tokens
   const approveTokens = useCallback(
@@ -261,6 +266,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         abi: KuriCoreABI,
         functionName: "userToData",
         args: [userAddress as `0x${string}`],
+        chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       });
 
       const membershipStatus = (userData as any)[0];
@@ -276,6 +282,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: kuriAddress,
         abi: KuriCoreABI,
         functionName: "passedIntervalsCounter",
+        chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       })) as number;
 
       // Validate interval index - if it's unreasonably high, skip payment check
@@ -301,6 +308,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         abi: KuriCoreABI,
         functionName: "hasPaid",
         args: [userAddress as `0x${string}`, currentIntervalIndex],
+        chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       })) as boolean;
 
       setUserPaymentStatus(hasPaid);
@@ -310,7 +318,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       setUserPaymentStatus(null);
       return false;
     }
-  }, [kuriAddress, userAddress, marketData]);
+  }, [kuriAddress, userAddress, marketData, chainId]);
 
   const checkPaymentStatusIfMember = useCallback(async (): Promise<boolean> => {
     if (!kuriAddress || !userAddress || !marketData) {
@@ -348,6 +356,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         address: kuriAddress,
         abi: KuriCoreABI,
         functionName: "kuriData",
+        chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       });
 
       const marketTuple = data as KuriDataTuple;
@@ -370,7 +379,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } finally {
       setIsLoading(false);
     }
-  }, [kuriAddress, userAddress]);
+  }, [kuriAddress, userAddress, chainId]);
 
   // Check payment status and balance when market becomes active or user changes
   useEffect(() => {
@@ -1152,6 +1161,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           abi: KuriCoreABI,
           functionName: "userToData",
           args: [address],
+          chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
         });
 
         return (userData as any)[0];
@@ -1159,7 +1169,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         throw handleContractError(error);
       }
     },
-    [kuriAddress]
+    [kuriAddress, chainId]
   );
 
   // Check if user has claimed for their winnings
@@ -1173,6 +1183,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
           abi: KuriCoreABI,
           functionName: "hasClaimed",
           args: [userAddress],
+          chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
         })) as boolean;
         return claimed;
       } catch (error) {
@@ -1180,7 +1191,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         return false;
       }
     },
-    [kuriAddress]
+    [kuriAddress, chainId]
   );
 
   return {

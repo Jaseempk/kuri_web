@@ -69,13 +69,13 @@ export const KURI_CONTRACT_ADDRESS =
 
 // Network selection based on environment variable
 export const getDefaultChainId = (): number => {
-  const network = import.meta.env.VITE_NETWORK || 'mainnet';
-  return network === 'testnet' ? baseSepolia.id : base.id;
+  const network = import.meta.env.VITE_NETWORK || "mainnet";
+  return network === "testnet" ? baseSepolia.id : base.id;
 };
 
 export const getDefaultChain = () => {
-  const network = import.meta.env.VITE_NETWORK || 'mainnet';
-  return network === 'testnet' ? baseSepolia : base;
+  const network = import.meta.env.VITE_NETWORK || "mainnet";
+  return network === "testnet" ? baseSepolia : base;
 };
 
 export const getNetworkConfig = (chainId: number): NetworkConfig => {

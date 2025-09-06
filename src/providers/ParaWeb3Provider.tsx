@@ -63,7 +63,7 @@ queryClient.setQueryDefaults(["user-profile-smart"], {
 
 // Cache invalidation utility for auth flows
 export const invalidateAuthCache = () => {
-  queryClient.invalidateQueries({ queryKey: ['auth'] });
+  queryClient.invalidateQueries({ queryKey: ["auth"] });
 };
 
 // Export query client for advanced cache operations
@@ -75,8 +75,6 @@ export const ParaWeb3Provider = ({
   children: React.ReactNode;
 }) => {
   const apiKey = import.meta.env.VITE_PARA_API_KEY || "";
-  console.log("ParaWeb3Provider apiKey:", apiKey ? "SET" : "NOT SET");
-  console.log("ParaWeb3Provider Environment:", Environment.BETA);
 
   return (
     <QueryClientProvider client={queryClient}>

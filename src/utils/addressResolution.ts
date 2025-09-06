@@ -1,5 +1,6 @@
 import { readContract } from "@wagmi/core";
 import { config } from "../config/wagmi";
+import { getDefaultChainId } from "../config/contracts";
 
 // Alchemy smart account ABI for owner() function
 const SMART_ACCOUNT_ABI = [{
@@ -22,7 +23,8 @@ export async function resolveSmartWalletToEOA(smartWalletAddress: string): Promi
     const eoaAddress = await readContract(config, {
       address: smartWalletAddress as `0x${string}`,
       abi: SMART_ACCOUNT_ABI,
-      functionName: "owner"
+      functionName: "owner",
+      chainId: getDefaultChainId() as 84532 | 8453, // Ensure we read from the correct network
     });
     
     const resolvedAddress = eoaAddress as string;

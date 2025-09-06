@@ -15,7 +15,7 @@ import { getContractAddress, getDefaultChainId } from "../config/contracts";
 
 // Use dynamic USDC address based on network configuration
 const getUSDCAddress = (): `0x${string}` => {
-  return getContractAddress(getDefaultChainId(), 'USDC');
+  return getContractAddress(getDefaultChainId(), "USDC");
 };
 
 export const useUSDCWithdraw = () => {
@@ -60,10 +60,6 @@ export const useUSDCWithdraw = () => {
           callData,
           operationName: "USDC withdrawal",
         });
-
-        console.log(
-          "🎉 USDC withdrawal gas fees sponsored by Alchemy Gas Manager!"
-        );
 
         await handleTransaction(txHash as `0x${string}`, {
           loadingMessage: "Processing withdrawal (gas-sponsored)...",

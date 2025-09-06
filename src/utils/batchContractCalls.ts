@@ -1,6 +1,7 @@
 import { readContract } from "@wagmi/core";
 import { KuriCoreABI } from "../contracts/abis/KuriCore";
 import { config } from "../config/wagmi";
+import { getDefaultChainId } from "../config/contracts";
 
 export interface UserMarketData {
   address: string;
@@ -22,12 +23,15 @@ export const checkMembershipStatus = async (
   marketAddress: string,
   userAddress: string
 ): Promise<number> => {
+  const chainId = getDefaultChainId(); // Use environment-configured chain
+  
   try {
     const userData = await readContract(config, {
       address: marketAddress as `0x${string}`,
       abi: KuriCoreABI,
       functionName: "userToData",
       args: [userAddress as `0x${string}`],
+      chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
     });
 
     return userData[0] as number;
@@ -56,12 +60,15 @@ export const checkPaymentStatusForMember = async (
     return null;
   }
 
+  const chainId = getDefaultChainId(); // Use environment-configured chain
+
   try {
     // Get current interval index
     const intervalCounter = (await readContract(config, {
       address: marketAddress as `0x${string}`,
       abi: KuriCoreABI,
       functionName: "passedIntervalsCounter",
+      chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
     })) as number;
 
     // Validate interval index
@@ -78,6 +85,7 @@ export const checkPaymentStatusForMember = async (
       abi: KuriCoreABI,
       functionName: "hasPaid",
       args: [userAddress as `0x${string}`, BigInt(intervalCounter)],
+      chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
     })) as boolean;
 
     return hasPaid;

@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, Copy, Download, ExternalLink, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { imageGenerationService, useImageGeneration } from '../../services/imageGenerationService';
-import { usePostCreationStore, usePostCreationSelectors, TemplateType } from '../../stores/postCreationStore';
+import { usePostCreationStore, usePostCreationSelectors } from '../../stores/postCreationStore';
 import { useClipboard } from '../../hooks/useClipboard';
 import { useEventBus } from '../../utils/eventBus';
 import { trackEvent } from '../../utils/analytics';
@@ -35,13 +35,11 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
   const {
     isVisible,
     market,
-    selectedTemplate,
     generatedImage,
     downloadUrl,
     customMessage,
     isSharing,
     imageGenerationTime,
-    setTemplate,
     setGeneratedImage,
     setCustomMessage,
     setSharing,
@@ -50,7 +48,6 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
 
   // Computed selectors
   const {
-    isReady,
     canShare,
     shareUrl,
     shareTitle,
@@ -59,7 +56,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
 
   // Hooks
   const { copyToClipboard } = useClipboard();
-  const { generateImage, isWorkerSupported, generateImageFallback } = useImageGeneration();
+  const { generateImageFallback } = useImageGeneration();
   const { emit, on } = useEventBus();
 
   // Local state for image generation
@@ -144,7 +141,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
         }
       };
     }
-  }, [isVisible, market, selectedTemplate, generatedImage]);
+  }, [isVisible, market, generatedImage]);
 
   // Create portal container
   useEffect(() => {
@@ -180,7 +177,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
       
       // Skip worker entirely since it always fails - go directly to fallback
       // This eliminates the confusing error notifications
-      result = await generateImageFallback(market, selectedTemplate, userAddress);
+      result = await generateImageFallback(market, 'hero', userAddress);
 
       // Check if request was cancelled during generation
       if (signal.aborted || !isMountedRef.current) {
@@ -215,25 +212,6 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
   };
 
   /**
-   * Handle template selection
-   */
-  const handleTemplateChange = (template: TemplateType) => {
-    if (template === selectedTemplate) return;
-    
-    // Cancel any ongoing generation immediately
-    cancelCurrentGeneration();
-    
-    setTemplate(template);
-    
-    // Clear existing image to trigger regeneration
-    if (generatedImage) {
-      setGeneratedImage('', '', 0);
-    }
-    
-    // The useEffect will handle the debounced regeneration
-  };
-
-  /**
    * Handle link copying
    */
   const handleCopyLink = async () => {
@@ -262,7 +240,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
     try {
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `kuri-circle-${market.address.slice(0, 8)}-${selectedTemplate}.png`;
+      link.download = `kuri-circle-${market.address.slice(0, 8)}-party.png`;
       link.style.display = 'none';
       
       document.body.appendChild(link);
@@ -285,7 +263,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
       toast.success('Celebration image downloaded!');
       
       trackEvent('celebration_image_downloaded', {
-        template: selectedTemplate,
+        template: 'party',
         market_address: market.address,
         participant_count: market.totalParticipants,
         interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
@@ -327,7 +305,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
         toast.success('Celebration image shared successfully!');
         
         trackEvent('celebration_image_shared', {
-          template: selectedTemplate,
+          template: 'party',
           method: 'native_share',
           market_address: market.address,
           participant_count: market.totalParticipants,
@@ -340,7 +318,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
         toast.success('Image copied to clipboard! Paste it anywhere to share.');
         
         trackEvent('celebration_image_shared', {
-          template: selectedTemplate,
+          template: 'party',
           method: 'clipboard',
           market_address: market.address,
           participant_count: market.totalParticipants,
@@ -358,7 +336,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
       toast.error('Failed to share image. Try downloading instead.');
       
       trackEvent('celebration_image_share_failed', {
-        template: selectedTemplate,
+        template: 'party',
         error_message: error instanceof Error ? error.message : 'Unknown error',
         market_address: market?.address,
         source: 'new_modal',
@@ -435,28 +413,6 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
         </p>
       </div>
 
-      {/* Template Selector */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="flex justify-center gap-1 xs:gap-2 flex-wrap mb-4"
-      >
-        {(['hero', 'stats', 'minimal'] as TemplateType[]).map(template => (
-          <button
-            key={template}
-            onClick={() => handleTemplateChange(template)}
-            disabled={isGeneratingImage}
-            className={`px-2 py-1 rounded-full text-xs font-medium transition-all touch-manipulation ${
-              selectedTemplate === template 
-                ? 'bg-[#C84E31] text-white shadow-sm' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50'
-            }`}
-          >
-            {template === 'hero' ? '🎉 Party' : template === 'stats' ? '📈 Stats' : '✨ Clean'}
-          </button>
-        ))}
-      </motion.div>
 
       {/* Image Display */}
       <motion.div

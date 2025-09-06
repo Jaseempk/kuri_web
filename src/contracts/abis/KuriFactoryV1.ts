@@ -188,6 +188,31 @@ export const KuriFactoryABI = [
       {
         indexed: false,
         internalType: "address",
+        name: "newTreasury",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "oldTreasury",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "caller",
+        type: "address",
+      },
+    ],
+    name: "TreasuryAddressUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
         name: "newCoordinator",
         type: "address",
       },
@@ -351,6 +376,15 @@ export const KuriFactoryABI = [
     name: "supportsInterface",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "_newTreasuryAddress", type: "address" },
+    ],
+    name: "updateTreasuryAddress",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

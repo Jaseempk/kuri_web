@@ -15,34 +15,41 @@ export const BRAND_COLORS = {
   gradients: {
     warm: ['#F9F5F1', '#E8DED1'],
     primary: ['#8B6F47', '#6B5637'],
-    accent: ['#C84E31', '#B83A21']
+    accent: ['#C84E31', '#B83A21'],
+    // Enhanced gradients for new template design
+    celebration: ['#C84E31', '#8B6F47'],
+    richWarm: ['#8B6F47', '#C84E31', '#B83A21']
   }
 } as const;
 
 export type BrandColor = keyof typeof BRAND_COLORS;
-export type GradientType = 'warm' | 'cool' | 'neutral' | 'primary' | 'accent';
+export type GradientType = 'warm' | 'cool' | 'neutral' | 'primary' | 'accent' | 'celebration' | 'richWarm';
 
 export const createBrandGradient = (type: GradientType): string[] => {
   switch (type) {
     case 'warm':
-      return BRAND_COLORS.gradients.warm;
+      return [...BRAND_COLORS.gradients.warm];
     case 'primary':
-      return BRAND_COLORS.gradients.primary;
+      return [...BRAND_COLORS.gradients.primary];
     case 'accent':
-      return BRAND_COLORS.gradients.accent;
+      return [...BRAND_COLORS.gradients.accent];
+    case 'celebration':
+      return [...BRAND_COLORS.gradients.celebration];
+    case 'richWarm':
+      return [...BRAND_COLORS.gradients.richWarm];
     case 'cool':
       return [BRAND_COLORS.secondary, BRAND_COLORS.white];
     case 'neutral':
       return [BRAND_COLORS.accent, BRAND_COLORS.white];
     default:
-      return BRAND_COLORS.gradients.warm;
+      return [...BRAND_COLORS.gradients.warm];
   }
 };
 
 export const getContrastColor = (backgroundColor: string): string => {
   // Simple contrast calculation - use white text on dark backgrounds
   const darkColors = [BRAND_COLORS.primary, BRAND_COLORS.highlight, BRAND_COLORS.black];
-  return darkColors.includes(backgroundColor) ? BRAND_COLORS.text.light : BRAND_COLORS.text.primary;
+  return darkColors.includes(backgroundColor as any) ? BRAND_COLORS.text.light : BRAND_COLORS.text.primary;
 };
 
 export const hexToRgba = (hex: string, alpha: number = 1): string => {
