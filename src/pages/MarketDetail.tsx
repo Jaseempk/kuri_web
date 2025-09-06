@@ -128,7 +128,7 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
             <span className="material-icons mr-1.5 text-xl">paid</span>
           </div>
           <p className="font-bold text-2xl">
-            ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(0)}
+            ${(Number(marketData.kuriAmount) / 1_000_000 / marketData.totalParticipantsCount).toFixed(0)}
           </p>
           <p className="text-xs opacity-80">Contribution</p>
         </div>
@@ -137,11 +137,7 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
             <span className="material-icons mr-1.5 text-xl">savings</span>
           </div>
           <p className="font-bold text-2xl">
-            $
-            {(
-              (Number(marketData.kuriAmount) / 1_000_000) *
-              marketData.totalParticipantsCount
-            ).toFixed(0)}
+            ${(Number(marketData.kuriAmount) / 1_000_000).toFixed(0)}
           </p>
           <p className="text-xs opacity-80">Pool</p>
         </div>
