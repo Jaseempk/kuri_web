@@ -1,7 +1,6 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useKuriCore } from '../hooks/contracts/useKuriCore';
 import { useKuriMarketDetail } from '../hooks/useKuriMarketDetail';
-import { useMarketTimers } from '../hooks/useMarketTimers';
 import type { MarketDetail } from '../hooks/useKuriMarketDetail';
 
 interface MarketContextType {
@@ -14,11 +13,6 @@ interface MarketContextType {
   marketDetail: MarketDetail | null;
   isLoadingDetail: boolean;
   errorDetail: any;
-  
-  // Timer data
-  timeLeft: string;
-  raffleTimeLeft: string;
-  depositTimeLeft: string;
   
   // Circle members are handled by a separate context or component-level hooks
   
@@ -97,11 +91,9 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     error: errorDetail,
     refetch: refetchDetail,
   } = useKuriMarketDetail(marketAddress);
-  
-  // Single timer subscription
-  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimers(marketData);
 
-  const contextValue: MarketContextType = {
+  // 🔥 MEMOIZE CONTEXT VALUE - Stable data and actions only (no timers)
+  const contextValue: MarketContextType = useMemo(() => ({
     // Core data
     marketData,
     isLoadingCore,
@@ -111,11 +103,6 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     marketDetail,
     isLoadingDetail,
     errorDetail,
-    
-    // Timer data
-    timeLeft,
-    raffleTimeLeft,
-    depositTimeLeft,
     
     // Actions
     refetchDetail,
@@ -146,7 +133,39 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     
     // DepositForm state
     isApproving,
-  };
+  }), [
+    // Core data
+    marketData,
+    isLoadingCore,
+    errorCore,
+    
+    // Detail data
+    marketDetail,
+    isLoadingDetail,
+    errorDetail,
+    
+    // Actions (these are stable references from hooks)
+    refetchDetail,
+    getMemberStatus,
+    acceptMemberSponsored,
+    acceptMultipleMembersSponsored,
+    rejectMemberSponsored,
+    isAccepting,
+    isRejecting,
+    requestMembershipSponsored,
+    initializeKuriSponsored,
+    fetchMarketData,
+    checkPaymentStatusIfMember,
+    checkHasClaimed,
+    depositSponsored,
+    userPaymentStatus,
+    userBalance,
+    currentInterval,
+    checkUserBalance,
+    refreshUserData,
+    claimKuriAmountSponsored,
+    isApproving,
+  ]);
 
   return (
     <MarketContext.Provider value={contextValue}>

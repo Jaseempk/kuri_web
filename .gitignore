@@ -24,3 +24,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Debug and investigation files
+AUTHENTICATION_BUG_INVESTIGATION.md
+GAS_SPONSORSHIP_SETUP.md
+PERFORMANCE_BUG_POSTMORTEM.md
+TODOTEST.md
+TODO_GASLESS_TRANSACTIONS.md
+clientlogs.md
+progress.md

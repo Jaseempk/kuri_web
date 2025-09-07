@@ -2,9 +2,16 @@ import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@apollo/client";
 import { MEMBERSHIP_REQUESTS_QUERY, MARKET_DEPLOYMENT_QUERY } from "../graphql/queries";
 import { MarketDeploymentQueryResult, MarketDeploymentQueryVariables } from "../graphql/types";
-import { useKuriCore } from "./contracts/useKuriCore";
+import { useKuriCore, KuriState } from "./contracts/useKuriCore";
 import { useBulkUserProfiles } from "./useBulkUserProfiles";
 import { resolveSmartWalletToEOA } from "../utils/addressResolution";
+import { useMarketContext } from "../contexts/MarketContext";
+
+export interface PaymentStatus {
+  isPaid: boolean;
+  isPaymentDue: boolean;
+  intervalIndex: number;
+}
 
 export interface MembershipRequest {
   id: string;
@@ -12,6 +19,7 @@ export interface MembershipRequest {
   originalUser?: string; // Original smart wallet address for contract calls
   timestamp: string;
   state: number;
+  paymentStatus?: PaymentStatus; // NEW: Payment status for current interval
 }
 
 export interface UseCircleMembersOptions {
@@ -30,6 +38,51 @@ export const useCircleMembers = (
   const [error, setError] = useState<string | null>(null);
 
   const { marketData, getMemberStatus, acceptMemberSponsored, acceptMultipleMembersSponsored, rejectMemberSponsored, isAccepting, isRejecting } = useKuriCore(marketAddress as `0x${string}`);
+
+  // Get payment data from MarketContext
+  const { marketDetail } = useMarketContext();
+
+  // Helper function to calculate current interval
+  const getCurrentInterval = useMemo(() => {
+    if (!marketData || marketData.state !== KuriState.ACTIVE) return 0;
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    const startTime = Number(marketData.startTime);
+    const intervalDuration = marketData.intervalDuration;
+    
+    if (startTime === 0 || currentTime < startTime) return 0;
+    
+    return Math.floor((currentTime - startTime) / intervalDuration) + 1;
+  }, [marketData]);
+
+  // Helper function to check if payment period is active
+  const isPaymentPeriodActive = useMemo(() => {
+    if (!marketData || marketData.state !== KuriState.ACTIVE) return false;
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    const nextDepositTime = Number(marketData.nextIntervalDepositTime);
+    
+    return currentTime >= nextDepositTime && getCurrentInterval > 0;
+  }, [marketData, getCurrentInterval]);
+
+  // Calculate payment status for all members
+  const memberPaymentStatus = useMemo(() => {
+    if (!marketDetail?.deposits || !isPaymentPeriodActive || getCurrentInterval <= 0) {
+      return new Map<string, boolean>();
+    }
+    
+    const paymentMap = new Map<string, boolean>();
+    
+    // Check each deposit to see if it's for the current interval
+    marketDetail.deposits.forEach(deposit => {
+      const depositInterval = parseInt(deposit.intervalIndex);
+      if (depositInterval === getCurrentInterval) {
+        paymentMap.set(deposit.user.toLowerCase(), true);
+      }
+    });
+    
+    return paymentMap;
+  }, [marketDetail?.deposits, getCurrentInterval, isPaymentPeriodActive]);
 
   // Query membership requests from subgraph
   const {
@@ -143,9 +196,27 @@ export const useCircleMembers = (
         }
       }
     }
-    
-    return filteredMembers;
-  }, [memberRequests, deploymentData, marketData?.creator, includeCreator, filterActiveOnly]);
+
+    // Enhance members with payment status
+    return filteredMembers.map(member => {
+      // Only add payment status if payment period is active
+      if (!isPaymentPeriodActive || getCurrentInterval <= 0) {
+        return member;
+      }
+
+      const userKey = member.user.toLowerCase();
+      const isPaid = memberPaymentStatus.get(userKey) || false;
+
+      return {
+        ...member,
+        paymentStatus: {
+          isPaid,
+          isPaymentDue: true,
+          intervalIndex: getCurrentInterval
+        }
+      };
+    });
+  }, [memberRequests, deploymentData, marketData?.creator, includeCreator, filterActiveOnly, isPaymentPeriodActive, getCurrentInterval, memberPaymentStatus]);
 
   // Extract addresses for bulk profile fetching - memoized to prevent infinite loops
   const userAddresses = useMemo(

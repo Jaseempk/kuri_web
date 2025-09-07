@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { KuriState } from "../hooks/contracts/useKuriCore";
 import { KuriState as GraphQLKuriState } from "../graphql/types";
 import { MarketProvider, useMarketContext } from "../contexts/MarketContext";
+import { MarketTimerProvider, useMarketTimerContext } from "../contexts/MarketTimerContext";
 import { Button } from "../components/ui/button";
 import { MarketSEO } from "../components/seo/MarketSEO";
 import { ShareModal } from "../components/modals/ShareModal";
@@ -104,6 +105,11 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   if (!marketData) return null;
 
   console.log("maarketData:", marketData);
+  console.log("🔄 StatsContainer render - data changed:", {
+    activeParticipants: marketData.totalActiveParticipantsCount,
+    totalParticipants: marketData.totalParticipantsCount,
+    kuriAmount: marketData.kuriAmount.toString()
+  });
 
   return (
     <motion.div
@@ -146,6 +152,9 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   );
 };
 
+// TabContent Render Tracking to Eliminate Duplicates
+let tabContentRenderCount = 0;
+
 // Extracted Tab Content Component
 interface TabContentProps {
   activeTab: string;
@@ -167,9 +176,6 @@ interface TabContentProps {
   } | null;
   winnerProfile: any;
   winnerProfileLoading: boolean;
-  timeLeft: string;
-  raffleTimeLeft: string;
-  depositTimeLeft: string;
   address: string;
   membershipStatus: number;
   shouldShowClaimCard: boolean;
@@ -186,15 +192,25 @@ const TabContent: React.FC<TabContentProps> = ({
   currentWinner,
   winnerProfile,
   winnerProfileLoading,
-  timeLeft,
-  raffleTimeLeft,
-  depositTimeLeft,
   address,
   membershipStatus,
   renderActionButton,
 }) => {
-  if (!marketData) return null;
+  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimerContext();
+  
+  // Track render instances to identify duplicates
+  tabContentRenderCount++;
   console.log("TiemLeft:", timeLeft);
+  console.log("🔄 TabContent render #" + tabContentRenderCount + " - timers updated:", {
+    timeLeft,
+    raffleTimeLeft, 
+    depositTimeLeft,
+    activeTab,
+    renderInstance: tabContentRenderCount,
+    preventedRender: timeLeft === 'cached_value' ? '❌ Prevented' : '✅ Legitimate'
+  });
+  
+  if (!marketData) return null;
 
   return (
     <AnimatePresence mode="wait">
@@ -685,15 +701,12 @@ function MarketDetailInner() {
     }
   }, [address, navigate]);
 
-  // Get ALL data and actions from MarketContext (no more duplicate subscriptions!)
+  // Get stable data and actions from MarketContext
   const {
     marketData,
     isLoadingCore,
     errorCore,
     marketDetail,
-    timeLeft,
-    raffleTimeLeft,
-    depositTimeLeft,
     getMemberStatus,
     requestMembershipSponsored,
     initializeKuriSponsored,
@@ -701,7 +714,58 @@ function MarketDetailInner() {
     checkPaymentStatusIfMember,
     checkHasClaimed,
   } = useMarketContext();
+
+  // Get timer data from separate context to prevent cascade re-renders
+  const {
+    timeLeft,
+    raffleTimeLeft,
+    depositTimeLeft,
+  } = useMarketTimerContext();
+  
+  // Add render cause tracking
+  const renderCount = useRef(0);
+  const previousProps = useRef<any>({});
+
+  useEffect(() => {
+    renderCount.current++;
+    const currentProps = {
+      userAddress,
+      marketDataExists: !!marketData,
+      timeLeft,
+      isLoadingCore,
+      address
+    };
+    
+    if (renderCount.current > 1) {
+      const changedProps: any = {};
+      Object.keys(currentProps).forEach(key => {
+        if (previousProps.current[key] !== (currentProps as any)[key]) {
+          changedProps[key] = { 
+            from: previousProps.current[key], 
+            to: (currentProps as any)[key] 
+          };
+        }
+      });
+      
+      if (Object.keys(changedProps).length > 0) {
+        console.log(`🔄 Render #${renderCount.current} - Changed props:`, changedProps);
+      } else {
+        console.log(`🔄 Render #${renderCount.current} - No prop changes (reference equality issue)`);
+      }
+    } else {
+      console.log(`🔄 Render #${renderCount.current} - Initial render`);
+    }
+    
+    previousProps.current = currentProps;
+  });
+
   console.log("addresss", address);
+  console.log("🔍 RENDER CAUSE:", {
+    userAddress,
+    marketDataExists: !!marketData,
+    timeLeft,
+    isLoadingCore
+  });
 
   // Fetch creator's profile
   const { profile: creatorProfile, isLoading: creatorProfileLoading } =
@@ -1578,8 +1642,8 @@ function MarketDetailInner() {
                     </button>
                   </div>
 
-                  {/* Tab Content */}
-                  <div className="p-8">
+                  {/* Tab Content - Desktop Only */}
+                  <div className="p-8 hidden lg:block">
                     <TabContent
                       activeTab={activeTab}
                       metadata={metadata}
@@ -1589,9 +1653,6 @@ function MarketDetailInner() {
                       currentWinner={currentWinner}
                       winnerProfile={winnerProfile}
                       winnerProfileLoading={winnerProfileLoading}
-                      timeLeft={timeLeft}
-                      raffleTimeLeft={raffleTimeLeft}
-                      depositTimeLeft={depositTimeLeft}
                       address={address || ""}
                       membershipStatus={membershipStatus}
                       shouldShowClaimCard={shouldShowClaimCard}
@@ -1656,8 +1717,8 @@ function MarketDetailInner() {
                   </nav>
                 </div>
 
-                {/* Mobile Tab Content */}
-                <div className="p-6">
+                {/* Mobile Tab Content - Mobile Only */}
+                <div className="p-6 lg:hidden">
                   <TabContent
                     activeTab={activeTab}
                     metadata={metadata}
@@ -1667,9 +1728,6 @@ function MarketDetailInner() {
                     currentWinner={currentWinner}
                     winnerProfile={winnerProfile}
                     winnerProfileLoading={winnerProfileLoading}
-                    timeLeft={timeLeft}
-                    raffleTimeLeft={raffleTimeLeft}
-                    depositTimeLeft={depositTimeLeft}
                     address={address || ""}
                     membershipStatus={membershipStatus}
                     shouldShowClaimCard={shouldShowClaimCard}
@@ -1878,6 +1936,7 @@ function MarketDetailInner() {
               </motion.div>
             </div>
           </div>
+
         </div>
       </div>
       <ShareModal
@@ -1906,6 +1965,16 @@ function MarketDetailInner() {
   );
 }
 
+function MarketDetailWithTimer() {
+  const { marketData } = useMarketContext();
+  
+  return (
+    <MarketTimerProvider marketData={marketData}>
+      <MarketDetailInner />
+    </MarketTimerProvider>
+  );
+}
+
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   
@@ -1915,7 +1984,7 @@ export default function MarketDetail() {
   
   return (
     <MarketProvider marketAddress={address}>
-      <MarketDetailInner />
+      <MarketDetailWithTimer />
     </MarketProvider>
   );
 }

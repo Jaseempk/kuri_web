@@ -379,7 +379,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } finally {
       setIsLoading(false);
     }
-  }, [kuriAddress, userAddress, chainId]);
+  }, [kuriAddress, chainId]);
 
   // Check payment status and balance when market becomes active or user changes
   useEffect(() => {
