@@ -6,17 +6,15 @@
  * full functionality including backdrop click.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, Copy, Download, ExternalLink, Check } from 'lucide-react';
+import { Share2, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { imageGenerationService, useImageGeneration } from '../../services/imageGenerationService';
+import QRCode from 'react-qr-code';
 import { usePostCreationStore, usePostCreationSelectors } from '../../stores/postCreationStore';
 import { useClipboard } from '../../hooks/useClipboard';
-import { useEventBus } from '../../utils/eventBus';
 import { trackEvent } from '../../utils/analytics';
-import { copyImageToClipboard } from '../celebration/utils/exportUtils';
 import { Button } from '../ui/button';
 
 interface PostCreationModalProps {
@@ -27,20 +25,13 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
   onViewMarket 
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const isMountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const generationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Zustand store state
   const {
     isVisible,
     market,
-    generatedImage,
-    downloadUrl,
     customMessage,
     isSharing,
-    imageGenerationTime,
-    setGeneratedImage,
     setCustomMessage,
     setSharing,
     hideModal,
@@ -48,7 +39,6 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
 
   // Computed selectors
   const {
-    canShare,
     shareUrl,
     shareTitle,
     defaultShareMessage,
@@ -56,160 +46,29 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
 
   // Hooks
   const { copyToClipboard } = useClipboard();
-  const { generateImageFallback } = useImageGeneration();
-  const { emit, on } = useEventBus();
 
-  // Local state for image generation
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [generationProgress, setGenerationProgress] = useState(0);
-  const [generationStage, setGenerationStage] = useState('');
+  // No longer needed - removed image generation state
 
   // Component lifecycle management
   useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      // Cancel any ongoing generation
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      if (generationTimeoutRef.current) {
-        clearTimeout(generationTimeoutRef.current);
-      }
-    };
-  }, []);
+    // Modal lifecycle tracking if needed
+  }, [isVisible, market]);
 
-  // Helper function to cancel ongoing generation
-  const cancelCurrentGeneration = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    if (generationTimeoutRef.current) {
-      clearTimeout(generationTimeoutRef.current);
-      generationTimeoutRef.current = null;
-    }
-    setIsGeneratingImage(false);
-  };
+  // Removed image generation logic - no longer needed
 
-  // Event bus subscriptions
-  useEffect(() => {
-    const unsubscribeProgress = on('image:generate-progress', (data) => {
-      if (isMountedRef.current) {
-        setGenerationProgress(data.progress);
-        setGenerationStage(data.stage);
-      }
-    });
-
-    const unsubscribeComplete = on('image:generate-complete', (data) => {
-      if (isMountedRef.current) {
-        setGeneratedImage(data.imageData, data.downloadUrl, data.generationTime);
-        setIsGeneratingImage(false);
-      }
-    });
-
-    const unsubscribeError = on('image:generate-error', (data) => {
-      if (isMountedRef.current) {
-        toast.error(`Image generation failed: ${data.error}`);
-        setIsGeneratingImage(false);
-      }
-    });
-
-    return () => {
-      unsubscribeProgress();
-      unsubscribeComplete();
-      unsubscribeError();
-    };
-  }, [on, setGeneratedImage]);
-
-  // Auto-generate image when modal opens or template changes (with debouncing)
-  useEffect(() => {
-    if (isVisible && market && !generatedImage) {
-      // Cancel any existing generation
-      cancelCurrentGeneration();
-      
-      // Debounce template changes
-      generationTimeoutRef.current = setTimeout(() => {
-        if (isMountedRef.current && !isGeneratingImage) {
-          handleGenerateImage();
-        }
-      }, 300); // 300ms debounce for template changes
-      
-      return () => {
-        if (generationTimeoutRef.current) {
-          clearTimeout(generationTimeoutRef.current);
-        }
-      };
-    }
-  }, [isVisible, market, generatedImage]);
-
-  // Create portal container
-  useEffect(() => {
-    // Ensure we have a portal container
-    if (!document.getElementById('modal-portal')) {
-      const portalContainer = document.createElement('div');
+  // Create portal container synchronously during render
+  // This ensures the container exists before we check for it
+  const ensurePortalContainer = () => {
+    let portalContainer = document.getElementById('modal-portal');
+    if (!portalContainer) {
+      portalContainer = document.createElement('div');
       portalContainer.id = 'modal-portal';
       document.body.appendChild(portalContainer);
     }
-  }, []);
-
-  /**
-   * Generate celebration image
-   */
-  const handleGenerateImage = async () => {
-    if (!market || isGeneratingImage) return;
-
-    // Create new abort controller for this generation
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-
-    setIsGeneratingImage(true);
-    setGenerationProgress(0);
-    setGenerationStage('Initializing...');
-
-    try {
-      const userAddress = '0x' + '1'.repeat(40); // Placeholder - get from actual wallet
-      
-      let result;
-      
-      // Check if request was cancelled before proceeding
-      if (signal.aborted) return;
-      
-      // Skip worker entirely since it always fails - go directly to fallback
-      // This eliminates the confusing error notifications
-      result = await generateImageFallback(market, 'hero', userAddress);
-
-      // Check if request was cancelled during generation
-      if (signal.aborted || !isMountedRef.current) {
-        return;
-      }
-
-      // Handle success
-      if (result && result.imageData) {
-        setGeneratedImage(result.imageData, result.downloadUrl, result.generationTime);
-        setIsGeneratingImage(false);
-        
-        // Emit success event for consistency
-        emit('image:generate-complete', {
-          imageData: result.imageData,
-          downloadUrl: result.downloadUrl,
-          generationTime: result.generationTime,
-        });
-      }
-    } catch (error) {
-      // Only show error if request wasn't cancelled
-      if (!signal.aborted && isMountedRef.current) {
-        console.error('Image generation failed:', error);
-        toast.error('Failed to generate celebration image');
-        setIsGeneratingImage(false);
-      }
-    } finally {
-      // Clean up abort controller
-      if (abortControllerRef.current === abortControllerRef.current) {
-        abortControllerRef.current = null;
-      }
-    }
+    return portalContainer;
   };
+
+  // Removed image generation function - no longer needed
 
   /**
    * Handle link copying
@@ -219,9 +78,10 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
       await copyToClipboard(shareUrl);
       toast.success('Link copied to clipboard!');
       
-      trackEvent('post_creation_link_copied', {
+      trackEvent('market_shared', {
         market_address: market?.address || '',
-        source: 'new_modal',
+        platform: 'copy',
+        source: 'post_creation',
       });
     } catch (error) {
       toast.error('Failed to copy link');
@@ -229,101 +89,41 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
   };
 
   /**
-   * Handle image download
+   * Handle text sharing
    */
-  const handleDownloadImage = () => {
-    if (!downloadUrl || !market) {
-      toast.error('No image available to download');
-      return;
-    }
-
-    try {
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `kuri-circle-${market.address.slice(0, 8)}-party.png`;
-      link.style.display = 'none';
-      
-      document.body.appendChild(link);
-      link.click();
-      
-      // Safe cleanup
-      setTimeout(() => {
-        try {
-          if (link.parentNode === document.body) {
-            document.body.removeChild(link);
-          }
-        } catch (cleanupError) {
-          console.warn('Download link cleanup failed:', cleanupError);
-          if (link.remove) {
-            link.remove();
-          }
-        }
-      }, 100);
-
-      toast.success('Celebration image downloaded!');
-      
-      trackEvent('celebration_image_downloaded', {
-        template: 'party',
-        market_address: market.address,
-        participant_count: market.totalParticipants,
-        interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
-        generation_time: imageGenerationTime,
-        source: 'new_modal',
-      });
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast.error('Failed to download image');
-    }
-  };
-
-  /**
-   * Handle image sharing
-   */
-  const handleShareImage = async () => {
-    if (!generatedImage || !market) {
-      toast.error('No image available to share');
+  const handleShareText = async () => {
+    if (!shareUrl || !market) {
+      toast.error('No share URL available');
       return;
     }
 
     setSharing(true);
 
     try {
-      const response = await fetch(generatedImage);
-      const blob = await response.blob();
-      const file = new File([blob], `kuri-circle-${market.name?.replace(/\s+/g, '-') || 'circle'}.png`, {
-        type: 'image/png'
-      });
-
       const shareData = {
         title: shareTitle,
         text: customMessage || defaultShareMessage,
-        files: [file],
+        url: shareUrl,
       };
 
       if (navigator.canShare && navigator.canShare(shareData)) {
         await navigator.share(shareData);
-        toast.success('Celebration image shared successfully!');
+        toast.success('Circle shared successfully!');
         
-        trackEvent('celebration_image_shared', {
-          template: 'party',
-          method: 'native_share',
+        trackEvent('market_shared', {
           market_address: market.address,
-          participant_count: market.totalParticipants,
-          interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
-          source: 'new_modal',
+          platform: 'native',
+          source: 'post_creation',
         });
       } else {
         // Fallback to clipboard
-        await copyImageToClipboard(generatedImage);
-        toast.success('Image copied to clipboard! Paste it anywhere to share.');
+        await copyToClipboard(`${customMessage || defaultShareMessage}\n\n${shareUrl}`);
+        toast.success('Share text copied to clipboard!');
         
-        trackEvent('celebration_image_shared', {
-          template: 'party',
-          method: 'clipboard',
+        trackEvent('market_shared', {
           market_address: market.address,
-          participant_count: market.totalParticipants,
-          interval_type: market.intervalType === 0 ? 'weekly' : 'monthly',
-          source: 'new_modal',
+          platform: 'clipboard',
+          source: 'post_creation',
         });
       }
     } catch (error) {
@@ -333,13 +133,12 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
       }
       
       console.error('Share failed:', error);
-      toast.error('Failed to share image. Try downloading instead.');
+      toast.error('Failed to share. Try copying the link instead.');
       
-      trackEvent('celebration_image_share_failed', {
-        template: 'party',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        market_address: market?.address,
-        source: 'new_modal',
+      trackEvent('error_occurred' as any, {
+        error_type: 'share_failed',
+        page: 'post_creation_modal',
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     } finally {
       setSharing(false);
@@ -368,8 +167,8 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
     return null;
   }
 
-  // Get portal container
-  const portalContainer = document.getElementById('modal-portal');
+  // Get or create portal container synchronously
+  const portalContainer = ensurePortalContainer();
   if (!portalContainer) {
     return null;
   }
@@ -414,44 +213,39 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
       </div>
 
 
-      {/* Image Display */}
+      {/* QR Code Display */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3 }}
-        className="flex justify-center w-full mb-4"
+        className="flex flex-col items-center w-full mb-4"
       >
-        {isGeneratingImage ? (
-          <div className="w-full max-w-[280px] sm:max-w-[320px] aspect-[16/10] rounded-lg bg-gray-100 border border-[#E8DED1] flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-2 border-[#C84E31] border-t-transparent rounded-full animate-spin mb-2"></div>
-            <span className="text-gray-500 text-xs text-center px-2">
-              {generationStage || 'Generating image...'}
-            </span>
-            {generationProgress > 0 && (
-              <div className="w-24 h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
-                <div 
-                  className="h-full bg-[#C84E31] transition-all duration-300"
-                  style={{ width: `${generationProgress}%` }}
+        <div className="w-full max-w-[200px] sm:max-w-[220px] aspect-square rounded-lg bg-white border border-[#E8DED1] shadow-sm p-4 flex flex-col items-center justify-center">
+          {shareUrl ? (
+            <>
+              <div className="w-full h-full flex items-center justify-center mb-2">
+                <QRCode
+                  value={shareUrl}
+                  size={160}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  viewBox={`0 0 256 256`}
+                  fgColor="#000000"
+                  bgColor="#FFFFFF"
                 />
               </div>
-            )}
-          </div>
-        ) : generatedImage ? (
-          <div className="w-full max-w-[280px] sm:max-w-[320px]">
-            <img 
-              src={generatedImage} 
-              alt="Circle celebration" 
-              loading="lazy"
-              className="w-full aspect-[16/10] rounded-lg shadow-sm object-cover border border-[#E8DED1]"
-            />
-          </div>
-        ) : (
-          <div className="w-full max-w-[280px] sm:max-w-[320px] aspect-[16/10] rounded-lg bg-gray-100 border border-[#E8DED1] flex items-center justify-center">
-            <span className="text-gray-500 text-xs text-center px-2">
-              Failed to generate image
-            </span>
-          </div>
-        )}
+              <p className="text-xs text-[#8B6F47] font-medium text-center">
+                Scan to Join Circle
+              </p>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="w-8 h-8 border-2 border-[#C84E31] border-t-transparent rounded-full animate-spin mb-2"></div>
+              <span className="text-gray-500 text-xs text-center">
+                Generating QR Code...
+              </span>
+            </div>
+          )}
+        </div>
       </motion.div>
 
       {/* Share URL */}
@@ -500,20 +294,11 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="grid grid-cols-3 gap-2 mb-4"
+        className="grid grid-cols-2 gap-2 mb-4"
       >
         <Button
-          onClick={handleDownloadImage}
-          disabled={!downloadUrl || isGeneratingImage}
-          className="bg-[#8B6F47] hover:bg-[#8B6F47]/90 text-white rounded font-medium text-xs py-2 px-2 h-auto touch-manipulation disabled:opacity-50"
-        >
-          <Download className="w-3 h-3 mr-1" />
-          <span>Download</span>
-        </Button>
-        
-        <Button
-          onClick={handleShareImage}
-          disabled={!canShare || isGeneratingImage}
+          onClick={handleShareText}
+          disabled={!shareUrl || isSharing}
           className="bg-[#C84E31] hover:bg-[#C84E31]/90 text-white rounded font-medium text-xs py-2 px-2 h-auto touch-manipulation disabled:opacity-50"
         >
           <AnimatePresence mode="wait">
@@ -549,7 +334,7 @@ export const PostCreationModal: React.FC<PostCreationModalProps> = ({
           className="border border-[#B8860B] text-[#B8860B] hover:bg-[#B8860B]/10 rounded font-medium text-xs py-2 px-2 h-auto touch-manipulation"
         >
           <Copy className="w-3 h-3 mr-1" />
-          <span>Copy</span>
+          <span>Copy Link</span>
         </Button>
       </motion.div>
       

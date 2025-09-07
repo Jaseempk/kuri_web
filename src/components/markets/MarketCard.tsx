@@ -3,39 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { useKuriCore } from "../../hooks/contracts/useKuriCore";
-import { getAccount } from "@wagmi/core";
-import { config } from "../../config/wagmi";
+
 import { useAuthContext } from "../../contexts/AuthContext";
 import { isUserRejection } from "../../utils/errors";
 import { ManageMembersDialog } from "./ManageMembersDialog";
 import { KuriMarket } from "../../hooks/useKuriMarkets";
-import {
-  Clock,
-  Loader2,
-  // Share2,
-  // Users,
-  // Target,
-  // ExternalLink,
-  // Calendar,
-} from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { IntervalType } from "../../graphql/types";
 import { toast } from "sonner";
-// import { formatEther } from "viem";
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardHeader,
-//   CardTitle,
-// } from "../ui/card";
-// import { MarketParticipation } from "../../types/market";
-// import { formatDistanceToNow } from "date-fns";
+
 import { cn } from "../../lib/utils";
 import { ShareModal } from "../modals/ShareModal";
 import { useQuery } from "@tanstack/react-query";
 import { useProfileRequired } from "../../hooks/useProfileRequired";
 import { ShareButton } from "../ui/ShareButton";
-// import { useShare } from "../../hooks/useShare";
 import { shouldUseKuriCore } from "../../utils/marketUtils";
 import { apiClient } from "../../lib/apiClient";
 
@@ -68,9 +49,9 @@ const CIRCLE_IMAGES = [
 const getIntervalTypeText = (intervalType: number | string): string => {
   // Convert to number to handle both string and number inputs
   const numericIntervalType = Number(intervalType);
-  
+
   // Convert to number to handle both string and number inputs from GraphQL
-  
+
   switch (numericIntervalType) {
     case INTERVAL_TYPE.WEEKLY:
       return "weekly";
@@ -103,24 +84,10 @@ export const getMetadata = async (
   }
 };
 
-// Hardcoded fallback data for markets without Supabase metadata
-const HARDCODED_MARKET_METADATA: Record<string, MarketMetadata> = {
-  // Example:
-  // "0x123...": {
-  //   id: 0,
-  //   created_at: "",
-  //   market_address: "0x123...",
-  //   short_description: "A community savings circle powered by Kuri protocol.",
-  //   long_description: "This is a hardcoded long story for the market.",
-  //   image_url: "/images/default-market.jpg",
-  // },
-};
-
 export const MarketCard: React.FC<MarketCardProps> = ({
   market,
   index,
-  onJoinClick,
-  onMarketClick,
+
   className,
 }) => {
   const navigate = useNavigate();
@@ -130,21 +97,18 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const shouldUseCore = shouldUseKuriCore(market, address || undefined);
 
   const {
-    requestMembership,
     requestMembershipSponsored, // 🚀 NEW: Gas-sponsored version
     getMemberStatus,
-    isRequesting,
+
     initializeKuriSponsored,
     marketData,
     fetchMarketData,
-    userPaymentStatus,
-    checkUserPaymentStatus,
+
     isLoading: isLoadingCore,
     error: coreError,
   } = useKuriCore(
     shouldUseCore ? (market.address as `0x${string}`) : undefined
   );
-
 
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -152,8 +116,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-
-  const wagmiAccount = getAccount(config);
 
   const { requireProfile } = useProfileRequired({
     strict: false, // AuthGuard handles route-level protection
@@ -168,10 +130,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   // Use metadata for image URL with fallback
   const imageUrl =
     metadata?.image_url || CIRCLE_IMAGES[index % CIRCLE_IMAGES.length];
-
-  // Default values until implemented in Market type
-  const defaultDescription =
-    "A community savings circle powered by Kuri protocol.";
 
   // Calculate launch end time (3 days from creation)
   const launchEndTime = useMemo(() => {
@@ -339,36 +297,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     }
   };
 
-  const getStatusColor = (state: number) => {
-    switch (state) {
-      case 0: // INLAUNCH
-        return "bg-[hsl(var(--gold))]";
-      case 2: // ACTIVE
-        return "bg-[hsl(var(--forest))]";
-      case 1: // LAUNCHFAILED
-        return "bg-[hsl(var(--ochre))]";
-      case 3: // COMPLETED
-        return "bg-[hsl(var(--sand))]";
-      default:
-        return "bg-[hsl(var(--sand))]";
-    }
-  };
-
-  const getStatusText = (state: number) => {
-    switch (state) {
-      case 0:
-        return "IN LAUNCH";
-      case 1:
-        return "LAUNCH FAILED";
-      case 2:
-        return "ACTIVE";
-      case 3:
-        return "COMPLETED";
-      default:
-        return "UNKNOWN";
-    }
-  };
-
   const getMembershipStatusDisplay = () => {
     switch (membershipStatus) {
       case 0: // NONE
@@ -386,20 +314,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     }
   };
 
-  const isCreator =
-    address?.toLowerCase() === market.creator.toLowerCase();
-
-  // Fallback to hardcoded data if no Supabase metadata
-  const fallbackMetadata: MarketMetadata = {
-    id: 0,
-    created_at: "",
-    market_address: market.address,
-    short_description:
-      market.name || "A community savings circle powered by Kuri protocol.",
-    long_description:
-      "This is a community savings circle powered by Kuri protocol. Join to save and win!",
-    image_url: "/images/default-market.jpg",
-  };
+  const isCreator = address?.toLowerCase() === market.creator.toLowerCase();
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't navigate if dialog is open, clicking on a button, or if the click is from the share button

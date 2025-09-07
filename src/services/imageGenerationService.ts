@@ -351,27 +351,21 @@ export class ImageGenerationService {
       stage: 'Creating canvas...',
     });
 
-    // Create canvas with template-specific styling
+    // Create portrait canvas optimized for card design (Instagram Stories/Mobile sharing)
     const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 500;
+    canvas.width = 600;   // Portrait width for mobile sharing
+    canvas.height = 800;  // 3:4 aspect ratio for Instagram Stories/portrait
     const ctx = canvas.getContext('2d')!;
     
-    // Template-specific rendering
+    // Enable high-quality rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Template-specific rendering with enhanced visuals
     switch (template) {
       case 'hero':
-        // Hero template - party style
-        ctx.fillStyle = '#8B6F47'; // Terracotta background
-        ctx.fillRect(0, 0, 800, 500);
-        ctx.fillStyle = '#F9F5F1';
-        ctx.font = 'bold 48px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🎉 Circle Created!', 400, 150);
-        ctx.font = '32px Inter, sans-serif';
-        ctx.fillText(market.name || 'New Savings Circle', 400, 220);
-        ctx.font = '24px Inter, sans-serif';
-        ctx.fillText(`${market.totalParticipants} Members • ${market.intervalType === 0 ? 'Weekly' : 'Monthly'}`, 400, 280);
-        ctx.fillText(`${market.kuriAmount} USDC Pool`, 400, 320);
+        // Enhanced hero template with gradient background and effects
+        await this.renderEnhancedHeroTemplate(ctx, market, canvas.width, canvas.height);
         break;
         
       case 'stats':
@@ -438,6 +432,229 @@ export class ImageGenerationService {
       downloadUrl,
       generationTime,
     };
+  }
+
+  /**
+   * Portrait card celebration template matching HTML design exactly
+   */
+  private async renderEnhancedHeroTemplate(
+    ctx: CanvasRenderingContext2D, 
+    market: KuriMarket, 
+    width: number, 
+    height: number
+  ): Promise<void> {
+    // Kuri brand colors (exact from HTML CSS variables)
+    const KURI_COLORS = {
+      primary: '#8B6F47',      // --primary-color
+      secondary: '#E8DED1',    // --secondary-color
+      accent: '#F9F5F1',       // --accent-color
+      highlight: '#C84E31',    // --highlight-color
+      supporting: '#6B7280'    // --supporting-color
+    };
+
+    // 1. BACKGROUND (accent color like HTML body)
+    ctx.fillStyle = KURI_COLORS.accent;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. MAIN CARD (full canvas with minimal edge margin)
+    const cardMargin = 20;  // Minimal edge margin
+    const cardWidth = width - (cardMargin * 2);   // Almost full width
+    const cardHeight = height - (cardMargin * 2); // Almost full height
+    const cardX = cardMargin;
+    const cardY = cardMargin;
+    const cardRadius = 24; // rounded-3xl equivalent
+
+    // Card shadow (matching HTML shadow-lg)
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 25;
+    ctx.shadowOffsetY = 10;
+    
+    // Card background (primary color)
+    ctx.fillStyle = KURI_COLORS.primary;
+    this.drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, cardRadius);
+    ctx.fill();
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+
+    // 3. CARD PADDING (p-8 = 32px, scaled up)
+    const padding = 40;
+    const contentX = cardX + padding;
+    const contentWidth = cardWidth - (padding * 2);
+    let currentY = cardY + padding;
+
+    // 4. CHECK CIRCLE ICON (w-20 h-20 = 80px, bg-secondary, rounded-full)
+    const iconSize = 80;
+    const iconX = cardX + cardWidth / 2;
+    const iconY = currentY + iconSize / 2;
+    
+    // Icon background circle (secondary color)
+    ctx.fillStyle = KURI_COLORS.secondary;
+    ctx.beginPath();
+    ctx.arc(iconX, iconY, iconSize / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Check circle icon (Material Icons check_circle equivalent)
+    ctx.fillStyle = KURI_COLORS.primary;
+    ctx.font = '50px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✓', iconX, iconY);
+    
+    currentY += iconSize + 30; // mb-6 equivalent
+
+    // 5. MAIN TITLE (text-3xl font-bold = ~48px)
+    ctx.font = 'bold 48px Poppins, system-ui, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.fillText('Circle Created!', cardX + cardWidth / 2, currentY);
+    currentY += 60;
+
+    // 6. SUBTITLE (text-secondary mt-2)
+    ctx.font = '20px Poppins, system-ui, sans-serif';
+    ctx.fillStyle = KURI_COLORS.secondary;
+    ctx.fillText("You're all set to go!", cardX + cardWidth / 2, currentY);
+    currentY += 50; // mt-8 equivalent
+
+    // 7. STATS CONTAINER (bg-white bg-opacity-10 p-6 rounded-2xl)
+    const statsContainerHeight = 240;
+    const statsRadius = 16; // rounded-2xl
+    const statsPadding = 24; // p-6
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; // bg-white bg-opacity-10
+    this.drawRoundedRect(ctx, contentX, currentY, contentWidth, statsContainerHeight, statsRadius);
+    ctx.fill();
+
+    // 8. CIRCLE NAME (text-xl font-semibold, left-aligned)
+    ctx.font = 'bold 24px Poppins, system-ui, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'left';
+    const circleName = market.name || 'Testing Alchemy AA-kit';
+    const truncatedName = circleName.length > 25 ? circleName.substring(0, 25) + '...' : circleName;
+    ctx.fillText(truncatedName, contentX + statsPadding, currentY + 40);
+
+    // 9. STATS ROW (flex justify-between items-center mt-4)
+    const statsRowY = currentY + 80;
+    ctx.font = '18px Poppins, system-ui, sans-serif';
+    ctx.fillStyle = KURI_COLORS.secondary;
+    
+    // Members (left side with groups icon)
+    ctx.textAlign = 'left';
+    ctx.fillText('👥', contentX + statsPadding, statsRowY);
+    ctx.fillText(`${market.totalParticipants} Members`, contentX + statsPadding + 35, statsRowY);
+    
+    // Frequency (right side with calendar icon)
+    const intervalText = market.intervalType === 0 ? 'Weekly' : 'Monthly';
+    ctx.textAlign = 'right';
+    ctx.fillText(intervalText, contentX + contentWidth - statsPadding, statsRowY);
+    ctx.fillText('📅', contentX + contentWidth - statsPadding - (intervalText.length * 12), statsRowY);
+
+    // 10. POOL AMOUNT CARD (mt-6 bg-white bg-opacity-20 p-4 rounded-xl text-center)
+    const poolCardY = currentY + 120;
+    const poolCardHeight = 80;
+    const poolCardRadius = 12; // rounded-xl
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // bg-white bg-opacity-20
+    this.drawRoundedRect(ctx, contentX + statsPadding, poolCardY, contentWidth - (statsPadding * 2), poolCardHeight, poolCardRadius);
+    ctx.fill();
+
+    // Pool amount content
+    ctx.textAlign = 'center';
+    const poolCenterX = cardX + cardWidth / 2;
+    
+    ctx.font = '14px Poppins, system-ui, sans-serif';
+    ctx.fillStyle = KURI_COLORS.secondary;
+    ctx.fillText('USDC Pool', poolCenterX, poolCardY + 25);
+    
+    ctx.font = 'bold 36px Poppins, system-ui, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    const poolAmount = (Number(market.kuriAmount) / 1_000_000).toFixed(2);
+    ctx.fillText(poolAmount, poolCenterX, poolCardY + 60);
+
+    currentY += statsContainerHeight + 40; // mt-8 equivalent
+
+    // 11. KURI LOGO AND DOMAIN AT BOTTOM
+    const bottomY = cardY + cardHeight - 60;
+    
+    // Try to load and draw Kuri logo
+    try {
+      await this.loadAndDrawKuriLogo(ctx, cardX + cardWidth / 2 - 60, bottomY, 40);
+      // Domain text next to logo
+      ctx.font = '16px Poppins, system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.textAlign = 'left';
+      ctx.fillText('kuri.fi', cardX + cardWidth / 2 - 10, bottomY + 8);
+    } catch (error) {
+      // Fallback: just show domain
+      ctx.font = '16px Poppins, system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.textAlign = 'center';
+      ctx.fillText('kuri.fi', cardX + cardWidth / 2, bottomY);
+    }
+  }
+
+  /**
+   * Load and draw Kuri logo from public images
+   */
+  private async loadAndDrawKuriLogo(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    maxSize: number
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        let drawWidth = maxSize;
+        let drawHeight = maxSize / aspectRatio;
+        
+        if (drawHeight > maxSize) {
+          drawHeight = maxSize;
+          drawWidth = maxSize * aspectRatio;
+        }
+        
+        ctx.drawImage(
+          img,
+          x - drawWidth / 2,
+          y - drawHeight / 2,
+          drawWidth,
+          drawHeight
+        );
+        resolve();
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load logo'));
+      
+      // Try to load the logo - adjust path as needed for your build process
+      img.src = '/images/KuriLogo.png';
+    });
+  }
+
+  /**
+   * Helper method to draw rounded rectangles
+   */
+  private drawRoundedRect(
+    ctx: CanvasRenderingContext2D, 
+    x: number, 
+    y: number, 
+    width: number, 
+    height: number, 
+    radius: number
+  ): void {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
   }
 }
 

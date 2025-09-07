@@ -66,9 +66,9 @@ const CIRCLE_IMAGES = [
 ];
 
 const getIntervalTypeText = (intervalType: number | string): string => {
-  // Convert to number to handle both string and number inputs  
+  // Convert to number to handle both string and number inputs
   const numericIntervalType = Number(intervalType);
-  
+
   // Convert to number to handle both string and number inputs from GraphQL
   return numericIntervalType === 0 ? "weekly" : "monthly";
 };
@@ -121,7 +121,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
   const [showShareModal, setShowShareModal] = useState(false);
 
   const wagmiAccount = getAccount(config);
-  
+
   const { requireProfile } = useProfileRequired({
     strict: false,
     action: "join_circle",
@@ -495,11 +495,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Win Amount</p>
                 <p className="text-sm xs:text-base font-medium text-[hsl(var(--forest))]">
-                  $
-                  {Math.floor(
-                    (Number(market.kuriAmount) / 1_000_000) *
-                    market.totalParticipants
-                  )}
+                  ${Math.floor(Number(market.kuriAmount) / 1_000_000)}
                 </p>
               </div>
               <div>

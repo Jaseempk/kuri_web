@@ -50,11 +50,14 @@ export function usePostCreationModal(options: UsePostCreationModalOptions = {}) 
    * Show the post-creation modal for a specific market
    */
   const show = useCallback((market: KuriMarket) => {
+    console.log('🚀 usePostCreationModal.show called with market:', market);
+    
     if (!market?.address) {
       console.error('Invalid market data provided to show modal');
       return;
     }
 
+    console.log('✅ Calling showModal with valid market');
     showModal(market);
     
     // Track modal display with safe error handling
@@ -174,10 +177,14 @@ export function useMarketListPostCreation() {
    * Matches the interface expected by CreateMarketForm
    */
   const handleMarketCreated = useCallback((market: KuriMarket) => {
+    console.log('🎯 handleMarketCreated called with:', market);
+    
     if (!market) {
       console.error('handleMarketCreated called with invalid market data');
       return;
     }
+    
+    console.log('📞 Calling show() with market');
     show(market);
   }, [show]);
 
