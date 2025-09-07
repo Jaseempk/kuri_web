@@ -712,18 +712,6 @@ export default function MarketList() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {/* Section Header */}
-                    <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-4 xs:mb-6">
-                      {sectionMarkets.length > 6 && (
-                        <Button
-                          variant="outline"
-                          className="hidden xs:inline-flex text-[#8B6F47] border-[#E8DED1] hover:bg-[#F9F5F1]"
-                        >
-                          View All
-                        </Button>
-                      )}
-                    </div>
-
                     {/* Markets Grid */}
                     {sectionMarkets.length === 0 ? (
                       <div className="text-center py-12">
