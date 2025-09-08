@@ -51,6 +51,25 @@ export const useOptimizedAuth = () => {
   const { getSignedAuth } = useApiAuth();
   const account = useAccount(); // ✅ Use live Para SDK state directly
 
+  // 🔧 FIX: Add debouncing to prevent Para SDK state fluctuations
+  const [debouncedAccount, setDebouncedAccount] = useState(account);
+
+  // 🔧 FIX: Debounce account state changes to prevent rapid fluctuations
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Only update debounced account after 500ms of stability
+      setDebouncedAccount(account);
+    }, 500);
+    
+    // Cancel timer if account changes again before 500ms
+    return () => clearTimeout(timer);
+  }, [
+    account?.isConnected, 
+    account?.isLoading, 
+    account?.embedded?.wallets?.[0]?.id,
+    account?.embedded?.wallets?.[0]?.address
+  ]);
+
   // Performance monitoring - track render frequency
   const renderCount = useRef(0);
   renderCount.current++;
@@ -62,12 +81,13 @@ export const useOptimizedAuth = () => {
   const walletService = getWalletService();
   const profileService = getProfileService();
 
-  // Extract stable primitive values from account to prevent infinite loops
-  const accountIsConnected = account?.isConnected ?? false;
-  const accountIsLoading = account?.isLoading ?? false;
-  const accountUserEmail = account?.user?.email;
-  const embeddedWalletId = account?.embedded?.wallets?.[0]?.id;
-  const embeddedWalletAddress = account?.embedded?.wallets?.[0]?.address;
+  // Extract stable primitive values from debounced account to prevent infinite loops
+  // Use debounced account for stability, but keep live account for immediate loading states
+  const accountIsConnected = debouncedAccount?.isConnected ?? false;
+  const accountIsLoading = account?.isLoading ?? false; // Keep live for immediate loading feedback
+  const accountUserEmail = debouncedAccount?.user?.email;
+  const embeddedWalletId = debouncedAccount?.embedded?.wallets?.[0]?.id;
+  const embeddedWalletAddress = debouncedAccount?.embedded?.wallets?.[0]?.address;
 
   // Create stable references for complex objects using serialized keys
   const accountUserKey = useMemo(
@@ -165,10 +185,10 @@ export const useOptimizedAuth = () => {
       return AuthFlowState.ERROR;
     }
 
-    // Create stable account object from primitives
+    // Create stable account object from debounced primitives
     const stableAccount = {
-      isConnected: accountIsConnected,
-      isLoading: accountIsLoading,
+      isConnected: accountIsConnected, // Uses debounced value for stability
+      isLoading: accountIsLoading, // Uses live value for immediate loading feedback
       user: { email: accountUserEmail },
       embedded: {
         wallets: embeddedWalletId
