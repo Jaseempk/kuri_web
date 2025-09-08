@@ -7,7 +7,7 @@ import { config } from "../../config/wagmi";
 import { getDefaultChainId } from "../../config/contracts";
 import { useTransactionStatus } from "../useTransactionStatus";
 
-import { calculateApprovalAmount } from "../../utils/tokenUtils";
+import { calculateApprovalAmount, calculateRequiredDepositAmount } from "../../utils/tokenUtils";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
 import { useAuthContext } from "../../contexts/AuthContext";
 import {
@@ -428,16 +428,16 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       throw new Error("Invalid parameters");
 
     try {
-      const kuriAmount = marketData.kuriAmount;
-
       // Check if this is a first deposit (interval 1) that requires 1% fee
       const isFirstDeposit =
         currentInterval === 1 && userPaymentStatus === false;
 
       // Calculate required amount including fee for first deposit
-      const requiredAmount = isFirstDeposit
-        ? kuriAmount + kuriAmount / BigInt(100) // Add 1% fee
-        : kuriAmount;
+      const requiredAmount = calculateRequiredDepositAmount(
+        marketData.kuriAmount,
+        marketData.totalParticipantsCount,
+        isFirstDeposit
+      );
 
       const requiredApproval = calculateApprovalAmount(requiredAmount);
       const currentAllowance = await checkAllowance();
@@ -506,6 +506,8 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     userAddress,
     marketData,
     tokenAddress,
+    currentInterval,
+    userPaymentStatus,
     checkAllowance,
     approveTokens,
     handleTransaction,
@@ -519,16 +521,16 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       throw new Error("Invalid parameters");
 
     try {
-      const kuriAmount = marketData.kuriAmount;
-
       // Check if this is a first deposit (interval 1) that requires 1% fee
       const isFirstDeposit =
         currentInterval === 1 && userPaymentStatus === false;
 
       // Calculate required amount including fee for first deposit
-      const requiredAmount = isFirstDeposit
-        ? kuriAmount + kuriAmount / BigInt(100) // Add 1% fee
-        : kuriAmount;
+      const requiredAmount = calculateRequiredDepositAmount(
+        marketData.kuriAmount,
+        marketData.totalParticipantsCount,
+        isFirstDeposit
+      );
 
       const requiredApproval = calculateApprovalAmount(requiredAmount);
       const currentAllowance = await checkAllowance();

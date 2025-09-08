@@ -121,3 +121,42 @@ export const hasSufficientBalance = (
 ): boolean => {
   return userBalance >= requiredAmount;
 };
+
+/**
+ * Calculate per-interval deposit amount from total kuri amount
+ * @param kuriAmount - Total amount for the entire kuri circle
+ * @param totalParticipants - Total number of participants in the circle
+ * @returns Amount each participant should deposit per interval
+ */
+export const calculatePerIntervalAmount = (
+  kuriAmount: bigint,
+  totalParticipants: number
+): bigint => {
+  if (totalParticipants <= 0) {
+    throw new Error("Total participants must be greater than 0");
+  }
+  return kuriAmount / BigInt(totalParticipants);
+};
+
+/**
+ * Calculate required deposit amount including fees
+ * @param kuriAmount - Total amount for the entire kuri circle
+ * @param totalParticipants - Total number of participants in the circle
+ * @param isFirstDeposit - Whether this is the user's first deposit (includes 1% fee)
+ * @returns Required deposit amount with fees if applicable
+ */
+export const calculateRequiredDepositAmount = (
+  kuriAmount: bigint,
+  totalParticipants: number,
+  isFirstDeposit: boolean = false
+): bigint => {
+  const perIntervalAmount = calculatePerIntervalAmount(kuriAmount, totalParticipants);
+  
+  if (isFirstDeposit) {
+    // Add 1% fee for first deposit
+    const fee = perIntervalAmount / BigInt(100);
+    return perIntervalAmount + fee;
+  }
+  
+  return perIntervalAmount;
+};
