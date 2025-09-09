@@ -20,23 +20,18 @@ export const validateImageFile = (
   if (!file) {
     return {
       isValid: false,
-      error: 'No file provided'
+      error: "No file provided",
     };
   }
 
   // Validate file type
-  const allowedTypes = [
-    'image/jpeg',
-    'image/jpg', 
-    'image/png',
-    'image/gif',
-    'image/webp'
-  ];
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
 
   if (!allowedTypes.includes(file.type)) {
     return {
       isValid: false,
-      error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed'
+      error:
+        "Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed",
     };
   }
 
@@ -45,7 +40,7 @@ export const validateImageFile = (
     const maxSizeMB = Math.round(maxSizeBytes / (1024 * 1024));
     return {
       isValid: false,
-      error: `File size exceeds ${maxSizeMB}MB limit`
+      error: `File size exceeds ${maxSizeMB}MB limit`,
     };
   }
 
@@ -53,25 +48,34 @@ export const validateImageFile = (
   if (file.name.length > 255) {
     return {
       isValid: false,
-      error: 'File name is too long'
+      error: "File name is too long",
     };
   }
 
   // Check for potentially malicious file extensions in name
-  const suspiciousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.com', '.pif', '.js', '.vbs'];
+  const suspiciousExtensions = [
+    ".exe",
+    ".bat",
+    ".cmd",
+    ".scr",
+    ".com",
+    ".pif",
+    ".js",
+    ".vbs",
+  ];
   const fileName = file.name.toLowerCase();
-  
+
   for (const ext of suspiciousExtensions) {
     if (fileName.includes(ext)) {
       return {
         isValid: false,
-        error: 'File name contains potentially unsafe content'
+        error: "File name contains potentially unsafe content",
       };
     }
   }
 
   return {
-    isValid: true
+    isValid: true,
   };
 };
 
@@ -93,15 +97,15 @@ export const validateImageDimensions = (
 
     img.onload = () => {
       URL.revokeObjectURL(url);
-      
+
       if (img.width > maxWidth || img.height > maxHeight) {
         resolve({
           isValid: false,
-          error: `Image dimensions exceed ${maxWidth}x${maxHeight} pixels`
+          error: `Image dimensions exceed ${maxWidth}x${maxHeight} pixels`,
         });
       } else {
         resolve({
-          isValid: true
+          isValid: true,
         });
       }
     };
@@ -110,7 +114,7 @@ export const validateImageDimensions = (
       URL.revokeObjectURL(url);
       resolve({
         isValid: false,
-        error: 'Unable to load image file'
+        error: "Unable to load image file",
       });
     };
 
@@ -151,6 +155,6 @@ export const validateImageUpload = async (
   }
 
   return {
-    isValid: true
+    isValid: true,
   };
 };
