@@ -1,9 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { KuriState } from "../hooks/contracts/useKuriCore";
 import { KuriState as GraphQLKuriState } from "../graphql/types";
 import { MarketProvider, useMarketContext } from "../contexts/MarketContext";
-import { MarketTimerProvider, useMarketTimerContext } from "../contexts/MarketTimerContext";
+import {
+  MarketTimerProvider,
+  useMarketTimerContext,
+} from "../contexts/MarketTimerContext";
 import { Button } from "../components/ui/button";
 import { MarketSEO } from "../components/seo/MarketSEO";
 import { ShareModal } from "../components/modals/ShareModal";
@@ -108,7 +117,7 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   console.log("🔄 StatsContainer render - data changed:", {
     activeParticipants: marketData.totalActiveParticipantsCount,
     totalParticipants: marketData.totalParticipantsCount,
-    kuriAmount: marketData.kuriAmount.toString()
+    kuriAmount: marketData.kuriAmount.toString(),
   });
 
   return (
@@ -134,7 +143,12 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
             <span className="material-icons mr-1.5 text-xl">paid</span>
           </div>
           <p className="font-bold text-2xl">
-            ${(Number(marketData.kuriAmount) / 1_000_000 / marketData.totalParticipantsCount).toFixed(0)}
+            $
+            {(
+              Number(marketData.kuriAmount) /
+              1_000_000 /
+              marketData.totalParticipantsCount
+            ).toFixed(2)}
           </p>
           <p className="text-xs opacity-80">Contribution</p>
         </div>
@@ -197,19 +211,23 @@ const TabContent: React.FC<TabContentProps> = ({
   renderActionButton,
 }) => {
   const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimerContext();
-  
+
   // Track render instances to identify duplicates
   tabContentRenderCount++;
   console.log("TiemLeft:", timeLeft);
-  console.log("🔄 TabContent render #" + tabContentRenderCount + " - timers updated:", {
-    timeLeft,
-    raffleTimeLeft, 
-    depositTimeLeft,
-    activeTab,
-    renderInstance: tabContentRenderCount,
-    preventedRender: timeLeft === 'cached_value' ? '❌ Prevented' : '✅ Legitimate'
-  });
-  
+  console.log(
+    "🔄 TabContent render #" + tabContentRenderCount + " - timers updated:",
+    {
+      timeLeft,
+      raffleTimeLeft,
+      depositTimeLeft,
+      activeTab,
+      renderInstance: tabContentRenderCount,
+      preventedRender:
+        timeLeft === "cached_value" ? "❌ Prevented" : "✅ Legitimate",
+    }
+  );
+
   if (!marketData) return null;
 
   return (
@@ -716,12 +734,8 @@ function MarketDetailInner() {
   } = useMarketContext();
 
   // Get timer data from separate context to prevent cascade re-renders
-  const {
-    timeLeft,
-    raffleTimeLeft,
-    depositTimeLeft,
-  } = useMarketTimerContext();
-  
+  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimerContext();
+
   // Add render cause tracking
   const renderCount = useRef(0);
   const previousProps = useRef<any>({});
@@ -733,29 +747,34 @@ function MarketDetailInner() {
       marketDataExists: !!marketData,
       timeLeft,
       isLoadingCore,
-      address
+      address,
     };
-    
+
     if (renderCount.current > 1) {
       const changedProps: any = {};
-      Object.keys(currentProps).forEach(key => {
+      Object.keys(currentProps).forEach((key) => {
         if (previousProps.current[key] !== (currentProps as any)[key]) {
-          changedProps[key] = { 
-            from: previousProps.current[key], 
-            to: (currentProps as any)[key] 
+          changedProps[key] = {
+            from: previousProps.current[key],
+            to: (currentProps as any)[key],
           };
         }
       });
-      
+
       if (Object.keys(changedProps).length > 0) {
-        console.log(`🔄 Render #${renderCount.current} - Changed props:`, changedProps);
+        console.log(
+          `🔄 Render #${renderCount.current} - Changed props:`,
+          changedProps
+        );
       } else {
-        console.log(`🔄 Render #${renderCount.current} - No prop changes (reference equality issue)`);
+        console.log(
+          `🔄 Render #${renderCount.current} - No prop changes (reference equality issue)`
+        );
       }
     } else {
       console.log(`🔄 Render #${renderCount.current} - Initial render`);
     }
-    
+
     previousProps.current = currentProps;
   });
 
@@ -764,7 +783,7 @@ function MarketDetailInner() {
     userAddress,
     marketDataExists: !!marketData,
     timeLeft,
-    isLoadingCore
+    isLoadingCore,
   });
 
   // Fetch creator's profile
@@ -914,7 +933,8 @@ function MarketDetailInner() {
       Date.now() > Number(marketData.launchPeriod) * 1000;
 
     if (isFull && !launchPeriodEnded) return "Circle is full - ready to start!";
-    if (isFull && launchPeriodEnded) return "Circle is full - launch period completed";
+    if (isFull && launchPeriodEnded)
+      return "Circle is full - launch period completed";
     return "Waiting for more members to fill the circle";
   }, [marketData]);
 
@@ -1099,7 +1119,9 @@ function MarketDetailInner() {
             {isInitializing ? (
               <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
             ) : (
-              <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">add_circle_outline</span>
+              <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">
+                add_circle_outline
+              </span>
             )}
             {isInitializing ? (
               <>
@@ -1190,7 +1212,9 @@ function MarketDetailInner() {
           onMemberActionComplete={handleMemberActionComplete}
         >
           <button className="w-full bg-[#E67A50] text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
-            <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">people_outline</span>
+            <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">
+              people_outline
+            </span>
             <span className="hidden sm:inline">
               Manage Members ({marketData?.totalActiveParticipantsCount || 0}/
               {marketData?.totalParticipantsCount || 0})
@@ -1223,7 +1247,9 @@ function MarketDetailInner() {
             ) : isMarketFull ? (
               <XCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
             ) : (
-              <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">add_circle_outline</span>
+              <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">
+                add_circle_outline
+              </span>
             )}
             {isRequesting ? (
               <>
@@ -1936,7 +1962,6 @@ function MarketDetailInner() {
               </motion.div>
             </div>
           </div>
-
         </div>
       </div>
       <ShareModal
@@ -1967,7 +1992,7 @@ function MarketDetailInner() {
 
 function MarketDetailWithTimer() {
   const { marketData } = useMarketContext();
-  
+
   return (
     <MarketTimerProvider marketData={marketData}>
       <MarketDetailInner />
@@ -1977,11 +2002,11 @@ function MarketDetailWithTimer() {
 
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
-  
+
   if (!address) {
     return null;
   }
-  
+
   return (
     <MarketProvider marketAddress={address}>
       <MarketDetailWithTimer />

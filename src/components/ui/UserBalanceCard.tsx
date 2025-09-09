@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatUnits } from "viem";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useAuthContext } from "../../contexts/AuthContext";
@@ -7,6 +7,7 @@ import { USDCDepositModal } from "../modals/USDCDepositModal";
 
 export const UserBalanceCard = () => {
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [dotCount, setDotCount] = useState(1);
   const { smartAddress: userAddress, account } = useAuthContext();
 
   const {
@@ -29,12 +30,45 @@ export const UserBalanceCard = () => {
     setShowDepositModal(true);
   };
 
+  // Incremental dot animation for loading state
+  useEffect(() => {
+    if (!isLoadingBalance) {
+      setDotCount(1); // Reset when not loading
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setDotCount(prev => prev >= 3 ? 1 : prev + 1);
+    }, 600); // Change dots every 600ms
+
+    return () => clearInterval(interval);
+  }, [isLoadingBalance]);
+
   const formatBalance = (balance: bigint) => {
     return Number(formatUnits(balance, 6)).toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   };
+
+  // Loading animation component
+  const LoadingDots = () => (
+    <div className="flex items-center gap-1">
+      <span className="text-gray-600">$</span>
+      <div className="flex gap-1 min-w-[24px]">
+        {Array.from({ length: 3 }, (_, index) => (
+          <div
+            key={index}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index < dotCount 
+                ? 'bg-gray-600 scale-100' 
+                : 'bg-gray-300 scale-75'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-[#f9f4ef] rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
@@ -56,7 +90,7 @@ export const UserBalanceCard = () => {
         <div className="mb-1">
           <p className="text-4xl font-bold text-gray-800">
             {isLoadingBalance ? (
-              <span className="animate-pulse">Loading...</span>
+              <LoadingDots />
             ) : balanceError ? (
               <span className="text-red-600 text-xl">Error</span>
             ) : (
@@ -92,7 +126,7 @@ export const UserBalanceCard = () => {
           <p className="text-sm text-gray-500">Your USDC Balance</p>
           <p className="text-4xl font-bold text-gray-800 mt-1">
             {isLoadingBalance ? (
-              <span className="animate-pulse">Loading...</span>
+              <LoadingDots />
             ) : balanceError ? (
               <span className="text-red-600 text-xl">Error</span>
             ) : (
