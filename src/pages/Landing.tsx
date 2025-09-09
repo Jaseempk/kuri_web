@@ -691,7 +691,8 @@ function App() {
                   No Active Circles Right Now
                 </h3>
                 <p className="text-sm max-w-sm mx-auto">
-                  Be the first to create a new circle and start building your
+                  Be the first to create a new{" "}
+                  {localizedContent.circleReference} and start building your
                   community savings group.
                 </p>
               </div>
@@ -699,7 +700,9 @@ function App() {
                 onClick={() => navigate("/markets")}
                 className="bg-[#C84E31] text-white hover:bg-[#b03e24] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
               >
-                Create Your Circle
+                Create Your{" "}
+                {localizedContent.circleReference.charAt(0).toUpperCase() +
+                  localizedContent.circleReference.slice(1)}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -724,14 +727,14 @@ function App() {
                     <button
                       onClick={prevCard}
                       className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#C84E31] rounded-full p-2 shadow-lg border border-white/20 transition-all duration-200"
-                      aria-label="Previous circle"
+                      aria-label={`Previous ${localizedContent.circleReference}`}
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
                       onClick={nextCard}
                       className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#C84E31] rounded-full p-2 shadow-lg border border-white/20 transition-all duration-200"
-                      aria-label="Next circle"
+                      aria-label={`Next ${localizedContent.circleReference}`}
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
@@ -767,7 +770,9 @@ function App() {
                             ? "bg-[#C84E31] w-4"
                             : "bg-[#C84E31]/30"
                         }`}
-                        aria-label={`Go to circle ${index + 1}`}
+                        aria-label={`Go to ${
+                          localizedContent.circleReference
+                        } ${index + 1}`}
                       />
                     ))}
                   </div>
@@ -1026,21 +1031,23 @@ function App() {
                     like {localizedContent.localTerm}
                   </span>
                 )}{" "}
-                for today's world. A circle of trust where friends, family, and
-                communities pool resources to help each member flourish, one by
-                one.
+                for today's world. A {localizedContent.circleReference} of trust
+                where friends, family, and communities pool resources to help
+                each {localizedContent.memberTerm} flourish, one by one.
               </p>
               <p className="text-lg text-muted-foreground mb-6">
                 No banks, no interest, no debt—just people supporting people.
-                Your circle becomes your safety net, turning individual
-                contributions into collective empowerment.
+                Your {localizedContent.circleReference} becomes your safety net,
+                turning individual {localizedContent.contributionTerm}s into
+                collective empowerment.
               </p>
               <p className="text-lg text-muted-foreground mb-6">
                 <span className="font-semibold">How it works:</span> Join or
-                create a circle with people you trust. Everyone contributes an
-                equal amount regularly, and each cycle, one member receives the
-                entire pool through a fair, transparent raffle. This continues
-                until everyone has had their turn.
+                create a {localizedContent.circleReference} with people you
+                trust. Everyone contributes an equal amount regularly, and each
+                cycle, one {localizedContent.memberTerm} receives the entire
+                pool through a fair, transparent raffle. This continues until
+                everyone has had their turn.
               </p>
             </motion.div>
           </div>
@@ -1113,10 +1120,11 @@ function App() {
                   viewport={{ once: true }}
                 >
                   <h3 className="text-white text-2xl font-sans font-semibold mb-2 drop-shadow-md">
-                    Join Your Circle
+                    {localizedContent.joinActionText}
                   </h3>
                   <p className="text-white/90 drop-shadow-md font-medium">
-                    Create or join a circle with people you trust
+                    Create or join a {localizedContent.circleReference} with
+                    people you trust
                   </p>
                 </motion.div>
               </motion.div>
@@ -1134,11 +1142,14 @@ function App() {
                 01 — JOIN
               </span>
               <h3 className="text-3xl font-sans font-semibold mb-6 mt-2">
-                Trust-based with optional privacy
+                Trust-based {localizedContent.circleReference} with optional
+                privacy
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Create or join a circle with trusted people. Set your
-                contribution amount and invite members to start saving together.
+                Create or join a {localizedContent.circleReference} with trusted
+                people. Set your {localizedContent.contributionTerm} amount and
+                invite {localizedContent.memberTermPlural} to start saving
+                together.
               </p>
 
               <div className="grid grid-cols-1 gap-4 mb-6">
@@ -1163,13 +1174,19 @@ function App() {
                   <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--terracotta))/10] flex items-center justify-center">
                     <Check className="h-4 w-4 text-[hsl(var(--terracotta))]" />
                   </div>
-                  <p>Set circle size and contribution amount</p>
+                  <p>
+                    Set {localizedContent.circleReference} size and{" "}
+                    {localizedContent.contributionTerm} amount
+                  </p>
                 </li>
                 <li className="flex items-start">
                   <div className="mt-1 mr-4 flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--terracotta))/10] flex items-center justify-center">
                     <Check className="h-4 w-4 text-[hsl(var(--terracotta))]" />
                   </div>
-                  <p>Invite members through email or social media</p>
+                  <p>
+                    Invite {localizedContent.memberTermPlural} through email or
+                    social media
+                  </p>
                 </li>
               </ul>
 
@@ -1180,7 +1197,7 @@ function App() {
                   className="group bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))]"
                   onClick={() => navigate("/markets")}
                 >
-                  Start Your Circle
+                  {localizedContent.createActionText}
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>
@@ -1198,11 +1215,15 @@ function App() {
                 02 — CONTRIBUTE
               </span>
               <h3 className="text-3xl font-sans font-semibold mb-6 mt-2">
-                Regular Contributions
+                Regular{" "}
+                {localizedContent.contributionTerm.charAt(0).toUpperCase() +
+                  localizedContent.contributionTerm.slice(1)}
+                s
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Make regular contributions to build your community fund with
-                automated reminders and real-time tracking.
+                Make payments to build your {localizedContent.circleReference}{" "}
+                fund either weekly/monthly with automated reminders and
+                real-time tracking.
               </p>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1214,7 +1235,9 @@ function App() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">
-                    Contribution Cycle
+                    {localizedContent.contributionTerm.charAt(0).toUpperCase() +
+                      localizedContent.contributionTerm.slice(1)}{" "}
+                    Cycle
                   </p>
                   <p className="font-medium">Monthly or Custom</p>
                 </div>
@@ -1242,7 +1265,7 @@ function App() {
                   className="group bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))]"
                   onClick={() => navigate("/markets")}
                 >
-                  Start Your Circle
+                  {localizedContent.createActionText}
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>
@@ -1281,7 +1304,10 @@ function App() {
                   viewport={{ once: true }}
                 >
                   <h3 className="text-white text-2xl font-sans font-semibold mb-2 drop-shadow-md">
-                    Make Contributions
+                    Make{" "}
+                    {localizedContent.contributionTerm.charAt(0).toUpperCase() +
+                      localizedContent.contributionTerm.slice(1)}
+                    s
                   </h3>
                   <p className="text-white/90 drop-shadow-md font-medium">
                     Regular payments build your community fund
@@ -1386,7 +1412,7 @@ function App() {
                   className="group bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] text-white border border-[hsl(var(--terracotta))]"
                   onClick={() => navigate("/markets")}
                 >
-                  Start Your Circle
+                  {localizedContent.createActionText}
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>
@@ -1482,11 +1508,15 @@ function App() {
         <div className="container mx-auto px-4 py-8 relative">
           <div className="bg-background/80 backdrop-blur-md p-12 rounded-2xl max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-sans font-semibold mb-6">
-              Ready to Start Your Circle?
+              Ready to Start Your{" "}
+              {localizedContent.circleReference.charAt(0).toUpperCase() +
+                localizedContent.circleReference.slice(1)}
+              ?
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of people who are already saving together and
-              building stronger communities.
+              Join thousands of people who are already saving together in{" "}
+              {localizedContent.circleReferencePlural} and building stronger
+              communities.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -1494,7 +1524,9 @@ function App() {
                 className="group"
                 onClick={() => navigate("/onboarding")}
               >
-                Create Your Circle
+                Create Your{" "}
+                {localizedContent.circleReference.charAt(0).toUpperCase() +
+                  localizedContent.circleReference.slice(1)}
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </div>
