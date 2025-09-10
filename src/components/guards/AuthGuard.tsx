@@ -15,6 +15,10 @@ export const AuthGuard = ({ children, requireProfile = true }: AuthGuardProps) =
   useEffect(() => {
     switch (authState) {
       case AuthFlowState.INITIALIZING:
+        coordinatedNavigate("/onboarding", "AuthGuard-auth", {
+          state: { returnUrl: window.location.pathname }
+        });
+        break;
       case AuthFlowState.PARA_LOADING:
         // Still loading, do nothing
         break;
@@ -36,6 +40,8 @@ export const AuthGuard = ({ children, requireProfile = true }: AuthGuardProps) =
   // Simple state-based routing
   switch (authState) {
     case AuthFlowState.INITIALIZING:
+      return null; // No skeleton, redirect handled in useEffect
+      
     case AuthFlowState.PARA_LOADING:
     case AuthFlowState.WALLET_RESOLVING:
     case AuthFlowState.PROFILE_LOADING:

@@ -65,7 +65,7 @@ const getLocalizedContent = (country: string): LocalizedContent => {
       localTermMeaning: "traditional Kenyan investment groups",
       circleReference: "chama",
       circleReferencePlural: "chamas",
-      contributionTerm: "contribution",
+      contributionTerm: "chama",
       memberTerm: "member",
       memberTermPlural: "members",
       joinActionText: "Join Your Chama",
