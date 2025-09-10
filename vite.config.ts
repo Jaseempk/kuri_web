@@ -25,7 +25,7 @@ export default defineConfig({
       manifest: {
         name: "Kuri Finance",
         short_name: "Kuri",
-        description: "Decentralized rotating savings circles",
+        description: "Rotation savings circles",
         theme_color: "#C84E31",
         background_color: "#F9F5F1",
         display: "standalone",

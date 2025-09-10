@@ -5,85 +5,107 @@
     <link rel="icon" type="image/png" href="/icons/icon-192x192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kuri - Community Saving Circles</title>
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#C84E31" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Kuri">
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-    <meta name="description" content="Decentralized rotating savings circles - Join circles, make contributions, and build financial trust in your community">
-    
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Kuri" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <meta
+      name="description"
+      content="Rotation savings circles - Join circles, make contributions, and build financial backup"
+    />
+
     <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+
     <!-- Manifest -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- OneSignal SDK v16 - Official Dashboard Code -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script
+      src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+      defer
+    ></script>
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
+      OneSignalDeferred.push(async function (OneSignal) {
         try {
           await OneSignal.init({
             appId: "5ad950da-8f42-4194-bbe0-b2b7d64c79c1",
-            safari_web_id: "web.onesignal.auto.1f7edc6b-077e-4a04-b244-6d0a0c671761",
+            safari_web_id:
+              "web.onesignal.auto.1f7edc6b-077e-4a04-b244-6d0a0c671761",
             notifyButton: {
               enable: true,
-              size: 'medium', // 'small', 'medium', 'large'
-              position: 'bottom-right', // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
+              size: "medium", // 'small', 'medium', 'large'
+              position: "bottom-right", // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
               offset: {
-                bottom: '20px',
-                right: '20px'
+                bottom: "20px",
+                right: "20px",
               },
               colors: {
-                'circle.background': '#C84E31', // Match your theme color
-                'circle.foreground': 'white',
-                'badge.background': '#ff6b6b',
-                'badge.foreground': 'white',
-                'badge.bordercolor': 'white',
-                'pulse.color': '#C84E31'
+                "circle.background": "#C84E31", // Match your theme color
+                "circle.foreground": "white",
+                "badge.background": "#ff6b6b",
+                "badge.foreground": "white",
+                "badge.bordercolor": "white",
+                "pulse.color": "#C84E31",
               },
               text: {
-                'tip.state.unsubscribed': 'Subscribe to notifications',
-                'tip.state.subscribed': "You're subscribed to notifications",
-                'tip.state.blocked': 'Unblock notifications',
-                'message.prenotify': 'Click to subscribe to notifications',
-                'message.action.subscribed': "Thanks! You'll receive notifications for new updates.",
-                'message.action.resubscribed': "You're subscribed to notifications",
-                'message.action.unsubscribed': "You won't receive notifications again",
-                'dialog.main.title': 'Manage Site Notifications',
-                'dialog.main.button.subscribe': 'SUBSCRIBE',
-                'dialog.main.button.unsubscribe': 'UNSUBSCRIBE'
+                "tip.state.unsubscribed": "Subscribe to notifications",
+                "tip.state.subscribed": "You're subscribed to notifications",
+                "tip.state.blocked": "Unblock notifications",
+                "message.prenotify": "Click to subscribe to notifications",
+                "message.action.subscribed":
+                  "Thanks! You'll receive notifications for new updates.",
+                "message.action.resubscribed":
+                  "You're subscribed to notifications",
+                "message.action.unsubscribed":
+                  "You won't receive notifications again",
+                "dialog.main.title": "Manage Site Notifications",
+                "dialog.main.button.subscribe": "SUBSCRIBE",
+                "dialog.main.button.unsubscribe": "UNSUBSCRIBE",
               },
-              theme: 'default', // 'default', 'inverse'
-              displayPredicate: function() {
+              theme: "default", // 'default', 'inverse'
+              displayPredicate: function () {
                 // Hide button if user is already subscribed
                 try {
-                  if (window.OneSignal && window.OneSignal.User && window.OneSignal.User.PushSubscription) {
-                    const isSubscribed = window.OneSignal.User.PushSubscription.optedIn;
-                    const hasPermission = window.OneSignal.Notifications && window.OneSignal.Notifications.permission;
-                    
+                  if (
+                    window.OneSignal &&
+                    window.OneSignal.User &&
+                    window.OneSignal.User.PushSubscription
+                  ) {
+                    const isSubscribed =
+                      window.OneSignal.User.PushSubscription.optedIn;
+                    const hasPermission =
+                      window.OneSignal.Notifications &&
+                      window.OneSignal.Notifications.permission;
+
                     // Only show if user is NOT subscribed or doesn't have permission
                     return !isSubscribed || !hasPermission;
                   }
                   return true; // Show by default if OneSignal not ready
                 } catch (error) {
-                  console.log('OneSignal displayPredicate check failed:', error);
+                  console.log(
+                    "OneSignal displayPredicate check failed:",
+                    error
+                  );
                   return true; // Show by default on error
                 }
-              }
+              },
             },
           });
-          console.log('✅ OneSignal: Initialization successful');
-          
+          console.log("✅ OneSignal: Initialization successful");
+
           // Make OneSignal globally accessible for debugging
           window._OneSignalDebug = OneSignal;
           window.OneSignal = OneSignal;
-          
         } catch (error) {
-          console.error('❌ OneSignal: Initialization failed:', error);
+          console.error("❌ OneSignal: Initialization failed:", error);
         }
       });
     </script>
