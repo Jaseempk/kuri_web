@@ -465,7 +465,7 @@ const TabContent: React.FC<TabContentProps> = ({
                     <h3 className="text-xl font-bold text-gray-800 mb-2">
                       {Date.now() <
                       Number(marketData.nextIntervalDepositTime) * 1000
-                        ? "Next Deposit Due In"
+                        ? "Next Deposit Starts In"
                         : "Next Raffle In"}
                     </h3>
                     <div className="flex items-end gap-x-3">
@@ -710,7 +710,6 @@ function MarketDetailInner() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [address]);
-
 
   // Get stable data and actions from MarketContext
   const {
@@ -1839,7 +1838,7 @@ function MarketDetailInner() {
                     <h3 className="text-lg font-semibold text-gray-900 text-center mb-4">
                       {Date.now() <
                       Number(marketData.nextIntervalDepositTime) * 1000
-                        ? "Next Deposit Due In"
+                        ? "Next Deposit Starts In"
                         : "Next Raffle In"}
                     </h3>
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
