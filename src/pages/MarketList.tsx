@@ -14,6 +14,7 @@ import {
 import { LoadingSkeleton } from "../components/ui/loading-states";
 import { CreateMarketForm } from "../components/markets/CreateMarketForm";
 import { OptimizedMarketCard } from "../components/markets/OptimizedMarketCard";
+import { MarketProvider } from "../contexts/MarketContext";
 import { OptimizedKuriMarket } from "../hooks/useOptimizedMarkets";
 import {
   Search,
@@ -728,12 +729,13 @@ export default function MarketList() {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
                         {sectionMarkets.map((market, index) => (
-                          <OptimizedMarketCard
-                            key={market.address}
-                            market={market}
-                            index={index}
-                            onJoinClick={handleUserAction}
-                          />
+                          <MarketProvider key={market.address} marketAddress={market.address}>
+                            <OptimizedMarketCard
+                              market={market}
+                              index={index}
+                              onJoinClick={handleUserAction}
+                            />
+                          </MarketProvider>
                         ))}
                       </div>
                     )}

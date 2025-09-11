@@ -11,6 +11,7 @@ import { LoadingSkeleton } from "../components/ui/loading-states";
 import { useAuthContext } from "../contexts/AuthContext";
 import { useKuriMarkets } from "../hooks/useKuriMarkets";
 import { MarketCard } from "../components/markets/MarketCard";
+import { MarketProvider } from "../contexts/MarketContext";
 import { Memberships } from "../components/profile/Memberships";
 import { PendingRequests } from "../components/profile/PendingRequests";
 import { ActivityFeed } from "../components/profile/ActivityFeed";
@@ -211,11 +212,12 @@ export default function EnhancedProfile() {
                               ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {sectionMarkets.map((market, index) => (
-                                    <MarketCard
-                                      key={market.address}
-                                      market={market}
-                                      index={index}
-                                    />
+                                    <MarketProvider key={market.address} marketAddress={market.address}>
+                                      <MarketCard
+                                        market={market}
+                                        index={index}
+                                      />
+                                    </MarketProvider>
                                   ))}
                                 </div>
                               )}

@@ -17,6 +17,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { MarketCard } from "../components/markets/MarketCard";
+import { MarketProvider } from "../contexts/MarketContext";
 import { KuriMarket, useKuriMarkets } from "../hooks/useKuriMarkets";
 import { useGeolocation } from "../hooks/useGeolocation";
 
@@ -711,11 +712,12 @@ function App() {
               {/* Desktop Grid Layout (md and up) */}
               <div className="hidden md:grid md:grid-cols-3 gap-8">
                 {inLaunchMarkets.map((market, index) => (
-                  <MarketCard
-                    key={market.address}
-                    market={market}
-                    index={index}
-                  />
+                  <MarketProvider key={market.address} marketAddress={market.address}>
+                    <MarketCard
+                      market={market}
+                      index={index}
+                    />
+                  </MarketProvider>
                 ))}
               </div>
 
@@ -753,7 +755,9 @@ function App() {
                       key={market.address}
                       className="flex-none w-[280px] snap-center"
                     >
-                      <MarketCard market={market} index={index} />
+                      <MarketProvider marketAddress={market.address}>
+                        <MarketCard market={market} index={index} />
+                      </MarketProvider>
                     </div>
                   ))}
                 </div>

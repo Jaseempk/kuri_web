@@ -88,7 +88,7 @@ export const UserBalanceCard = () => {
 
         {/* Balance - Close to label */}
         <div className="mb-1">
-          <p className="text-4xl font-bold text-gray-800">
+          <div className="text-4xl font-bold text-gray-800">
             {isLoadingBalance ? (
               <LoadingDots />
             ) : balanceError ? (
@@ -96,7 +96,7 @@ export const UserBalanceCard = () => {
             ) : (
               `$${formatBalance(balance)}`
             )}
-          </p>
+          </div>
         </div>
 
         {/* Wallet address */}
@@ -124,7 +124,7 @@ export const UserBalanceCard = () => {
       <div className="hidden sm:flex sm:flex-row justify-between items-center">
         <div>
           <p className="text-sm text-gray-500">Your USDC Balance</p>
-          <p className="text-4xl font-bold text-gray-800 mt-1">
+          <div className="text-4xl font-bold text-gray-800 mt-1">
             {isLoadingBalance ? (
               <LoadingDots />
             ) : balanceError ? (
@@ -132,7 +132,7 @@ export const UserBalanceCard = () => {
             ) : (
               `$${formatBalance(balance)}`
             )}
-          </p>
+          </div>
           <div className="flex items-center mt-2 space-x-2">
             <span className="text-xs text-gray-500">
               Wallet: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
