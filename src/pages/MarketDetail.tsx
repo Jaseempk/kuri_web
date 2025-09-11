@@ -711,13 +711,6 @@ function MarketDetailInner() {
     window.scrollTo(0, 0);
   }, [address]);
 
-  // Validate address
-  useEffect(() => {
-    if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      navigate("/markets");
-      return;
-    }
-  }, [address, navigate]);
 
   // Get stable data and actions from MarketContext
   const {
@@ -2002,9 +1995,25 @@ function MarketDetailWithTimer() {
 
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
+  const navigate = useNavigate();
 
-  if (!address) {
-    return null;
+  // Validate address immediately - redirect if invalid
+  useEffect(() => {
+    if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      navigate("/markets", { replace: true });
+    }
+  }, [address, navigate]);
+
+  // Don't render anything until we have a valid address
+  if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    return (
+      <div className="min-h-screen bg-[#F9F5F1] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#8B6F47] mx-auto mb-4" />
+          <p className="text-[#8B6F47] font-medium">Validating market...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
