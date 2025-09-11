@@ -488,7 +488,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
                   Contribution
                 </p>
                 <p className="text-sm xs:text-base font-medium">
-                  ${(Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
+                  ${(Number(market.kuriAmount) / 1_000_000 / market.totalParticipants).toFixed(2)}{" "}
                   {getIntervalTypeText(market.intervalType)}
                 </p>
               </div>

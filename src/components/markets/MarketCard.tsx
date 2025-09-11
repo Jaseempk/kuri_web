@@ -506,18 +506,14 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   Contribution
                 </p>
                 <p className="text-sm xs:text-base font-medium">
-                  ${(Number(market.kuriAmount) / 1_000_000).toFixed(2)}{" "}
+                  ${(Number(market.kuriAmount) / 1_000_000 / (marketData?.totalParticipantsCount ?? market.totalParticipants)).toFixed(2)}{" "}
                   {getIntervalTypeText(market.intervalType)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Win Amount</p>
                 <p className="text-sm xs:text-base font-medium text-[hsl(var(--forest))]">
-                  $
-                  {Math.floor(
-                    (Number(market.kuriAmount) / 1_000_000) *
-                      market.totalParticipants
-                  )}
+                  ${Math.floor(Number(market.kuriAmount) / 1_000_000)}
                 </p>
               </div>
               <div>
