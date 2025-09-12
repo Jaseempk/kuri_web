@@ -1210,7 +1210,7 @@ function MarketDetailInner() {
           onOpenChange={setIsDialogOpen}
           onMemberActionComplete={handleMemberActionComplete}
         >
-          <button className="w-full bg-[#E67A50] text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center">
+          <button className="w-full bg-orange-600 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md hover:bg-orange-700 transition-colors duration-300 flex items-center justify-center">
             <span className="material-icons text-lg sm:text-xl mr-1.5 sm:mr-2">
               people_outline
             </span>
