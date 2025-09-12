@@ -211,22 +211,24 @@ const TabContent: React.FC<TabContentProps> = ({
   renderActionButton,
 }) => {
   const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimerContext();
+  const { currentInterval } = useMarketContext();
 
   // Track render instances to identify duplicates
   tabContentRenderCount++;
   console.log("TiemLeft:", timeLeft);
-  console.log(
-    "🔄 TabContent render #" + tabContentRenderCount + " - timers updated:",
-    {
-      timeLeft,
-      raffleTimeLeft,
-      depositTimeLeft,
-      activeTab,
-      renderInstance: tabContentRenderCount,
-      preventedRender:
-        timeLeft === "cached_value" ? "❌ Prevented" : "✅ Legitimate",
-    }
-  );
+  // console.log(
+  //   "🔄 TabContent render #" + tabContentRenderCount + " - timers updated:",
+  //   {
+  //     timeLeft,
+  //     raffleTimeLeft,
+  //     depositTimeLeft,
+  //     activeTab,
+  //     renderInstance: tabContentRenderCount,
+  //     preventedRender:
+  //       timeLeft === "cached_value" ? "❌ Prevented" : "✅ Legitimate",
+  //   }
+  // );
+  console.log("currentInterval:", currentInterval);
 
   if (!marketData) return null;
 
@@ -465,7 +467,11 @@ const TabContent: React.FC<TabContentProps> = ({
                     <h3 className="text-xl font-bold text-gray-800 mb-2">
                       {Date.now() <
                       Number(marketData.nextIntervalDepositTime) * 1000
-                        ? "Next Deposit Starts In"
+                        ? currentInterval === 0
+                          ? "First Deposit Starts In"
+                          : "Next Deposit Starts In"
+                        : currentInterval === 1
+                        ? "First Raffle In"
                         : "Next Raffle In"}
                     </h3>
                     <div className="flex items-end gap-x-3">
@@ -723,6 +729,7 @@ function MarketDetailInner() {
     fetchMarketData,
     checkPaymentStatusIfMember,
     checkHasClaimed,
+    currentInterval,
   } = useMarketContext();
 
   // Get timer data from separate context to prevent cascade re-renders
@@ -1838,7 +1845,11 @@ function MarketDetailInner() {
                     <h3 className="text-lg font-semibold text-gray-900 text-center mb-4">
                       {Date.now() <
                       Number(marketData.nextIntervalDepositTime) * 1000
-                        ? "Next Deposit Starts In"
+                        ? currentInterval === 0
+                          ? "First Deposit Starts In"
+                          : "Next Deposit Starts In"
+                        : currentInterval === 1
+                        ? "First Raffle In"
                         : "Next Raffle In"}
                     </h3>
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
