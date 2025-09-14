@@ -448,8 +448,8 @@ export default function MarketList() {
         {/* Stats Section with Headers */}
         <div className="py-8">
           <div className="container mx-auto px-3 xs:px-4 space-y-8">
-            {/* Your Wallet Section */}
-            {isWalletConnected && (
+            {/* Your Wallet Section - COMMENTED OUT (may reuse later) */}
+            {/* {isWalletConnected && (
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">
                   Your Wallet
@@ -458,7 +458,7 @@ export default function MarketList() {
                   <UserBalanceCard />
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Market Statistics Section */}
             <div>
