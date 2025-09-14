@@ -328,107 +328,19 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
     setShowShareModal(true);
   };
 
-  // Render action button based on user role and market state
-  const renderActionButton = () => {
-    if (isCreator) {
-      if (canInitialize) {
-        return (
-          <Button
-            onClick={handleInitialize}
-            disabled={isLoading}
-            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Initialize Kuri"
-            )}
-          </Button>
-        );
-      }
-      return (
-        <ManageMembersDialog
-          market={market}
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onMemberActionComplete={handleMemberActionComplete}
-        >
-          <Button className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200">
-            Manage Members ({market.activeParticipants}/
-            {market.totalParticipants})
-          </Button>
-        </ManageMembersDialog>
-      );
-    }
-
-    // For non-creators, handle different user states
-    switch (membershipStatus) {
-      case 0: // NONE
-        return (
-          <Button
-            onClick={handleJoinRequest}
-            disabled={isLoading || isMarketFull}
-            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
-            title={isMarketFull ? "This circle is already full" : undefined}
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isMarketFull ? (
-              "Circle Full"
-            ) : (
-              "Request to Join"
-            )}
-          </Button>
-        );
-
-      case 1: // ACCEPTED
-        return (
-          <Button
-            disabled
-            className="w-full bg-[#F9F5F1] text-[#8B6F47] border-[#E8DED1] cursor-not-allowed"
-          >
-            Member
-          </Button>
-        );
-
-      case 2: // REJECTED
-        return (
-          <Button
-            onClick={handleJoinRequest}
-            disabled={isLoading || isMarketFull}
-            className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Request Again"
-            )}
-          </Button>
-        );
-
-      case 3: // FLAGGED
-        return (
-          <Button
-            disabled
-            className="w-full bg-[#FEF2F2] text-[#DC2626] border-[#FEE2E2] cursor-not-allowed"
-          >
-            Flagged
-          </Button>
-        );
-
-      case 4: // APPLIED
-        return (
-          <Button
-            disabled
-            className="w-full bg-[#F9F5F1] text-[#8B6F47] font-medium border-[#E8DED1] cursor-not-allowed hover:bg-[#F9F5F1]"
-          >
-            Applied
-          </Button>
-        );
-
-      default:
-        return null;
-    }
+  // Render view details button
+  const renderViewButton = () => {
+    return (
+      <Button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/markets/${market.address}`);
+        }}
+        className="w-full hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200"
+      >
+        View Circle
+      </Button>
+    );
   };
 
   return (
@@ -488,7 +400,12 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
                   Contribution
                 </p>
                 <p className="text-sm xs:text-base font-medium">
-                  ${(Number(market.kuriAmount) / 1_000_000 / market.totalParticipants).toFixed(2)}{" "}
+                  $
+                  {(
+                    Number(market.kuriAmount) /
+                    1_000_000 /
+                    market.totalParticipants
+                  ).toFixed(2)}{" "}
                   {getIntervalTypeText(market.intervalType)}
                 </p>
               </div>
@@ -521,7 +438,7 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
               </div>
             )}
 
-            <div className="pt-1 xs:pt-2">{renderActionButton()}</div>
+            <div className="pt-1 xs:pt-2">{renderViewButton()}</div>
           </div>
         </div>
       </div>
