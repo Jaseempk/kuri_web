@@ -22,6 +22,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     // { path: "/dashboard", label: "Dashboard" },
   ];
 
+  // Filter navigation items to exclude current page
+  const filteredNavItems = navigationItems.filter(item => 
+    !location.pathname.startsWith(item.path)
+  );
+
+  // Determine if we should show hamburger menu (only if there are items to show)
+  const showHamburgerMenu = filteredNavItems.length > 0;
+
+  // Check if we're on a profile page
+  const isProfilePage = location.pathname.startsWith('/u/') || location.pathname === '/me';
+
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
@@ -60,34 +71,53 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Right side: Connect/Profile Button and Mobile Menu */}
           <div className="flex items-center gap-2 xs:gap-3">
+            {/* Mobile Navigation Items (show directly when not many items) */}
+            <div className="md:hidden flex items-center gap-2">
+              {filteredNavItems.length === 1 && filteredNavItems.map(({ path, label }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className="text-sm font-medium text-[hsl(var(--gold))] hover:text-[hsl(var(--gold))]/80 transition-colors py-2 px-3 rounded-lg hover:bg-[hsl(var(--gold))/10]"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+
             {/* Connect/Profile Button */}
             <div className="hidden xs:block">
-              {address ? <ProfileButton /> : <ConnectButton />}
+              {address ? (
+                !isProfilePage ? <ProfileButton /> : null
+              ) : <ConnectButton />}
             </div>
 
             {/* Mobile Connect/Profile Button (smaller) */}
             <div className="xs:hidden">
-              {address ? <ProfileButton /> : <ConnectButton />}
+              {address ? (
+                !isProfilePage ? <ProfileButton /> : null
+              ) : <ConnectButton />}
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              className="md:hidden p-2 rounded-lg hover:bg-[hsl(var(--gold))/10] transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle mobile menu"
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5 text-[hsl(var(--gold))]" />
-              ) : (
-                <Menu className="h-5 w-5 text-[hsl(var(--gold))]" />
-              )}
-            </button>
+            {/* Mobile Menu Button - only show if we have multiple items */}
+            {showHamburgerMenu && filteredNavItems.length > 1 && (
+              <button
+                className="md:hidden p-2 rounded-lg hover:bg-[hsl(var(--gold))/10] transition-colors"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle mobile menu"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-5 w-5 text-[hsl(var(--gold))]" />
+                ) : (
+                  <Menu className="h-5 w-5 text-[hsl(var(--gold))]" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Mobile Navigation Menu */}
         <AnimatePresence>
-          {isMobileMenuOpen && (
+          {isMobileMenuOpen && filteredNavItems.length > 1 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -96,7 +126,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               className="md:hidden border-t border-[hsl(var(--gold))/20] mt-3 xs:mt-4 pt-3 xs:pt-4"
             >
               <nav className="flex flex-col space-y-3">
-                {navigationItems.map(({ path, label }) => (
+                {filteredNavItems.map(({ path, label }) => (
                   <Link
                     key={path}
                     to={path}
