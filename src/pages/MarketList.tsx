@@ -22,7 +22,7 @@ import {
   Check,
   ChevronDown,
   TrendingUp,
-  TrendingDown,
+  Plus,
 } from "lucide-react";
 import { formatUnits } from "viem";
 import { apiClient } from "../lib/apiClient";
@@ -30,7 +30,7 @@ import { MarketMetadata } from "../components/markets/MarketCard";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { usePostCreationShareReplacement } from "../components/modals/PostCreationModalProvider";
 import { useUSDCBalances } from "../hooks/useUSDCBalances";
-import { UserBalanceCard } from "../components/ui/UserBalanceCard";
+// import { UserBalanceCard } from "../components/ui/UserBalanceCard"; // Commented out for potential reuse
 
 const INTERVAL_TYPE = {
   WEEKLY: 0 as IntervalType,
@@ -52,48 +52,6 @@ const marketSections = [
     value: "active",
   },
 ];
-
-// Stats card component
-const StatsCard = ({
-  title,
-  value,
-  change,
-}: {
-  title: string;
-  value: string;
-  change: string;
-}) => {
-  const isPositive = parseFloat(change) >= 0;
-
-  return (
-    <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-3xl font-bold text-gray-800 mt-2">{value}</p>
-        </div>
-        <div className="text-right">
-          <div
-            className={`flex items-center ${
-              isPositive ? "text-green-500" : "text-red-500"
-            }`}
-          >
-            {isPositive ? (
-              <TrendingUp className="h-4 w-4" />
-            ) : (
-              <TrendingDown className="h-4 w-4" />
-            )}
-            <span className="text-lg font-semibold ml-1">
-              {isPositive ? "+" : ""}
-              {change}%
-            </span>
-          </div>
-          <p className="text-xs text-gray-400 mt-1">vs last period</p>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Market search component
 const MarketSearch = ({
@@ -219,7 +177,6 @@ export default function MarketList() {
     totalParticipants: 0,
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [activeStatsCard, setActiveStatsCard] = useState(0);
   const { onSuccess } = usePostCreationShareReplacement();
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -445,197 +402,172 @@ export default function MarketList() {
   return (
     <>
       <div className="min-h-screen bg-[#fdfaf7]">
-        {/* Stats Section with Headers */}
-        <div className="py-8">
-          <div className="container mx-auto px-3 xs:px-4 space-y-8">
-            {/* Your Wallet Section - COMMENTED OUT (may reuse later) */}
-            {/* {isWalletConnected && (
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Your Wallet
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1">
-                  <UserBalanceCard />
-                </div>
-              </div>
-            )} */}
-
-            {/* Market Statistics Section */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Market Statistics
-              </h2>
-
-              {/* Mobile: One card at a time swipe */}
-              <div className="sm:hidden">
-                <div
-                  className="overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
-                  onScroll={(e) => {
-                    const scrollLeft = e.currentTarget.scrollLeft;
-                    const cardWidth = e.currentTarget.scrollWidth / 3;
-                    const newActiveCard = Math.round(scrollLeft / cardWidth);
-                    setActiveStatsCard(newActiveCard);
-                  }}
-                >
-                  <div className="flex pb-2">
-                    <div className="w-full flex-shrink-0 snap-center px-4">
-                      <StatsCard
-                        title="Total Participants"
-                        value={totalParticipants.toString()}
-                        change={participantsChange}
-                      />
-                    </div>
-                    <div className="w-full flex-shrink-0 snap-center px-4">
-                      <StatsCard
-                        title="Active Circles"
-                        value={activeCircles.toString()}
-                        change={circlesChange}
-                      />
-                    </div>
-                    <div className="w-full flex-shrink-0 snap-center px-4">
-                      <StatsCard
-                        title="Total Value Locked"
-                        value={`$${Number(
-                          formatUnits(totalValueLocked, 6)
-                        ).toLocaleString()}`}
-                        change={tvlChange}
+        {/* Main Grid Container */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Left Column - Welcome + Explore Circles */}
+            <div className="lg:col-span-2 space-y-12">
+              {/* Welcome Section with Glassmorphic Design */}
+              <div className="bg-white/40 backdrop-blur-[10px] p-8 rounded-3xl shadow-lg border border-white/20">
+                <div className="flex flex-col md:flex-row md:items-center gap-8">
+                  <div className="flex-1">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                      <span className="md:hidden">Welcome to Kuri</span>
+                      <span className="hidden md:inline">
+                        Welcome to Kuri Circles
+                      </span>
+                    </h1>
+                    <p className="text-gray-600 mb-8 text-lg">
+                      <span className="md:hidden">
+                        Create or join trusted savings circles. Watch our demo
+                        to get started!
+                      </span>
+                      <span className="hidden md:inline">
+                        Learn how to create or join trusted savings circles and
+                        achieve your financial goals together. Watch our quick
+                        demo to get started!
+                      </span>
+                    </p>
+                    <Dialog
+                      open={showCreateForm}
+                      onOpenChange={setShowCreateForm}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          onClick={(e) => {
+                            if (!handleCreateMarket()) {
+                              e.preventDefault();
+                            }
+                          }}
+                          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                        >
+                          <Plus className="mr-2 h-5 w-5" />
+                          Start a New Circle
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
+                        <DialogTitle className="sr-only">
+                          Create New Circle
+                        </DialogTitle>
+                        <DialogDescription className="sr-only">
+                          Create a new savings circle by setting up the basic
+                          details, participation options, and circle
+                          information.
+                        </DialogDescription>
+                        <CreateMarketForm
+                          onSuccess={handleMarketCreated}
+                          onClose={() => setShowCreateForm(false)}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="md:w-2/5">
+                    <div className="aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-white/50">
+                      <iframe
+                        src="https://www.youtube-nocookie.com/embed/8jTHBmKQ03g?privacy-enhanced-mode=1&rel=0&modestbranding=1"
+                        className="w-full h-full"
+                        title="How Kuri Works - Tutorial Video"
+                        style={{ border: "none" }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
                       />
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Swipe indicators */}
-                <div className="flex justify-center mt-4 space-x-2">
-                  {[0, 1, 2].map((index) => (
-                    <div
-                      key={index}
-                      className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                        activeStatsCard === index
-                          ? "bg-gray-800"
-                          : "bg-gray-300"
-                      }`}
-                    />
-                  ))}
+              {/* Explore Circles Section */}
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Explore Circles
+                  </h2>
+                  <p className="text-gray-600 mt-2 text-base">
+                    Join trusted savings circles and achieve your goals
+                    together.
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Desktop: Grid layout */}
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatsCard
-                  title="Total Value Locked"
-                  value={`$${Number(
-                    formatUnits(totalValueLocked, 6)
-                  ).toLocaleString()}`}
-                  change={tvlChange}
-                />
-                <StatsCard
-                  title="Active Circles"
-                  value={activeCircles.toString()}
-                  change={circlesChange}
-                />
-                <StatsCard
-                  title="Total Participants"
-                  value={totalParticipants.toString()}
-                  change={participantsChange}
-                />
+            {/* Right Column - Market Statistics Sidebar (Desktop Only) */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="bg-white/40 backdrop-blur-[10px] p-6 rounded-3xl shadow-lg border border-white/20 sticky top-28">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                  Market Statistics
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Individual stat cards with glassmorphic design */}
+                  <div className="flex justify-between items-center p-4 bg-white/50 rounded-xl">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        Total Value Locked
+                      </p>
+                      <p className="text-2xl font-bold text-gray-800">
+                        $
+                        {Number(
+                          formatUnits(totalValueLocked, 6)
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-green-500 flex items-center">
+                        <TrendingUp className="h-4 w-4 mr-1" />+{tvlChange}%
+                      </p>
+                      <p className="text-xs text-gray-400">vs last period</p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center p-4 bg-white/50 rounded-xl">
+                    <div>
+                      <p className="text-sm text-gray-500">Active Circles</p>
+                      <p className="text-2xl font-bold text-gray-800">
+                        {activeCircles}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-green-500 flex items-center">
+                        <TrendingUp className="h-4 w-4 mr-1" />+{circlesChange}%
+                      </p>
+                      <p className="text-xs text-gray-400">vs last period</p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center p-4 bg-white/50 rounded-xl">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        Total Participants
+                      </p>
+                      <p className="text-2xl font-bold text-gray-800">
+                        {totalParticipants}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-green-500 flex items-center">
+                        <TrendingUp className="h-4 w-4 mr-1" />+
+                        {participantsChange}%
+                      </p>
+                      <p className="text-xs text-gray-400">vs last period</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </main>
 
-        {/* Main Content */}
-        <div className="container mx-auto px-3 xs:px-4 py-6 xs:py-8">
-          {/* Enhanced Header Section */}
-          <div className="mb-6 xs:mb-8">
-            {/* Mobile: Button first, then title */}
-            <div className="xs:hidden space-y-4">
-              <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-                <DialogTrigger asChild>
-                  <Button
-                    onClick={(e) => {
-                      if (!handleCreateMarket()) {
-                        e.preventDefault();
-                      }
-                    }}
-                    className="w-full bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-4 transition-all duration-200"
-                  >
-                    Start a Circle
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
-                  <DialogTitle className="sr-only">
-                    Create New Circle
-                  </DialogTitle>
-                  <DialogDescription className="sr-only">
-                    Create a new savings circle by setting up the basic details,
-                    participation options, and circle information.
-                  </DialogDescription>
-                  <CreateMarketForm
-                    onSuccess={handleMarketCreated}
-                    onClose={() => setShowCreateForm(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-
-              <div className="text-left">
-                <h1 className="text-2xl font-bold text-[#8B6F47]">
-                  Explore Circles
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Join trusted savings circles and achieve your goals together
-                </p>
-              </div>
-            </div>
-
-            {/* Desktop: Original layout */}
-            <div className="hidden xs:flex xs:flex-row justify-between items-start xs:items-center gap-4">
-              <div className="text-left">
-                <h1 className="text-2xl xs:text-3xl font-bold text-[#8B6F47]">
-                  Explore Circles
-                </h1>
-                <p className="text-sm xs:text-base text-muted-foreground mt-1 xs:mt-2">
-                  Join trusted savings circles and achieve your goals together
-                </p>
-              </div>
-              <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-                <DialogTrigger asChild>
-                  <Button
-                    onClick={(e) => {
-                      if (!handleCreateMarket()) {
-                        e.preventDefault();
-                      }
-                    }}
-                    className="w-auto bg-[hsl(var(--terracotta))] text-white hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] border border-[hsl(var(--terracotta))] rounded-full px-6 transition-all duration-200"
-                  >
-                    Start a Circle
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-[480px] p-0 gap-0">
-                  <DialogTitle className="sr-only">
-                    Create New Circle
-                  </DialogTitle>
-                  <DialogDescription className="sr-only">
-                    Create a new savings circle by setting up the basic details,
-                    participation options, and circle information.
-                  </DialogDescription>
-                  <CreateMarketForm
-                    onSuccess={handleMarketCreated}
-                    onClose={() => setShowCreateForm(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-
-          {/* Filter Bar - Sticky */}
-          <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E8DED1]/50 -mx-3 xs:-mx-4 px-3 xs:px-4 py-3 xs:py-4 mb-6 xs:mb-8 z-10 rounded-2xl">
-            {/* Mobile: Horizontal layout with different proportions */}
-            <div className="flex xs:hidden gap-3 items-center">
-              <div className="flex-1">
+        {/* Search/Filter Bar - Sticky Full Width */}
+        <div className="sticky top-0 z-20 bg-[#fdfaf7]/95 backdrop-blur-sm border-b border-[#E8DED1]/50 py-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <MarketSearch
                   value={searchQuery}
                   onChange={setSearchQuery}
-                  placeholder="Search circles..."
+                  placeholder="Search by market name or address..."
                 />
               </div>
               <div className="flex-shrink-0">
@@ -645,25 +577,11 @@ export default function MarketList() {
                 />
               </div>
             </div>
-
-            {/* Desktop: Original layout */}
-            <div className="hidden xs:flex xs:flex-row gap-4 items-center">
-              <div className="flex-1">
-                <MarketSearch
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Search by market name or address..."
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <IntervalTypeFilter
-                  value={activeFilter}
-                  onChange={setActiveFilter}
-                />
-              </div>
-            </div>
           </div>
+        </div>
 
+        {/* Markets Content - Full Width Below Grid */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
           {/* Markets Content */}
           <div className="w-full">
             <div className="mb-6 xs:mb-8 bg-white/80 backdrop-blur-sm border border-[#E8DED1]/50 p-1.5 rounded-xl w-fit mr-auto overflow-x-auto flex-nowrap whitespace-nowrap scrollbar-thin scrollbar-thumb-[#E8DED1] scrollbar-track-transparent gap-1 shadow-sm flex">
@@ -729,7 +647,10 @@ export default function MarketList() {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
                         {sectionMarkets.map((market, index) => (
-                          <MarketProvider key={market.address} marketAddress={market.address}>
+                          <MarketProvider
+                            key={market.address}
+                            marketAddress={market.address}
+                          >
                             <OptimizedMarketCard
                               market={market}
                               index={index}
