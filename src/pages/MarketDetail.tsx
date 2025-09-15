@@ -148,7 +148,7 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
               Number(marketData.kuriAmount) /
               1_000_000 /
               marketData.totalParticipantsCount
-            ).toFixed(2)}
+            ).toFixed(1)}
           </p>
           <p className="text-xs opacity-80">Contribution</p>
         </div>
