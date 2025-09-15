@@ -369,7 +369,7 @@ export const CreateMarketForm = ({
 
             <div>
               <label className="block font-semibold mb-1 text-[#8B6F47] text-sm">
-                Monthly Deposit per Participant (USDC)
+                Interval Deposit per Participant (USDC)
               </label>
               <input
                 type="text"
