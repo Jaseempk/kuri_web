@@ -296,7 +296,7 @@ const TabContent: React.FC<TabContentProps> = ({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
-                    Next Payout
+                    Next Raffle
                   </span>
                   <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
                     {marketData.state === KuriState.ACTIVE
