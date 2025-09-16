@@ -14,6 +14,7 @@ import {
   Twitter,
   Instagram,
   Github,
+  Send,
   ChevronUp,
 } from "lucide-react";
 import { MarketCard } from "../components/markets/MarketCard";
@@ -1558,18 +1559,30 @@ function App() {
               <a
                 href="https://x.com/Kuriorg"
                 className="text-white/70 hover:text-white transition-colors"
+                aria-label="Follow us on Twitter"
               >
                 <Twitter className="h-5 w-5" />
               </a>
               <a
                 href="#"
                 className="text-white/70 hover:text-white transition-colors"
+                aria-label="Follow us on Instagram"
               >
                 <Instagram className="h-5 w-5" />
               </a>
               <a
+                href="https://t.me/+ozinyJWf_1VhMzE1"
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="Join our Telegram"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Send className="h-5 w-5" />
+              </a>
+              <a
                 href="#"
                 className="text-white/70 hover:text-white transition-colors"
+                aria-label="View our GitHub"
               >
                 <Github className="h-5 w-5" />
               </a>
@@ -1652,18 +1665,30 @@ function App() {
                 <a
                   href="https://x.com/Kuriorg"
                   className="text-white/70 hover:text-white transition-colors"
+                  aria-label="Follow us on Twitter"
                 >
                   <Twitter className="h-5 w-5" />
                 </a>
                 <a
                   href="#"
                   className="text-white/70 hover:text-white transition-colors"
+                  aria-label="Follow us on Instagram"
                 >
                   <Instagram className="h-5 w-5" />
                 </a>
                 <a
+                  href="https://t.me/+ozinyJWf_1VhMzE1"
+                  className="text-white/70 hover:text-white transition-colors"
+                  aria-label="Join our Telegram"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Send className="h-5 w-5" />
+                </a>
+                <a
                   href="#"
                   className="text-white/70 hover:text-white transition-colors"
+                  aria-label="View our GitHub"
                 >
                   <Github className="h-5 w-5" />
                 </a>
