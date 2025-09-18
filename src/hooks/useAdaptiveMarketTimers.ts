@@ -31,7 +31,8 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
   const staticTimestampsRef = useRef<{
     launch: number;
     raffle: number;
-    deposit: number;
+    depositStart: number;
+    depositEnd: number;
     capturedAt: number;  // When we captured the blockchain data
   } | null>(null);
   
@@ -57,16 +58,21 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
 
     // 🔒 CAPTURE STATIC TIMESTAMPS - These never change until page refresh!
     const captureTime = Date.now();
+    const depositPeriodStart = Number(marketData.nextIntervalDepositTime) * 1000;
+    const depositPeriodEnd = depositPeriodStart + (3 * 24 * 60 * 60 * 1000); // +3 days
+    
     staticTimestampsRef.current = {
       launch: Number(marketData.launchPeriod) * 1000,
       raffle: Number(marketData.nexRaffleTime) * 1000,
-      deposit: Number(marketData.nextIntervalDepositTime) * 1000,
+      depositStart: depositPeriodStart,
+      depositEnd: depositPeriodEnd,
       capturedAt: captureTime
     };
 
     console.log(`   • Launch End: ${new Date(staticTimestampsRef.current.launch).toLocaleString()}`);
     console.log(`   • Raffle Time: ${new Date(staticTimestampsRef.current.raffle).toLocaleString()}`);  
-    console.log(`   • Deposit Time: ${new Date(staticTimestampsRef.current.deposit).toLocaleString()}`);
+    console.log(`   • Deposit Start: ${new Date(staticTimestampsRef.current.depositStart).toLocaleString()}`);
+    console.log(`   • Deposit End: ${new Date(staticTimestampsRef.current.depositEnd).toLocaleString()}`);
     console.log(`   • 🔥 ZERO API calls from now until page refresh!`);
 
     // ⚡ PURE MATH COUNTDOWN - No external dependencies!
@@ -101,8 +107,8 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
           setRaffleTimeLeft(newRaffleTimeLeft);
         }
 
-        // Deposit countdown
-        const depositRemainingMs = staticTimestampsRef.current.deposit - now;
+        // Deposit countdown - use depositEnd (3 days after depositStart)
+        const depositRemainingMs = staticTimestampsRef.current.depositEnd - now;
         const newDepositTimeLeft = depositRemainingMs <= 0 ? "Payment due now" : formatTimeLeft(depositRemainingMs);
         
         if (depositTimeLeft !== newDepositTimeLeft) {

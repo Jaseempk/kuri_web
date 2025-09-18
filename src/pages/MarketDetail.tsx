@@ -476,11 +476,16 @@ const TabContent = memo<TabContentProps>(({
                     </h3>
                     <div className="flex items-end gap-x-3">
                       {(() => {
-                        const activeTimer =
-                          Date.now() <
-                          Number(marketData.nextIntervalDepositTime) * 1000
-                            ? depositTimeLeft
+                        const activeTimer = (() => {
+                          const now = Date.now();
+                          const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
+                          const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
+                          
+                          // Show deposit timer if we're in the 3-day deposit period
+                          return (now >= depositStart && now <= depositEnd) 
+                            ? depositTimeLeft 
                             : raffleTimeLeft;
+                        })();
 
                         return (
                           <>
@@ -1848,11 +1853,16 @@ function MarketDetailInner() {
                     </h3>
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
                       {(() => {
-                        const activeTimer =
-                          Date.now() <
-                          Number(marketData.nextIntervalDepositTime) * 1000
-                            ? depositTimeLeft
+                        const activeTimer = (() => {
+                          const now = Date.now();
+                          const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
+                          const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
+                          
+                          // Show deposit timer if we're in the 3-day deposit period
+                          return (now >= depositStart && now <= depositEnd) 
+                            ? depositTimeLeft 
                             : raffleTimeLeft;
+                        })();
 
                         return (
                           <>

@@ -19,7 +19,10 @@ import { config } from "../../config/wagmi";
 import { getDefaultChainId } from "../../config/contracts";
 import { useTransactionStatus } from "../useTransactionStatus";
 
-import { calculateApprovalAmount, calculateRequiredDepositAmount } from "../../utils/tokenUtils";
+import {
+  calculateApprovalAmount,
+  calculateRequiredDepositAmount,
+} from "../../utils/tokenUtils";
 import { useAccount, useSignMessage } from "@getpara/react-sdk";
 import { useAuthContext } from "../../contexts/AuthContext";
 import {
@@ -308,6 +311,9 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         return false;
       }
 
+      console.log(
+        `Current interval for market ${kuriAddress}: ${intervalCounter}`
+      );
       // Store current interval for UI components
       setCurrentInterval(intervalCounter);
 
