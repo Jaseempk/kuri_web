@@ -520,6 +520,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     if (!kuriAddress || !userAddress || !marketData || !tokenAddress)
       throw new Error("Invalid parameters");
 
+    setIsLoading(true);
     try {
       // Check if this is a first deposit (interval 1) that requires 1% fee
       const isFirstDeposit =
@@ -639,6 +640,8 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     } catch (error) {
       console.error("Gas-sponsored deposit failed:", error);
       throw handleContractError(error);
+    } finally {
+      setIsLoading(false);
     }
   }, [
     kuriAddress,

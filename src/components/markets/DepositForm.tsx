@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { KuriState, IntervalType } from "../../hooks/contracts/useKuriCore";
 import { useMarketContext } from "../../contexts/MarketContext";
+import { useAuthContext } from "../../contexts/AuthContext";
 
 import { formatUnits } from "viem";
 
@@ -39,13 +40,16 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     isLoadingCore,
     errorCore,
     isApproving,
-    userPaymentStatus,
     userBalance,
     currentInterval,
     checkUserBalance,
     refreshUserData,
     checkPaymentStatusIfMember,
+    marketDetail,
   } = useMarketContext();
+
+  // Get user address for GraphQL payment verification
+  const { smartAddress: userAddress } = useAuthContext();
 
   // Map context values to component expectations
   const isLoading = isLoadingCore;
@@ -55,8 +59,50 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     useState(false);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
 
+  // 🔥 NEW: GraphQL-based payment status calculation (same as Members tab)
+  const graphqlPaymentStatus = useMemo(() => {
+    if (!marketDetail?.deposits || !userAddress || currentInterval <= 0) {
+      return false;
+    }
+    
+    // Check if current time is past deposit window
+    const currentTime = Math.floor(Date.now() / 1000);
+    const nextDepositTime = Number(marketData.nextIntervalDepositTime);
+    const isPaymentPeriodActive = currentTime >= nextDepositTime && currentInterval > 0;
+    
+    if (!isPaymentPeriodActive) {
+      return false;
+    }
+    
+    // Check if user has deposit for current interval in GraphQL data
+    return marketDetail.deposits.some(deposit => {
+      const depositInterval = parseInt(deposit.intervalIndex);
+      const depositUser = deposit.user.toLowerCase();
+      return depositInterval === currentInterval && depositUser === userAddress.toLowerCase();
+    });
+  }, [marketDetail?.deposits, userAddress, currentInterval, marketData?.nextIntervalDepositTime]);
+
+  // Use GraphQL payment status instead of smart contract status for consistency
+  const actualPaymentStatus = graphqlPaymentStatus;
+
+  // 🔍 DEBUG: Log payment status comparison for debugging
+  useEffect(() => {
+    if (userAddress && currentInterval > 0) {
+      console.log("🔍 DepositForm Payment Status Debug:", {
+        userAddress,
+        currentInterval,
+        graphqlPaymentStatus,
+        deposits: marketDetail?.deposits?.filter(d => 
+          d.user.toLowerCase() === userAddress.toLowerCase()
+        ),
+        nextDepositTime: marketData?.nextIntervalDepositTime,
+        currentTime: Math.floor(Date.now() / 1000)
+      });
+    }
+  }, [userAddress, currentInterval, graphqlPaymentStatus, marketDetail?.deposits]);
+
   // Check if this is user's first deposit (interval 1 and hasn't paid yet)
-  const isFirstDeposit = currentInterval === 1 && userPaymentStatus === false;
+  const isFirstDeposit = currentInterval === 1 && actualPaymentStatus === false;
 
   // Calculate required amount including fee for first deposit
   const requiredAmount = calculateRequiredDepositAmount(
@@ -72,10 +118,8 @@ export const DepositForm: React.FC<DepositFormProps> = ({
   const nextDepositTime = new Date(
     Number(marketData.nextIntervalDepositTime) * 1000
   );
-  const raffleTime = new Date(Number(marketData.nexRaffleTime) * 1000);
   const now = new Date();
   const canDeposit = now >= nextDepositTime;
-  const isAfterRaffle = now >= raffleTime;
 
   // 🔥 NEW: Explicitly check payment status when component mounts (lazy loading)
   useEffect(() => {
@@ -124,13 +168,6 @@ export const DepositForm: React.FC<DepositFormProps> = ({
       }
     } catch (err) {
       // Track deposit failure
-      const errorType =
-        err instanceof Error && err.message.includes("insufficient")
-          ? "insufficient_balance"
-          : err instanceof Error && err.message.includes("approval")
-          ? "approval_failed"
-          : "transaction_failed";
-
       trackError(
         "deposit_failed",
         "DepositForm",
@@ -190,7 +227,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     if (!canDeposit) return null;
 
     // If user has already paid, show paid status
-    if (userPaymentStatus === true) {
+    if (actualPaymentStatus === true) {
       return (
         <div className="flex items-center gap-2 text-sm text-green-600"></div>
       );
@@ -224,7 +261,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
 
   const renderActionButton = () => {
     // If user has already paid, show paid status
-    if (userPaymentStatus === true) {
+    if (actualPaymentStatus === true) {
       return (
         <div className="bg-green-600/80 backdrop-blur-sm text-white border border-green-600/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm shadow-lg flex items-center gap-2">
           <CheckCircle className="w-4 h-4" />
@@ -319,7 +356,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
         </div>
 
         {/* Paid status information */}
-        {userPaymentStatus === true && (
+        {actualPaymentStatus === true && (
           <div className="bg-green-50/10 border border-green-200/20 rounded-lg p-3 text-sm text-green-700">
             {/* <p className="font-medium mb-1">Payment Status:</p> */}
             <p>The raffle will select the winner soon!</p>
