@@ -8,7 +8,9 @@ interface CircleMembersDisplayProps {
   marketAddress: string;
 }
 
-export const CircleMembersDisplay = ({ marketAddress }: CircleMembersDisplayProps) => {
+export const CircleMembersDisplay = ({
+  marketAddress,
+}: CircleMembersDisplayProps) => {
   // Use shared hook with creator inclusion and active filtering
   const {
     members: activeMembers,
@@ -22,13 +24,22 @@ export const CircleMembersDisplay = ({ marketAddress }: CircleMembersDisplayProp
     filterActiveOnly: true,
   });
 
+
   // Calculate payment summary
   const paymentSummary = useMemo(() => {
-    const membersWithPaymentDue = activeMembers.filter(m => m.paymentStatus?.isPaymentDue);
-    const paidCount = membersWithPaymentDue.filter(m => m.paymentStatus?.isPaid).length;
+    const membersWithPaymentDue = activeMembers.filter(
+      (m) => m.paymentStatus?.isPaymentDue
+    );
+    const paidCount = membersWithPaymentDue.filter(
+      (m) => m.paymentStatus?.isPaid
+    ).length;
     const dueCount = membersWithPaymentDue.length - paidCount;
-    
-    return { paidCount, dueCount, hasPaymentPeriod: membersWithPaymentDue.length > 0 };
+
+    return {
+      paidCount,
+      dueCount,
+      hasPaymentPeriod: membersWithPaymentDue.length > 0,
+    };
   }, [activeMembers]);
 
   // Render progress bar
@@ -85,7 +96,10 @@ export const CircleMembersDisplay = ({ marketAddress }: CircleMembersDisplayProp
           </h3>
         </div>
         <div className="text-red-500 p-4 rounded-lg bg-red-50">
-          Error: {typeof error === 'string' ? error : error?.message || "Unknown error"}
+          Error:{" "}
+          {typeof error === "string"
+            ? error
+            : error?.message || "Unknown error"}
         </div>
       </div>
     );

@@ -143,9 +143,6 @@ export const KURI_MARKET_DETAIL_QUERY = gql`
       amountDeposited
       depositTimestamp
       contractAddress
-      blockNumber
-      blockTimestamp
-      transactionHash
     }
     raffleWinnerSelecteds: KuriCore_RaffleWinnerSelected(
       where: { contractAddress: { _ilike: $marketAddress } }

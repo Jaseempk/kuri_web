@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useCallback,
   useRef,
+  memo,
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { KuriState } from "../hooks/contracts/useKuriCore";
@@ -113,12 +114,12 @@ interface StatsContainerProps {
 const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   if (!marketData) return null;
 
-  console.log("maarketData:", marketData);
-  console.log("🔄 StatsContainer render - data changed:", {
-    activeParticipants: marketData.totalActiveParticipantsCount,
-    totalParticipants: marketData.totalParticipantsCount,
-    kuriAmount: marketData.kuriAmount.toString(),
-  });
+  // console.log("maarketData:", marketData);
+  // console.log("🔄 StatsContainer render - data changed:", {
+  //   activeParticipants: marketData.totalActiveParticipantsCount,
+  //   totalParticipants: marketData.totalParticipantsCount,
+  //   kuriAmount: marketData.kuriAmount.toString(),
+  // });
 
   return (
     <motion.div
@@ -197,7 +198,7 @@ interface TabContentProps {
   renderActionButton: () => React.ReactNode;
 }
 
-const TabContent: React.FC<TabContentProps> = ({
+const TabContent = memo<TabContentProps>(({
   activeTab,
   metadata,
   marketData,
@@ -215,7 +216,7 @@ const TabContent: React.FC<TabContentProps> = ({
 
   // Track render instances to identify duplicates
   tabContentRenderCount++;
-  console.log("TiemLeft:", timeLeft);
+  // console.log("TiemLeft:", timeLeft);
   // console.log(
   //   "🔄 TabContent render #" + tabContentRenderCount + " - timers updated:",
   //   {
@@ -228,7 +229,6 @@ const TabContent: React.FC<TabContentProps> = ({
   //       timeLeft === "cached_value" ? "❌ Prevented" : "✅ Legitimate",
   //   }
   // );
-  console.log("currentInterval:", currentInterval);
 
   if (!marketData) return null;
 
@@ -674,7 +674,14 @@ const TabContent: React.FC<TabContentProps> = ({
       )}
     </AnimatePresence>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if important props change (not timer-related props)
+  return (
+    prevProps.activeTab === nextProps.activeTab &&
+    prevProps.membershipStatus === nextProps.membershipStatus &&
+    prevProps.address === nextProps.address
+  );
+});
 
 // Convert useKuriCore KuriState to GraphQL KuriState for components that expect it
 const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
@@ -760,30 +767,17 @@ function MarketDetailInner() {
         }
       });
 
-      if (Object.keys(changedProps).length > 0) {
-        console.log(
-          `🔄 Render #${renderCount.current} - Changed props:`,
-          changedProps
-        );
-      } else {
-        console.log(
-          `🔄 Render #${renderCount.current} - No prop changes (reference equality issue)`
-        );
-      }
-    } else {
-      console.log(`🔄 Render #${renderCount.current} - Initial render`);
     }
 
     previousProps.current = currentProps;
   });
 
-  console.log("addresss", address);
-  console.log("🔍 RENDER CAUSE:", {
-    userAddress,
-    marketDataExists: !!marketData,
-    timeLeft,
-    isLoadingCore,
-  });
+  // console.log("🔍 RENDER CAUSE:", {
+  //   userAddress,
+  //   marketDataExists: !!marketData,
+  //   timeLeft,
+  //   isLoadingCore,
+  // });
 
   // Fetch creator's profile
   const { profile: creatorProfile, isLoading: creatorProfileLoading } =

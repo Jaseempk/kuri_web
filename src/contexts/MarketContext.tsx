@@ -2,6 +2,7 @@ import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useKuriCore } from '../hooks/contracts/useKuriCore';
 import { useKuriMarketDetail } from '../hooks/useKuriMarketDetail';
 import type { MarketDetail } from '../hooks/useKuriMarketDetail';
+import { useUserDeposits } from '../hooks/useUserDeposits';
 
 interface MarketContextType {
   // Core market data
@@ -13,6 +14,14 @@ interface MarketContextType {
   marketDetail: MarketDetail | null;
   isLoadingDetail: boolean;
   errorDetail: any;
+  
+  // User deposits data
+  userDeposits: any[];
+  userDepositsLoading: boolean;
+  userDepositsError: any;
+  hasUserPaidForInterval: (userAddress: string, intervalIndex: number) => boolean;
+  getDepositsForUser: (userAddress: string) => any[];
+  getDepositsForInterval: (intervalIndex: number) => any[];
   
   // Circle members are handled by a separate context or component-level hooks
   
@@ -92,6 +101,16 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     refetch: refetchDetail,
   } = useKuriMarketDetail(marketAddress);
 
+  // Single subscription to user deposits
+  const {
+    deposits: userDeposits,
+    loading: userDepositsLoading,
+    error: userDepositsError,
+    hasUserPaidForInterval,
+    getDepositsForUser,
+    getDepositsForInterval,
+  } = useUserDeposits(marketAddress);
+
   // 🔥 MEMOIZE CONTEXT VALUE - Stable data and actions only (no timers)
   const contextValue: MarketContextType = useMemo(() => ({
     // Core data
@@ -103,6 +122,14 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     marketDetail,
     isLoadingDetail,
     errorDetail,
+    
+    // User deposits data
+    userDeposits,
+    userDepositsLoading,
+    userDepositsError,
+    hasUserPaidForInterval,
+    getDepositsForUser,
+    getDepositsForInterval,
     
     // Actions
     refetchDetail,
@@ -143,6 +170,14 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     marketDetail,
     isLoadingDetail,
     errorDetail,
+    
+    // User deposits data (use length for stability)
+    userDeposits?.length,
+    userDepositsLoading,
+    userDepositsError,
+    hasUserPaidForInterval,
+    getDepositsForUser,
+    getDepositsForInterval,
     
     // Actions (these are stable references from hooks)
     refetchDetail,

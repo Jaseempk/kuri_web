@@ -1,5 +1,17 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { readContract, writeContract, simulateContract } from "@wagmi/core";
+
+// Debounce utility for frequent blockchain calls
+const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): T => {
+  let timeout: NodeJS.Timeout;
+  return ((...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  }) as T;
+};
 import { KuriCoreABI } from "../../contracts/abis/KuriCoreV1";
 import { ERC20ABI } from "../../contracts/abis/ERC20";
 import { handleContractError } from "../../utils/errors";
@@ -1199,6 +1211,17 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     [kuriAddress, chainId]
   );
 
+  // Create debounced versions of frequently called functions
+  const debouncedCheckUserPaymentStatus = useMemo(
+    () => debounce(checkUserPaymentStatus, 1000),
+    [checkUserPaymentStatus]
+  );
+
+  const debouncedCheckUserBalance = useMemo(
+    () => debounce(checkUserBalance, 1000),
+    [checkUserBalance]
+  );
+
   return {
     // Market data
     marketData,
@@ -1235,6 +1258,9 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     approveTokensSponsored, // 🚀 NEW: Gas-sponsored version
     checkUserPaymentStatus,
     checkUserBalance,
+    // Debounced versions for performance
+    debouncedCheckUserPaymentStatus,
+    debouncedCheckUserBalance,
     refreshUserData,
     checkPaymentStatusIfMember, // Add the new method to the return object
     checkHasClaimed,

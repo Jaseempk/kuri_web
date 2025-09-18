@@ -45,7 +45,8 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     checkUserBalance,
     refreshUserData,
     checkPaymentStatusIfMember,
-    marketDetail,
+    userDepositsLoading,
+    hasUserPaidForInterval,
   } = useMarketContext();
 
   // Get user address for GraphQL payment verification
@@ -59,47 +60,16 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     useState(false);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
 
-  // 🔥 NEW: GraphQL-based payment status calculation (same as Members tab)
-  const graphqlPaymentStatus = useMemo(() => {
-    if (!marketDetail?.deposits || !userAddress || currentInterval <= 0) {
-      return false;
-    }
-    
-    // Check if current time is past deposit window
-    const currentTime = Math.floor(Date.now() / 1000);
-    const nextDepositTime = Number(marketData.nextIntervalDepositTime);
-    const isPaymentPeriodActive = currentTime >= nextDepositTime && currentInterval > 0;
-    
-    if (!isPaymentPeriodActive) {
-      return false;
-    }
-    
-    // Check if user has deposit for current interval in GraphQL data
-    return marketDetail.deposits.some(deposit => {
-      const depositInterval = parseInt(deposit.intervalIndex);
-      const depositUser = deposit.user.toLowerCase();
-      return depositInterval === currentInterval && depositUser === userAddress.toLowerCase();
-    });
-  }, [marketDetail?.deposits, userAddress, currentInterval, marketData?.nextIntervalDepositTime]);
 
-  // Use GraphQL payment status instead of smart contract status for consistency
-  const actualPaymentStatus = graphqlPaymentStatus;
-
-  // 🔍 DEBUG: Log payment status comparison for debugging
-  useEffect(() => {
-    if (userAddress && currentInterval > 0) {
-      console.log("🔍 DepositForm Payment Status Debug:", {
-        userAddress,
-        currentInterval,
-        graphqlPaymentStatus,
-        deposits: marketDetail?.deposits?.filter(d => 
-          d.user.toLowerCase() === userAddress.toLowerCase()
-        ),
-        nextDepositTime: marketData?.nextIntervalDepositTime,
-        currentTime: Math.floor(Date.now() / 1000)
-      });
+  // Use centralized payment status from MarketContext
+  const actualPaymentStatus = useMemo(() => {
+    if (!userAddress || currentInterval <= 0 || userDepositsLoading) {
+      return null;
     }
-  }, [userAddress, currentInterval, graphqlPaymentStatus, marketDetail?.deposits]);
+    
+    return hasUserPaidForInterval(userAddress, currentInterval);
+  }, [userAddress, currentInterval, hasUserPaidForInterval, userDepositsLoading]);
+
 
   // Check if this is user's first deposit (interval 1 and hasn't paid yet)
   const isFirstDeposit = currentInterval === 1 && actualPaymentStatus === false;
