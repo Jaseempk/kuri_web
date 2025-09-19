@@ -95,6 +95,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const { handleTransaction } = useTransactionStatus();
   const { signMessageAsync } = useSignMessage();
   const chainId = getDefaultChainId(); // Use environment-configured chain (mainnet/testnet)
+  
 
   // Fetch token address from the contract
   const fetchTokenAddress = useCallback(async () => {
@@ -311,9 +312,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         return false;
       }
 
-      console.log(
-        `Current interval for market ${kuriAddress}: ${intervalCounter}`
-      );
       // Store current interval for UI components
       setCurrentInterval(intervalCounter);
 
@@ -365,7 +363,10 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
   // Enhanced fetchMarketData to also check payment status
   const fetchMarketData = useCallback(async () => {
-    if (!kuriAddress) return;
+    if (!kuriAddress) {
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
 
@@ -378,7 +379,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
       });
 
       const marketTuple = data as KuriDataTuple;
-      setMarketData({
+      const processedData = {
         creator: marketTuple[0],
         kuriAmount: marketTuple[1],
         totalParticipantsCount: marketTuple[2],
@@ -391,13 +392,51 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         endTime: BigInt(marketTuple[9]),
         intervalType: marketTuple[10],
         state: marketTuple[11],
-      });
+      };
+      
+      setMarketData(processedData);
+      
     } catch (err) {
-      setError(handleContractError(err).message);
+      const errorMessage = handleContractError(err).message;
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   }, [kuriAddress, chainId]);
+
+  // 🔒 MEMOIZE marketData to prevent object recreation causing infinite re-renders
+  const memoizedMarketData = useMemo(() => {
+    if (!marketData) return null;
+    
+    // Create stable object with same structure to break re-render cascade
+    return {
+      creator: marketData.creator,
+      kuriAmount: marketData.kuriAmount,
+      totalParticipantsCount: marketData.totalParticipantsCount,
+      totalActiveParticipantsCount: marketData.totalActiveParticipantsCount,
+      intervalDuration: marketData.intervalDuration,
+      nexRaffleTime: marketData.nexRaffleTime,
+      nextIntervalDepositTime: marketData.nextIntervalDepositTime,
+      launchPeriod: marketData.launchPeriod,
+      startTime: marketData.startTime,
+      endTime: marketData.endTime,
+      intervalType: marketData.intervalType,
+      state: marketData.state,
+    };
+  }, [
+    marketData?.creator,
+    marketData?.kuriAmount,
+    marketData?.totalParticipantsCount,
+    marketData?.totalActiveParticipantsCount,
+    marketData?.intervalDuration,
+    marketData?.nexRaffleTime?.toString(),
+    marketData?.nextIntervalDepositTime?.toString(),
+    marketData?.launchPeriod?.toString(),
+    marketData?.startTime?.toString(),
+    marketData?.endTime?.toString(),
+    marketData?.intervalType,
+    marketData?.state,
+  ]);
 
   // Check payment status and balance when market becomes active or user changes
   useEffect(() => {
@@ -412,7 +451,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   useEffect(() => {
     fetchMarketData();
     fetchTokenAddress();
-  }, [fetchMarketData, fetchTokenAddress]);
+  }, [kuriAddress, chainId]); // 🔥 FIX: Use direct dependencies instead of callback references
 
   // Initialize market
   const initializeKuri = useCallback(async () => {
@@ -1230,7 +1269,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
 
   return {
     // Market data
-    marketData,
+    marketData: memoizedMarketData,
     isLoading,
     error,
 

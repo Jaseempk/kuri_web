@@ -163,9 +163,6 @@ export const KURI_MARKET_DETAIL_QUERY = gql`
       user
       timestamp
       contractAddress
-      blockNumber
-      blockTimestamp
-      transactionHash
     }
     userAccepteds: KuriCore_UserAccepted(
       where: { contractAddress: { _ilike: $marketAddress } }
@@ -175,9 +172,6 @@ export const KURI_MARKET_DETAIL_QUERY = gql`
       caller
       _totalActiveParticipantsCount
       contractAddress
-      blockNumber
-      blockTimestamp
-      transactionHash
     }
   }
 `;
@@ -192,9 +186,6 @@ export const USER_ACTIVITY_QUERY = gql`
       user
       timestamp
       contractAddress
-      blockNumber
-      blockTimestamp
-      transactionHash
     }
     userDepositeds: KuriCore_UserDeposited(
       where: { user: { _eq: $userAddress } }

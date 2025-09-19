@@ -10,10 +10,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { KuriState } from "../hooks/contracts/useKuriCore";
 import { KuriState as GraphQLKuriState } from "../graphql/types";
 import { MarketProvider, useMarketContext } from "../contexts/MarketContext";
-import {
-  MarketTimerProvider,
-  useMarketTimerContext,
-} from "../contexts/MarketTimerContext";
+// 🔥 REMOVED: Complex timer context - using simple MarketCard approach instead
+// import {
+//   MarketTimerProvider,
+//   useMarketTimerContext,
+// } from "../contexts/MarketTimerContext";
 import { Button } from "../components/ui/button";
 import { MarketSEO } from "../components/seo/MarketSEO";
 import { ShareModal } from "../components/modals/ShareModal";
@@ -167,8 +168,6 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   );
 };
 
-// TabContent Render Tracking to Eliminate Duplicates
-let tabContentRenderCount = 0;
 
 // Extracted Tab Content Component
 interface TabContentProps {
@@ -198,6 +197,269 @@ interface TabContentProps {
   renderActionButton: () => React.ReactNode;
 }
 
+// 🔥 ISOLATED TIMER COMPONENTS: Timer state isolated to prevent parent re-renders
+
+// Component that provides timer values for parsing (like "2d 5h 30m 15s")
+const useTimerValue = (marketData: any, type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft') => {
+  const [timerValue, setTimerValue] = useState<string>("");
+
+  useEffect(() => {
+    if (!marketData) return;
+
+
+    const updateTimer = () => {
+      const now = Date.now();
+
+      if (type === 'timeLeft' && marketData.state === 0) {
+        // INLAUNCH countdown
+        const end = Number((marketData as any).endTime) * 1000;
+        const diff = end - now;
+
+        if (diff <= 0) {
+          setTimerValue("Launch period ended");
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        setTimerValue(newValue);
+      } 
+      else if (type === 'raffleTimeLeft' && marketData.state === 2) {
+        // ACTIVE raffle countdown
+        const raffleEnd = Number(marketData.nexRaffleTime) * 1000;
+        const raffleDiff = raffleEnd - now;
+        
+        if (raffleDiff <= 0) {
+          setTimerValue("Raffle due now");
+        } else {
+          const days = Math.floor(raffleDiff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((raffleDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((raffleDiff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((raffleDiff % (1000 * 60)) / 1000);
+          const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            setTimerValue(newValue);
+        }
+      }
+      else if (type === 'depositTimeLeft' && marketData.state === 2) {
+        // ACTIVE deposit countdown
+        const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
+        const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000);
+        const depositDiff = depositEnd - now;
+        
+        if (depositDiff <= 0) {
+          setTimerValue("Payment due now");
+        } else {
+          const days = Math.floor(depositDiff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((depositDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((depositDiff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((depositDiff % (1000 * 60)) / 1000);
+          const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            setTimerValue(newValue);
+        }
+      }
+    };
+
+    const timer = setInterval(updateTimer, 1000);
+    updateTimer(); // Initial update
+    
+    return () => {
+      clearInterval(timer);
+    };
+  }, [marketData?.state, (marketData as any)?.endTime, marketData?.nexRaffleTime, marketData?.nextIntervalDepositTime, type]);
+
+  return timerValue;
+};
+
+// Isolated components for timer display sections
+const TimerSection = memo<{ marketData: any; section: 'days' | 'hours' | 'minutes' | 'seconds'; type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft' }>(({ marketData, section, type }) => {
+  const timerValue = useTimerValue(marketData, type);
+  
+  
+  if (section === 'days') {
+    return <>{timerValue.includes("d") ? timerValue.split("d")[0].padStart(2, "0") : "00"}</>;
+  } else if (section === 'hours') {
+    return <>{timerValue.includes("h") ? timerValue.split("h")[0].split(" ").pop()?.padStart(2, "0") || "00" : "00"}</>;
+  } else if (section === 'minutes') {
+    return <>{timerValue.includes("m") ? timerValue.split("m")[0].split(" ").pop()?.padStart(2, "0") || "00" : "00"}</>;
+  } else if (section === 'seconds') {
+    return <>{timerValue.includes("s") ? timerValue.split("s")[0].split(" ").pop()?.padStart(2, "0") || "00" : "00"}</>;
+  }
+  return <></>;
+});
+
+
+// Component for displaying adaptive timer in desktop format
+const AdaptiveTimerDisplay = memo<{ marketData: any }>(({ marketData }) => {
+  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft');
+  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft');
+  
+  
+  const activeTimer = (() => {
+    const now = Date.now();
+    const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
+    const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
+    
+    // Show deposit timer if we're in the 3-day deposit period
+    return (now >= depositStart && now <= depositEnd) 
+      ? depositTimeLeft 
+      : raffleTimeLeft;
+  })();
+
+  return (
+    <>
+      <div className="text-center">
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("d")
+            ? activeTimer.split("d")[0].padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Days
+        </span>
+      </div>
+      <span className="text-4xl font-bold text-orange-500">
+        :
+      </span>
+      <div className="text-center">
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("h")
+            ? activeTimer
+                .split("h")[0]
+                .split(" ")
+                .pop()
+                ?.padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Hours
+        </span>
+      </div>
+      <span className="text-4xl font-bold text-orange-500">
+        :
+      </span>
+      <div className="text-center">
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("m")
+            ? activeTimer
+                .split("m")[0]
+                .split(" ")
+                .pop()
+                ?.padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Minutes
+        </span>
+      </div>
+      <span className="text-4xl font-bold text-orange-500">
+        :
+      </span>
+      <div className="text-center">
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("s")
+            ? activeTimer
+                .split("s")[0]
+                .split(" ")
+                .pop()
+                ?.padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Seconds
+        </span>
+      </div>
+    </>
+  );
+});
+
+// Component for displaying adaptive timer in mobile format
+const AdaptiveTimerMobileDisplay = memo<{ marketData: any }>(({ marketData }) => {
+  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft');
+  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft');
+  
+  
+  const activeTimer = (() => {
+    const now = Date.now();
+    const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
+    const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
+    
+    // Show deposit timer if we're in the 3-day deposit period
+    return (now >= depositStart && now <= depositEnd) 
+      ? depositTimeLeft 
+      : raffleTimeLeft;
+  })();
+
+  return (
+    <>
+      <div>
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("d")
+            ? activeTimer.split("d")[0].padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Days
+        </span>
+      </div>
+      <span className="text-3xl font-bold text-orange-500">
+        :
+      </span>
+      <div>
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("h")
+            ? activeTimer
+                .split("h")[0]
+                .split(" ")
+                .pop()
+                ?.padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Hours
+        </span>
+      </div>
+      <span className="text-3xl font-bold text-orange-500">
+        :
+      </span>
+      <div>
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("m")
+            ? activeTimer
+                .split("m")[0]
+                .split(" ")
+                .pop()
+                ?.padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Minutes
+        </span>
+      </div>
+      <span className="text-3xl font-bold text-orange-500">
+        :
+      </span>
+      <div>
+        <span className="text-4xl font-bold text-orange-500">
+          {activeTimer.includes("s")
+            ? activeTimer
+                .split("s")[0]
+                .split(" ")
+                .pop()
+                ?.padStart(2, "0")
+            : "00"}
+        </span>
+        <span className="block text-xs text-gray-900">
+          Seconds
+        </span>
+      </div>
+    </>
+  );
+});
+
 const TabContent = memo<TabContentProps>(({
   activeTab,
   metadata,
@@ -211,24 +473,8 @@ const TabContent = memo<TabContentProps>(({
   membershipStatus,
   renderActionButton,
 }) => {
-  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimerContext();
   const { currentInterval } = useMarketContext();
 
-  // Track render instances to identify duplicates
-  tabContentRenderCount++;
-  // console.log("TiemLeft:", timeLeft);
-  // console.log(
-  //   "🔄 TabContent render #" + tabContentRenderCount + " - timers updated:",
-  //   {
-  //     timeLeft,
-  //     raffleTimeLeft,
-  //     depositTimeLeft,
-  //     activeTab,
-  //     renderInstance: tabContentRenderCount,
-  //     preventedRender:
-  //       timeLeft === "cached_value" ? "❌ Prevented" : "✅ Legitimate",
-  //   }
-  // );
 
   if (!marketData) return null;
 
@@ -399,9 +645,7 @@ const TabContent = memo<TabContentProps>(({
                     <div className="flex items-end gap-x-3">
                       <div className="text-center">
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("d")
-                            ? timeLeft.split("d")[0].padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="days" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Days
@@ -412,13 +656,7 @@ const TabContent = memo<TabContentProps>(({
                       </span>
                       <div className="text-center">
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("h")
-                            ? timeLeft
-                                .split("h")[0]
-                                .split(" ")
-                                .pop()
-                                ?.padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="hours" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Hours
@@ -429,13 +667,7 @@ const TabContent = memo<TabContentProps>(({
                       </span>
                       <div className="text-center">
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("m")
-                            ? timeLeft
-                                .split("m")[0]
-                                .split(" ")
-                                .pop()
-                                ?.padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="minutes" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Minutes
@@ -446,13 +678,7 @@ const TabContent = memo<TabContentProps>(({
                       </span>
                       <div className="text-center">
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("s")
-                            ? timeLeft
-                                .split("s")[0]
-                                .split(" ")
-                                .pop()
-                                ?.padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="seconds" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Seconds
@@ -475,84 +701,7 @@ const TabContent = memo<TabContentProps>(({
                         : "Next Raffle In"}
                     </h3>
                     <div className="flex items-end gap-x-3">
-                      {(() => {
-                        const activeTimer = (() => {
-                          const now = Date.now();
-                          const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
-                          const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
-                          
-                          // Show deposit timer if we're in the 3-day deposit period
-                          return (now >= depositStart && now <= depositEnd) 
-                            ? depositTimeLeft 
-                            : raffleTimeLeft;
-                        })();
-
-                        return (
-                          <>
-                            <div className="text-center">
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("d")
-                                  ? activeTimer.split("d")[0].padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Days
-                              </span>
-                            </div>
-                            <span className="text-4xl font-bold text-orange-500">
-                              :
-                            </span>
-                            <div className="text-center">
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("h")
-                                  ? activeTimer
-                                      .split("h")[0]
-                                      .split(" ")
-                                      .pop()
-                                      ?.padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Hours
-                              </span>
-                            </div>
-                            <span className="text-4xl font-bold text-orange-500">
-                              :
-                            </span>
-                            <div className="text-center">
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("m")
-                                  ? activeTimer
-                                      .split("m")[0]
-                                      .split(" ")
-                                      .pop()
-                                      ?.padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Minutes
-                              </span>
-                            </div>
-                            <span className="text-4xl font-bold text-orange-500">
-                              :
-                            </span>
-                            <div className="text-center">
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("s")
-                                  ? activeTimer
-                                      .split("s")[0]
-                                      .split(" ")
-                                      .pop()
-                                      ?.padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Seconds
-                              </span>
-                            </div>
-                          </>
-                        );
-                      })()}
+                      <AdaptiveTimerDisplay marketData={marketData} />
                     </div>
                   </>
                 )}
@@ -681,11 +830,18 @@ const TabContent = memo<TabContentProps>(({
   );
 }, (prevProps, nextProps) => {
   // Only re-render if important props change (not timer-related props)
-  return (
+  const shouldSkipRender = (
     prevProps.activeTab === nextProps.activeTab &&
     prevProps.membershipStatus === nextProps.membershipStatus &&
-    prevProps.address === nextProps.address
+    prevProps.address === nextProps.address &&
+    prevProps.creatorProfileLoading === nextProps.creatorProfileLoading &&
+    prevProps.creatorProfile?.id === nextProps.creatorProfile?.id &&
+    prevProps.winnerProfileLoading === nextProps.winnerProfileLoading &&
+    prevProps.winnerProfile?.id === nextProps.winnerProfile?.id
   );
+  
+  
+  return shouldSkipRender;
 });
 
 // Convert useKuriCore KuriState to GraphQL KuriState for components that expect it
@@ -744,8 +900,7 @@ function MarketDetailInner() {
     currentInterval,
   } = useMarketContext();
 
-  // Get timer data from separate context to prevent cascade re-renders
-  const { timeLeft, raffleTimeLeft, depositTimeLeft } = useMarketTimerContext();
+  // 🔥 TIMER MOVED: Timer logic moved to isolated components to prevent parent re-renders
 
   // Add render cause tracking
   const renderCount = useRef(0);
@@ -756,7 +911,6 @@ function MarketDetailInner() {
     const currentProps = {
       userAddress,
       marketDataExists: !!marketData,
-      timeLeft,
       isLoadingCore,
       address,
     };
@@ -784,9 +938,12 @@ function MarketDetailInner() {
   //   isLoadingCore,
   // });
 
+  // Stabilize creator address to prevent unnecessary profile refetches
+  const creatorAddress = useMemo(() => marketData?.creator || null, [marketData?.creator]);
+  
   // Fetch creator's profile
   const { profile: creatorProfile, isLoading: creatorProfileLoading } =
-    useUserProfileByAddress(marketData?.creator || null);
+    useUserProfileByAddress(creatorAddress);
 
   // Fetch metadata
   const { data: metadata } = useQuery({
@@ -822,9 +979,12 @@ function MarketDetailInner() {
     return null;
   }, [marketDetail?.winners, marketData?.state, marketData?.nexRaffleTime]);
 
+  // Stabilize winner address to prevent unnecessary profile refetches
+  const winnerAddress = useMemo(() => currentWinner?.winner || null, [currentWinner?.winner]);
+  
   // Fetch winner's profile
   const { profile: winnerProfile, isLoading: winnerProfileLoading } =
-    useUserProfileByAddress(currentWinner?.winner || null);
+    useUserProfileByAddress(winnerAddress);
 
   // Fetch membership status
   useEffect(() => {
@@ -1776,9 +1936,7 @@ function MarketDetailInner() {
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("d")
-                            ? timeLeft.split("d")[0].padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="days" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Days
@@ -1789,13 +1947,7 @@ function MarketDetailInner() {
                       </span>
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("h")
-                            ? timeLeft
-                                .split("h")[0]
-                                .split(" ")
-                                .pop()
-                                ?.padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="hours" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Hours
@@ -1806,13 +1958,7 @@ function MarketDetailInner() {
                       </span>
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("m")
-                            ? timeLeft
-                                .split("m")[0]
-                                .split(" ")
-                                .pop()
-                                ?.padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="minutes" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Minutes
@@ -1823,13 +1969,7 @@ function MarketDetailInner() {
                       </span>
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          {timeLeft.includes("s")
-                            ? timeLeft
-                                .split("s")[0]
-                                .split(" ")
-                                .pop()
-                                ?.padStart(2, "0")
-                            : "00"}
+                          <TimerSection marketData={marketData} section="seconds" type="timeLeft" />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Seconds
@@ -1852,84 +1992,7 @@ function MarketDetailInner() {
                         : "Next Raffle In"}
                     </h3>
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
-                      {(() => {
-                        const activeTimer = (() => {
-                          const now = Date.now();
-                          const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
-                          const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
-                          
-                          // Show deposit timer if we're in the 3-day deposit period
-                          return (now >= depositStart && now <= depositEnd) 
-                            ? depositTimeLeft 
-                            : raffleTimeLeft;
-                        })();
-
-                        return (
-                          <>
-                            <div>
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("d")
-                                  ? activeTimer.split("d")[0].padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Days
-                              </span>
-                            </div>
-                            <span className="text-3xl font-bold text-orange-500">
-                              :
-                            </span>
-                            <div>
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("h")
-                                  ? activeTimer
-                                      .split("h")[0]
-                                      .split(" ")
-                                      .pop()
-                                      ?.padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Hours
-                              </span>
-                            </div>
-                            <span className="text-3xl font-bold text-orange-500">
-                              :
-                            </span>
-                            <div>
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("m")
-                                  ? activeTimer
-                                      .split("m")[0]
-                                      .split(" ")
-                                      .pop()
-                                      ?.padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Minutes
-                              </span>
-                            </div>
-                            <span className="text-3xl font-bold text-orange-500">
-                              :
-                            </span>
-                            <div>
-                              <span className="text-4xl font-bold text-orange-500">
-                                {activeTimer.includes("s")
-                                  ? activeTimer
-                                      .split("s")[0]
-                                      .split(" ")
-                                      .pop()
-                                      ?.padStart(2, "0")
-                                  : "00"}
-                              </span>
-                              <span className="block text-xs text-gray-900">
-                                Seconds
-                              </span>
-                            </div>
-                          </>
-                        );
-                      })()}
+                      <AdaptiveTimerMobileDisplay marketData={marketData} />
                     </div>
                   </>
                 )}
@@ -1998,19 +2061,14 @@ function MarketDetailInner() {
 }
 
 function MarketDetailWithTimer() {
-  const { marketData } = useMarketContext();
-
-  return (
-    <MarketTimerProvider marketData={marketData}>
-      <MarketDetailInner />
-    </MarketTimerProvider>
-  );
+  // 🔥 REMOVED: No longer need MarketTimerProvider wrapper - using simple timer logic
+  return <MarketDetailInner />;
 }
 
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
-
+  
   // Validate address immediately - redirect if invalid
   useEffect(() => {
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {

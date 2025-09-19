@@ -12,11 +12,14 @@ export const useUserProfileByAddress = (userAddress: string | null) => {
     refetch: fetchProfileByAddress,
   } = useQuery({
     queryKey: ["user-profile-by-address", userAddress?.toLowerCase()],
-    queryFn: () => profileService.fetchProfileSilent(userAddress!),
+    queryFn: () => {
+      return profileService.fetchProfileSilent(userAddress!);
+    },
     enabled: !!userAddress,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });
+
 
   return {
     profile,

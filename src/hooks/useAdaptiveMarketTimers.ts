@@ -20,6 +20,8 @@ interface KuriData {
 // This is how Netflix, YouTube, etc. handle countdowns
 
 export function useAdaptiveMarketTimers(marketData: KuriData | null) {
+  console.log(`⏰ useAdaptiveMarketTimers called with marketData:`, marketData?.state, marketData?.creator);
+  
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [raffleTimeLeft, setRaffleTimeLeft] = useState<string>("");
   const [depositTimeLeft, setDepositTimeLeft] = useState<string>("");
@@ -38,6 +40,25 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
   
   // Performance tracking
   const updateCountRef = useRef(0);
+  
+  // Ref to track current market state for timer updates
+  const marketStateRef = useRef<KuriState | null>(null);
+  
+  // Memoize market data key properties to prevent unnecessary re-renders
+  const marketDataKey = useMemo(() => {
+    if (!marketData) return null;
+    return {
+      state: marketData.state,
+      launchPeriod: marketData.launchPeriod.toString(),
+      nexRaffleTime: marketData.nexRaffleTime.toString(),
+      nextIntervalDepositTime: marketData.nextIntervalDepositTime.toString(),
+    };
+  }, [
+    marketData?.state,
+    marketData?.launchPeriod?.toString(),
+    marketData?.nexRaffleTime?.toString(),
+    marketData?.nextIntervalDepositTime?.toString(),
+  ]);
 
   // Format time difference to human readable string
   const formatTimeLeft = (diff: number): string => {
@@ -52,9 +73,17 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
   };
 
   useEffect(() => {
-    if (!marketData) return;
+    console.log(`⏰ useAdaptiveMarketTimers useEffect triggered. marketDataKey:`, marketDataKey);
+    
+    if (!marketData || !marketDataKey) {
+      console.warn(`⏰ No marketData provided to useAdaptiveMarketTimers - timers will remain empty`);
+      return;
+    }
 
     console.log(`🎯 STATIC TIMER: Capturing blockchain data once for ${KuriState[marketData.state]} state`);
+
+    // Update the market state ref
+    marketStateRef.current = marketData.state;
 
     // 🔒 CAPTURE STATIC TIMESTAMPS - These never change until page refresh!
     const captureTime = Date.now();
@@ -80,10 +109,10 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
       const now = Date.now();
       updateCountRef.current += 1;
 
-      if (!staticTimestampsRef.current) return;
+      if (!staticTimestampsRef.current || !marketStateRef.current) return;
 
       // INLAUNCH countdown (using captured launch time)
-      if (marketData.state === KuriState.INLAUNCH) {
+      if (marketStateRef.current === KuriState.INLAUNCH) {
         const remainingMs = staticTimestampsRef.current.launch - now;
         const newTimeLeft = remainingMs <= 0 ? "Launch period ended" : formatTimeLeft(remainingMs);
         
@@ -98,7 +127,7 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
       }
 
       // ACTIVE state countdowns (using captured times)
-      if (marketData.state === KuriState.ACTIVE) {
+      if (marketStateRef.current === KuriState.ACTIVE) {
         // Raffle countdown
         const raffleRemainingMs = staticTimestampsRef.current.raffle - now;
         const newRaffleTimeLeft = raffleRemainingMs <= 0 ? "Raffle due now" : formatTimeLeft(raffleRemainingMs);
@@ -138,7 +167,14 @@ export function useAdaptiveMarketTimers(marketData: KuriData | null) {
       console.log(`   • Performance: ⚡ MAXIMUM (pure math)`);
       console.log(`   • CPU Usage: 📉 MINIMAL (single 1s timer)`);
     };
-  }, [marketData]); // Only depends on marketData, not individual fields!
+  }, [marketDataKey]); // Only depend on stable memoized key - removes infinite loop
+
+  // Separate effect to update market state ref when state changes
+  useEffect(() => {
+    if (marketData?.state !== undefined) {
+      marketStateRef.current = marketData.state;
+    }
+  }, [marketData?.state]);
 
   return useMemo(() => ({
     timeLeft,

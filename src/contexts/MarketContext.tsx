@@ -161,25 +161,24 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     // DepositForm state
     isApproving,
   }), [
-    // Core data
+    // Core data - only primitive values and stable refs
     marketData,
     isLoadingCore,
     errorCore,
     
-    // Detail data
+    // Detail data - only primitive values and stable refs
     marketDetail,
     isLoadingDetail,
     errorDetail,
     
-    // User deposits data (use length for stability)
+    // User deposits data - ONLY length and loading states (not function refs)
     userDeposits?.length,
     userDepositsLoading,
     userDepositsError,
-    hasUserPaidForInterval,
-    getDepositsForUser,
-    getDepositsForInterval,
+    // ❌ REMOVED UNSTABLE FUNCTION DEPENDENCIES:
+    // hasUserPaidForInterval, getDepositsForUser, getDepositsForInterval
     
-    // Actions (these are stable references from hooks)
+    // Actions - stable function references from hooks
     refetchDetail,
     getMemberStatus,
     acceptMemberSponsored,
