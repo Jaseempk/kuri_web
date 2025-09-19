@@ -1,29 +1,55 @@
 import { useState, useEffect } from "react";
 import { useKuriMarkets } from "../../hooks/useKuriMarkets";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { motion } from "framer-motion";
-import { Badge } from "../ui/badge";
-import { formatEther } from "viem";
-import { useKuriCore } from "../../hooks/contracts/useKuriCore";
+import { readContract } from "@wagmi/core";
+import { config } from "../../config/wagmi";
+import { KuriCoreABI } from "../../contracts/abis/KuriCoreV1";
+import { getDefaultChainId } from "../../config/contracts";
+import { MarketProvider } from "../../contexts/MarketContext";
+import { MarketCard } from "../markets/MarketCard";
 
 export function Memberships() {
   const { smartAddress: address } = useAuthContext();
   const { markets, loading } = useKuriMarkets();
-  const { getMemberStatus } = useKuriCore();
 
   const [memberMarkets, setMemberMarkets] = useState<any[]>([]);
   const [loadingStatus, setLoadingStatus] = useState(true);
 
+  // Use environment-configured chain (mainnet/testnet)
+  const chainId = getDefaultChainId();
+
   useEffect(() => {
     async function fetchMembershipStatus() {
-      if (!markets || !address) return;
+      if (!markets || !address) {
+        setLoadingStatus(false);
+        return;
+      }
 
-      const membershipPromises = markets.map(async (market) => {
+      setMemberMarkets([]);
+      setLoadingStatus(true);
+
+      // Filter for only ACTIVE markets (state === 2) before checking membership
+      const activeMarkets = markets.filter((market) => market.state === 2);
+
+      const membershipPromises = activeMarkets.map(async (market) => {
         try {
-          const status = await getMemberStatus(market.address as `0x${string}`);
-          return status === 1 ? market : null; // 1 = ACCEPTED
+          // Call the contract directly instead of using useKuriCore
+          const userData = await readContract(config, {
+            address: market.address as `0x${string}`,
+            abi: KuriCoreABI,
+            functionName: "userToData",
+            args: [address as `0x${string}`],
+            chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
+          });
+
+          const memberStatus = (userData as any)[0];
+          return memberStatus === 1 ? market : null; // 1 = ACCEPTED
         } catch (error) {
-          console.error("Error fetching member status:", error);
+          console.error(
+            "Error fetching member status for market:",
+            market.address,
+            error
+          );
           return null;
         }
       });
@@ -34,7 +60,7 @@ export function Memberships() {
     }
 
     fetchMembershipStatus();
-  }, [markets, address, getMemberStatus]);
+  }, [markets, address]);
 
   if (loading || loadingStatus) {
     return (
@@ -61,53 +87,14 @@ export function Memberships() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {memberMarkets.map((market, index) => (
-        <motion.div
-          key={market.address}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all"
-        >
-          <div className="flex flex-col h-full">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold mb-2 line-clamp-1 text-foreground">
-                  {market.name}
-                </h3>
-                <p className="text-sm text-muted-foreground line-clamp-1 break-all">
-                  Created by {market.creator}
-                </p>
-              </div>
-              <Badge
-                variant="outline"
-                className="text-xs md:text-sm ml-2 flex-shrink-0"
-              >
-                Member
-              </Badge>
-            </div>
-
-            <div className="mt-auto grid grid-cols-2 gap-3">
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-sm text-muted-foreground mb-1">
-                  Deposit
-                </p>
-                <p className="text-base font-medium text-foreground">
-                  {formatEther(market.depositAmount)} ETH
-                </p>
-              </div>
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-sm text-muted-foreground mb-1">
-                  Members
-                </p>
-                <p className="text-base font-medium text-foreground">
-                  {market.totalMembers}
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        <MarketProvider key={market.address} marketAddress={market.address}>
+          <MarketCard
+            market={market}
+            index={index}
+          />
+        </MarketProvider>
       ))}
     </div>
   );
