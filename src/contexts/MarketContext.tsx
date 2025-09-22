@@ -3,6 +3,7 @@ import { useKuriCore } from '../hooks/contracts/useKuriCore';
 import { useKuriMarketDetail } from '../hooks/useKuriMarketDetail';
 import type { MarketDetail } from '../hooks/useKuriMarketDetail';
 import { useUserDeposits } from '../hooks/useUserDeposits';
+import { useRaffleWinners, type ProcessedWinner } from '../hooks/useRaffleWinners';
 
 interface MarketContextType {
   // Core market data
@@ -10,10 +11,17 @@ interface MarketContextType {
   isLoadingCore: boolean;
   errorCore: any;
   
-  // Market detail data  
+  // Market detail data (excluding winners - now comes from dedicated hook)
   marketDetail: MarketDetail | null;
   isLoadingDetail: boolean;
   errorDetail: any;
+  
+  // Winner data (from dedicated hook)
+  winners: ProcessedWinner[];
+  currentWinner: ProcessedWinner | null;
+  winnersLoading: boolean;
+  winnersError: any;
+  refetchWinners: () => void;
   
   // User deposits data
   userDeposits: any[];
@@ -93,13 +101,32 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     isApproving,
   } = useKuriCore(marketAddress as `0x${string}`);
   
-  // Single subscription to market detail
+  // Single subscription to market detail (excluding winners)
   const {
     marketDetail,
     loading: isLoadingDetail,
     error: errorDetail,
     refetch: refetchDetail,
   } = useKuriMarketDetail(marketAddress);
+
+  // Dedicated subscription to winner data
+  const {
+    winners,
+    currentWinner,
+    loading: winnersLoading,
+    error: winnersError,
+    refetch: refetchWinners,
+  } = useRaffleWinners(marketAddress);
+
+  console.log("🏛️ MARKET CONTEXT INTEGRATION:", {
+    marketAddress,
+    hasMarketDetail: !!marketDetail,
+    originalWinnersFromDetail: marketDetail?.winners?.length || 0,
+    newWinnersFromHook: winners?.length || 0,
+    currentWinnerFromHook: currentWinner?.intervalIndex,
+    winnersLoading,
+    hasWinnersError: !!winnersError,
+  });
 
   // Single subscription to user deposits
   const {
@@ -118,10 +145,17 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     isLoadingCore,
     errorCore,
     
-    // Detail data
+    // Detail data (excluding winners)
     marketDetail,
     isLoadingDetail,
     errorDetail,
+    
+    // Winner data (from dedicated hook)
+    winners,
+    currentWinner,
+    winnersLoading,
+    winnersError,
+    refetchWinners,
     
     // User deposits data
     userDeposits,
@@ -170,6 +204,13 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     marketDetail,
     isLoadingDetail,
     errorDetail,
+    
+    // Winner data - stable refs from dedicated hook
+    winners?.length,
+    currentWinner?.intervalIndex,
+    winnersLoading,
+    winnersError,
+    refetchWinners,
     
     // User deposits data - ONLY length and loading states (not function refs)
     userDeposits?.length,

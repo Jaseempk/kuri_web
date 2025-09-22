@@ -116,7 +116,10 @@ export const MEMBERSHIP_REQUESTS_QUERY = gql`
 
 export const KURI_MARKET_DETAIL_QUERY = gql`
   query KuriMarketDetail($marketAddress: String!) {
-    kuriInitialised: KuriCore_KuriInitialised_by_pk(id: $marketAddress) {
+    kuriInitialised: KuriCore_KuriInitialised(
+      where: { contractAddress: { _ilike: $marketAddress } }
+      limit: 1
+    ) {
       id
       _kuriData_0
       _kuriData_1
@@ -231,6 +234,23 @@ export const MARKET_DEPLOYMENT_QUERY = gql`
       timestamp
       wannabeMember
       circleCurrencyAddress
+    }
+  }
+`;
+
+export const RAFFLE_WINNERS_QUERY = gql`
+  query RaffleWinners($marketAddress: String!) {
+    raffleWinnerSelecteds: KuriCore_RaffleWinnerSelected(
+      where: { contractAddress: { _ilike: $marketAddress } }
+      order_by: { winnerTimestamp: desc }
+    ) {
+      id
+      intervalIndex
+      winnerIndex
+      winnerAddress
+      winnerTimestamp
+      requestId
+      contractAddress
     }
   }
 `;

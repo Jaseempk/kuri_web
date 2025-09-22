@@ -175,7 +175,7 @@ export interface TransformedKuriMarketsResult {
 }
 
 export interface KuriMarketDetailQueryResult {
-  kuriInitialised: KuriInitialised | null;
+  kuriInitialised: KuriInitialised[];
   userDepositeds: UserDeposited[];
   raffleWinnerSelecteds: RaffleWinnerSelected[];
   membershipRequesteds: MembershipRequested[];
@@ -212,6 +212,14 @@ export interface MarketDeploymentQueryResult {
 
 export interface MarketDeploymentQueryVariables {
   marketAddress: string;
+}
+
+export interface RaffleWinnersQueryVariables {
+  marketAddress: string;
+}
+
+export interface RaffleWinnersQueryResult {
+  raffleWinnerSelecteds: RaffleWinnerSelected[];
 }
 
 // Enums

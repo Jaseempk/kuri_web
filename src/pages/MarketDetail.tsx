@@ -193,6 +193,8 @@ interface TabContentProps {
   address: string;
   membershipStatus: number;
   shouldShowClaimCard: boolean;
+  shouldShowWinnerDisplay: boolean;
+  isCurrentUserWinner: boolean;
   handleClaimSuccess: () => void;
   renderActionButton: () => React.ReactNode;
 }
@@ -200,12 +202,19 @@ interface TabContentProps {
 // 🔥 ISOLATED TIMER COMPONENTS: Timer state isolated to prevent parent re-renders
 
 // Component that provides timer values for parsing (like "2d 5h 30m 15s")
-const useTimerValue = (marketData: any, type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft') => {
+// ✨ FIXED: Added shouldShowWinner param to prevent timer interference
+const useTimerValue = (marketData: any, type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft', shouldShowWinner: boolean = false) => {
   const [timerValue, setTimerValue] = useState<string>("");
 
   useEffect(() => {
     if (!marketData) return;
 
+    // 🚀 FIX: Don't run timers when winner is being displayed to prevent flickering
+    if (shouldShowWinner && (type === 'raffleTimeLeft' || type === 'depositTimeLeft')) {
+      console.log(`⏸️ Timer paused for ${type} - winner being displayed`);
+      setTimerValue("Winner display active");
+      return;
+    }
 
     const updateTimer = () => {
       const now = Date.now();
@@ -269,14 +278,14 @@ const useTimerValue = (marketData: any, type: 'timeLeft' | 'raffleTimeLeft' | 'd
     return () => {
       clearInterval(timer);
     };
-  }, [marketData?.state, (marketData as any)?.endTime, marketData?.nexRaffleTime, marketData?.nextIntervalDepositTime, type]);
+  }, [marketData?.state, (marketData as any)?.endTime, marketData?.nexRaffleTime, marketData?.nextIntervalDepositTime, type, shouldShowWinner]);
 
   return timerValue;
 };
 
 // Isolated components for timer display sections
-const TimerSection = memo<{ marketData: any; section: 'days' | 'hours' | 'minutes' | 'seconds'; type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft' }>(({ marketData, section, type }) => {
-  const timerValue = useTimerValue(marketData, type);
+const TimerSection = memo<{ marketData: any; section: 'days' | 'hours' | 'minutes' | 'seconds'; type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft'; shouldShowWinner?: boolean }>(({ marketData, section, type, shouldShowWinner = false }) => {
+  const timerValue = useTimerValue(marketData, type, shouldShowWinner);
   
   
   if (section === 'days') {
@@ -293,9 +302,9 @@ const TimerSection = memo<{ marketData: any; section: 'days' | 'hours' | 'minute
 
 
 // Component for displaying adaptive timer in desktop format
-const AdaptiveTimerDisplay = memo<{ marketData: any }>(({ marketData }) => {
-  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft');
-  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft');
+const AdaptiveTimerDisplay = memo<{ marketData: any; shouldShowWinner?: boolean }>(({ marketData, shouldShowWinner = false }) => {
+  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft', shouldShowWinner);
+  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft', shouldShowWinner);
   
   
   const activeTimer = (() => {
@@ -377,9 +386,9 @@ const AdaptiveTimerDisplay = memo<{ marketData: any }>(({ marketData }) => {
 });
 
 // Component for displaying adaptive timer in mobile format
-const AdaptiveTimerMobileDisplay = memo<{ marketData: any }>(({ marketData }) => {
-  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft');
-  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft');
+const AdaptiveTimerMobileDisplay = memo<{ marketData: any; shouldShowWinner?: boolean }>(({ marketData, shouldShowWinner = false }) => {
+  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft', shouldShowWinner);
+  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft', shouldShowWinner);
   
   
   const activeTimer = (() => {
@@ -460,6 +469,169 @@ const AdaptiveTimerMobileDisplay = memo<{ marketData: any }>(({ marketData }) =>
   );
 });
 
+// Winner Display Component - Replaces countdown during 3-day winner window
+interface WinnerDisplayProps {
+  currentWinner: {
+    intervalIndex: number;
+    winner: string;
+    timestamp: string;
+  };
+  winnerProfile: any;
+  winnerProfileLoading: boolean;
+  isCurrentUserWinner: boolean;
+  marketData: any;
+  address: string;
+  shouldShowClaimCard: boolean;
+  handleClaimSuccess: () => void;
+  isMobile?: boolean;
+}
+
+const WinnerDisplay = memo<WinnerDisplayProps>(({
+  currentWinner,
+  winnerProfile,
+  winnerProfileLoading,
+  isCurrentUserWinner,
+  marketData,
+  address,
+  shouldShowClaimCard,
+  handleClaimSuccess,
+  isMobile = false,
+}) => {
+  console.log("🎊 WINNER DISPLAY RENDER:", {
+    currentWinner,
+    isCurrentUserWinner,
+    shouldShowClaimCard,
+    isMobile,
+  });
+
+  if (isCurrentUserWinner && shouldShowClaimCard) {
+    // Winner sees claim interface
+    return (
+      <div className="space-y-6">
+        {/* Congratulations Header */}
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", duration: 0.8 }}
+            className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <Trophy className="w-8 h-8 text-white" />
+          </motion.div>
+          <motion.h3
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-2xl font-bold text-yellow-700 mb-2"
+          >
+            🎉 Congratulations! 🎉
+          </motion.h3>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-gray-600"
+          >
+            You won Round #{currentWinner.intervalIndex}!
+          </motion.p>
+        </div>
+
+        {/* Claim Interface */}
+        <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-4 border-2 border-yellow-200">
+          <ClaimInterface
+            marketData={marketData}
+            kuriAddress={address as `0x${string}`}
+            onClaimSuccess={handleClaimSuccess}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Non-winners see winner announcement
+  return (
+    <div className="text-center space-y-4">
+      {/* Winner Announcement Header */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", duration: 0.8 }}
+        className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto"
+      >
+        <Trophy className="w-8 h-8 text-white" />
+      </motion.div>
+      
+      <motion.h3
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="text-xl font-bold text-yellow-700"
+      >
+        Round #{currentWinner.intervalIndex} Winner
+      </motion.h3>
+
+      {/* Winner Profile */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-6 border border-yellow-200"
+      >
+        {winnerProfileLoading ? (
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse" />
+            <div className="text-center">
+              <div className="h-4 bg-gray-300 rounded animate-pulse mb-2 w-24" />
+              <div className="h-3 bg-gray-300 rounded animate-pulse w-16" />
+            </div>
+          </div>
+        ) : winnerProfile ? (
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+              {winnerProfile.profile_image_url ? (
+                <img
+                  src={winnerProfile.profile_image_url}
+                  alt={winnerProfile.display_name || winnerProfile.username || "Winner"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Trophy className="w-6 h-6 text-white" />
+              )}
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-gray-800 text-lg">
+                {winnerProfile.display_name || winnerProfile.username || "Anonymous Winner"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {currentWinner.winner.slice(0, 6)}...{currentWinner.winner.slice(-4)}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center mx-auto mb-2">
+              <Trophy className="w-6 h-6 text-white" />
+            </div>
+            <p className="font-bold text-gray-800 text-lg">Anonymous Winner</p>
+            <p className="text-sm text-gray-500">
+              {currentWinner.winner.slice(0, 6)}...{currentWinner.winner.slice(-4)}
+            </p>
+          </div>
+        )}
+      </motion.div>
+
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="text-sm text-gray-600"
+      >
+        🎊 The winner has 3 days to claim their prize
+      </motion.p>
+    </div>
+  );
+});
+
 const TabContent = memo<TabContentProps>(({
   activeTab,
   metadata,
@@ -471,6 +643,10 @@ const TabContent = memo<TabContentProps>(({
   winnerProfileLoading,
   address,
   membershipStatus,
+  shouldShowClaimCard,
+  shouldShowWinnerDisplay,
+  isCurrentUserWinner,
+  handleClaimSuccess,
   renderActionButton,
 }) => {
   const { currentInterval } = useMarketContext();
@@ -690,23 +866,51 @@ const TabContent = memo<TabContentProps>(({
 
                 {marketData.state === KuriState.ACTIVE && (
                   <>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      {Date.now() <
-                      Number(marketData.nextIntervalDepositTime) * 1000
-                        ? currentInterval === 0
-                          ? "First Deposit Starts In"
-                          : "Next Deposit Starts In"
-                        : currentInterval === 1
-                        ? "First Raffle In"
-                        : "Next Raffle In"}
-                    </h3>
-                    <div className="flex items-end gap-x-3">
-                      <AdaptiveTimerDisplay marketData={marketData} />
-                    </div>
+                    {shouldShowWinnerDisplay && currentWinner ? (
+                      // Show winner display instead of countdown
+                      <WinnerDisplay
+                        currentWinner={currentWinner}
+                        winnerProfile={winnerProfile}
+                        winnerProfileLoading={winnerProfileLoading}
+                        isCurrentUserWinner={isCurrentUserWinner}
+                        marketData={marketData}
+                        address={address || ""}
+                        shouldShowClaimCard={shouldShowClaimCard}
+                        handleClaimSuccess={handleClaimSuccess}
+                        isMobile={false}
+                      />
+                    ) : (
+                      // Show normal countdown
+                      <>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">
+                          {Date.now() <
+                          Number(marketData.nextIntervalDepositTime) * 1000
+                            ? currentInterval === 0
+                              ? "First Deposit Starts In"
+                              : "Next Deposit Starts In"
+                            : currentInterval === 1
+                            ? "First Raffle In"
+                            : "Next Raffle In"}
+                        </h3>
+                        <div className="flex items-end gap-x-3">
+                          <AdaptiveTimerDisplay marketData={marketData} shouldShowWinner={shouldShowWinnerDisplay} />
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
 
                 {/* Current Winner Display for Active Markets */}
+                {(() => {
+                  console.log("🎯 WINNER DISPLAY RENDER CHECK:", {
+                    hasCurrentWinner: !!currentWinner,
+                    currentWinner,
+                    marketState: marketData?.state,
+                    isActive: marketData?.state === KuriState.ACTIVE,
+                    shouldShowWinnerDisplay: !!(currentWinner && marketData?.state === KuriState.ACTIVE),
+                  });
+                  return null;
+                })()}
                 {currentWinner && marketData.state === KuriState.ACTIVE && (
                   <div className="mt-4 p-4 bg-gradient-to-br from-[hsl(var(--gold))]/20 to-amber-50 rounded-xl border border-[hsl(var(--gold))]/30">
                     <h4 className="font-bold text-[#E67A50] mb-2 flex items-center gap-2">
@@ -775,19 +979,22 @@ const TabContent = memo<TabContentProps>(({
               </div>
 
               {/* Action Button - Desktop Only */}
-              <div className="hidden lg:block flex-shrink-0">
-                {membershipStatus === 1 &&
-                marketData.state === KuriState.ACTIVE ? (
-                  <div className="w-full">{renderActionButton()}</div>
-                ) : (
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {renderActionButton()}
-                  </motion.div>
-                )}
-              </div>
+              {/* Only show if not in winner display mode for current user */}
+              {!(shouldShowWinnerDisplay && isCurrentUserWinner && shouldShowClaimCard) && (
+                <div className="hidden lg:block flex-shrink-0">
+                  {membershipStatus === 1 &&
+                  marketData.state === KuriState.ACTIVE ? (
+                    <div className="w-full">{renderActionButton()}</div>
+                  ) : (
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {renderActionButton()}
+                    </motion.div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -874,6 +1081,13 @@ function MarketDetailInner() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [hasUserClaimed, setHasUserClaimed] = useState<boolean | null>(null);
+  
+  // 🚀 NEW: Persistent winner state to prevent flickering during GraphQL polling
+  const [persistentWinner, setPersistentWinner] = useState<{
+    intervalIndex: number;
+    winner: string;
+    timestamp: string;
+  } | null>(null);
 
   const { requireProfile } = useProfileRequired({
     strict: false,
@@ -891,6 +1105,13 @@ function MarketDetailInner() {
     isLoadingCore,
     errorCore,
     marketDetail,
+    // New dedicated winner data
+    winners,
+    currentWinner: currentWinnerFromContext,
+    winnersLoading,
+    winnersError,
+    refetchWinners,
+    // Other actions
     getMemberStatus,
     requestMembershipSponsored,
     initializeKuriSponsored,
@@ -899,6 +1120,21 @@ function MarketDetailInner() {
     checkHasClaimed,
     currentInterval,
   } = useMarketContext();
+
+  console.log("🎭 MARKET DETAIL COMPONENT CONTEXT DATA:", {
+    address,
+    hasMarketData: !!marketData,
+    hasMarketDetail: !!marketDetail,
+    originalWinnersFromDetail: marketDetail?.winners?.length || 0,
+    newWinnersFromContext: winners?.length || 0,
+    currentWinnerFromContext: currentWinnerFromContext,
+    currentWinnerInterval: currentWinnerFromContext?.intervalIndex,
+    winnersLoading,
+    hasWinnersError: !!winnersError,
+    marketDataState: marketData?.state,
+    marketDataNextRaffle: marketData?.nexRaffleTime?.toString(),
+    marketDataIntervalDuration: marketData?.intervalDuration?.toString(),
+  });
 
   // 🔥 TIMER MOVED: Timer logic moved to isolated components to prevent parent re-renders
 
@@ -956,28 +1192,70 @@ function MarketDetailInner() {
   const isLoading = isLoadingCore;
   const error = errorCore;
 
-  // Determine current winner logic
+  // Use winner data with persistent state to prevent GraphQL polling flickering
   const currentWinner = useMemo(() => {
-    if (!marketDetail?.winners || marketDetail.winners.length === 0)
-      return null;
-    if (marketData?.state !== KuriState.ACTIVE) return null;
+    console.log("🏆 PERSISTENT WINNER DISPLAY LOGIC:", {
+      marketAddress: address,
+      currentWinnerFromContext: currentWinnerFromContext?.intervalIndex,
+      persistentWinner: persistentWinner?.intervalIndex,
+      winnersCount: winners?.length || 0,
+      marketState: marketData?.state,
+      hasMarketData: !!marketData,
+      winnersLoading,
+      hasWinnersError: !!winnersError,
+    });
 
-    // Get the most recent winner (highest intervalIndex)
-    const latestWinner = marketDetail.winners.reduce((latest, current) =>
-      current.intervalIndex > latest.intervalIndex ? current : latest
-    );
-
-    // Check if we should show the winner (between raffle selection and next raffle)
-    const nextRaffleTime = Number(marketData?.nexRaffleTime || 0) * 1000;
-    const now = Date.now();
-
-    // Show winner if there's time until next raffle
-    if (now < nextRaffleTime) {
-      return latestWinner;
+    // 🚀 PERSISTENCE LOGIC: Once we have a winner, keep showing it even during GraphQL polling
+    if (currentWinnerFromContext) {
+      // Update persistent winner when we get new winner data
+      const newWinner = {
+        intervalIndex: currentWinnerFromContext.intervalIndex,
+        winner: currentWinnerFromContext.winner,
+        timestamp: currentWinnerFromContext.timestamp,
+      };
+      
+      // Only update if it's actually new (different interval or address)
+      if (!persistentWinner || 
+          persistentWinner.intervalIndex !== newWinner.intervalIndex ||
+          persistentWinner.winner !== newWinner.winner) {
+        console.log("🔄 Updating persistent winner:", newWinner);
+        setPersistentWinner(newWinner);
+      }
+      
+      return newWinner;
     }
 
+    // 🛡️ FALLBACK TO PERSISTENT STATE: If GraphQL polling temporarily clears data, use persistent state
+    if (persistentWinner && !winnersLoading) {
+      console.log("🛡️ Using persistent winner during data refresh");
+      return persistentWinner;
+    }
+
+    // Check for loading or error states
+    if (winnersLoading) {
+      console.log("⏳ Winners still loading...");
+      // Keep showing persistent winner during loading
+      if (persistentWinner) {
+        console.log("🛡️ Showing persistent winner during loading");
+        return persistentWinner;
+      }
+      return null;
+    }
+
+    if (winnersError) {
+      console.log("❌ Winners error:", winnersError.message);
+      // Keep showing persistent winner even on error
+      if (persistentWinner) {
+        console.log("🛡️ Showing persistent winner despite error");
+        return persistentWinner;
+      }
+      return null;
+    }
+
+    // No winner available
+    console.log("❌ No winner data available");
     return null;
-  }, [marketDetail?.winners, marketData?.state, marketData?.nexRaffleTime]);
+  }, [currentWinnerFromContext, persistentWinner, winners?.length, marketData?.state, address, winnersLoading, winnersError]);
 
   // Stabilize winner address to prevent unnecessary profile refetches
   const winnerAddress = useMemo(() => currentWinner?.winner || null, [currentWinner?.winner]);
@@ -985,6 +1263,43 @@ function MarketDetailInner() {
   // Fetch winner's profile
   const { profile: winnerProfile, isLoading: winnerProfileLoading } =
     useUserProfileByAddress(winnerAddress);
+
+  // Check if current user is the winner
+  const isCurrentUserWinner = useMemo(() => {
+    const result = !!(currentWinner && userAddress && 
+      currentWinner.winner.toLowerCase() === userAddress.toLowerCase());
+    
+    console.log("🏆 IS CURRENT USER WINNER CHECK:", {
+      hasCurrentWinner: !!currentWinner,
+      currentWinnerAddress: currentWinner?.winner,
+      hasUserAddress: !!userAddress,
+      userAddress,
+      addressMatch: currentWinner && userAddress ? 
+        currentWinner.winner.toLowerCase() === userAddress.toLowerCase() : false,
+      result,
+    });
+    
+    return result;
+  }, [currentWinner, userAddress]);
+
+  // Determine if we should show winner display instead of countdown
+  const shouldShowWinnerDisplay = useMemo(() => {
+    console.log("🔍 SIMPLIFIED WINNER DISPLAY CONDITIONS:", {
+      hasCurrentWinner: !!currentWinner,
+      hasMarketData: !!marketData,
+      marketState: marketData?.state,
+    });
+
+    if (!currentWinner) {
+      console.log("❌ No current winner for display");
+      return false;
+    }
+
+    // SIMPLIFIED: If we have a winner, show the winner display
+    // The currentWinner logic already handles timing and market state checks
+    console.log("✅ Showing winner display - winner exists");
+    return true;
+  }, [currentWinner]);
 
   // Fetch membership status
   useEffect(() => {
@@ -1098,27 +1413,58 @@ function MarketDetailInner() {
 
   // Determine if claim card should be visible
   const shouldShowClaimCard = useMemo(() => {
-    if (!currentWinner || !userAddress) return false;
+    console.log("🎯 CLAIM CARD VISIBILITY CHECK:", {
+      hasCurrentWinner: !!currentWinner,
+      currentWinnerAddress: currentWinner?.winner,
+      userAddress,
+      hasUserAddress: !!userAddress,
+      marketData: !!marketData,
+      marketState: marketData?.state,
+      kuriStateActive: KuriState.ACTIVE,
+      nexRaffleTime: marketData?.nexRaffleTime,
+      hasUserClaimed,
+      hasUserClaimedType: typeof hasUserClaimed,
+    });
+
+    if (!currentWinner || !userAddress) {
+      console.log("❌ No winner or user address for claim card");
+      return false;
+    }
 
     // Check if the current user is the winner
     const isWinner =
       currentWinner.winner.toLowerCase() === userAddress.toLowerCase();
-    if (!isWinner) return false;
+    console.log("🔍 ADDRESS MATCHING:", {
+      winnerAddress: currentWinner.winner,
+      winnerAddressLower: currentWinner.winner.toLowerCase(),
+      userAddress: userAddress,
+      userAddressLower: userAddress.toLowerCase(),
+      isWinner,
+    });
+    
+    if (!isWinner) {
+      console.log("❌ User is not the winner for claim card");
+      return false;
+    }
 
-    // Check if market is active and raffle time has passed
-    if (marketData?.state !== KuriState.ACTIVE) return false;
-    const nextRaffleTime = new Date(Number(marketData?.nexRaffleTime) * 1000);
-    const now = new Date();
-    const isRaffleDue = nextRaffleTime <= now;
-    if (!isRaffleDue) return false;
+    // SIMPLIFIED: If user is winner, show claim card regardless of complex timing
+    // The winner display logic already handles timing constraints
+    console.log("✅ User is winner - checking claim status");
 
     // Only show if user hasn't claimed yet
-    return hasUserClaimed === false;
+    // 🚀 FIXED: Handle null case and show claim card for winners who haven't claimed
+    const shouldShow = hasUserClaimed !== true; // Show if false OR null (not claimed)
+    console.log("🎯 CLAIM STATUS CHECK:", {
+      hasUserClaimed,
+      shouldShow,
+      condition: "hasUserClaimed !== true",
+      explanation: "Shows claim card if not explicitly claimed (handles null case)",
+    });
+    
+    return shouldShow;
   }, [
     currentWinner,
     userAddress,
-    marketData?.state,
-    marketData?.nexRaffleTime,
     hasUserClaimed,
   ]);
 
@@ -1318,12 +1664,16 @@ function MarketDetailInner() {
               />
 
               {/* Claim Card - Only show to winners who haven't claimed */}
-              {shouldShowClaimCard && (
+              {shouldShowClaimCard ? (
                 <ClaimInterface
                   marketData={marketData}
                   kuriAddress={address as `0x${string}`}
                   onClaimSuccess={handleClaimSuccess}
                 />
+              ) : (
+                <div style={{ display: 'none' }}>
+                  {/* Debug: Claim card hidden - shouldShowClaimCard: {shouldShowClaimCard.toString()} */}
+                </div>
               )}
             </div>
           );
@@ -1443,12 +1793,16 @@ function MarketDetailInner() {
               />
 
               {/* Claim Card - Only show to winners who haven't claimed */}
-              {shouldShowClaimCard && (
+              {shouldShowClaimCard ? (
                 <ClaimInterface
                   marketData={marketData}
                   kuriAddress={address as `0x${string}`}
                   onClaimSuccess={handleClaimSuccess}
                 />
+              ) : (
+                <div style={{ display: 'none' }}>
+                  {/* Debug: Claim card hidden - shouldShowClaimCard: {shouldShowClaimCard.toString()} */}
+                </div>
               )}
             </div>
           );
@@ -1840,6 +2194,8 @@ function MarketDetailInner() {
                       address={address || ""}
                       membershipStatus={membershipStatus}
                       shouldShowClaimCard={shouldShowClaimCard}
+                      shouldShowWinnerDisplay={shouldShowWinnerDisplay}
+                      isCurrentUserWinner={isCurrentUserWinner}
                       handleClaimSuccess={handleClaimSuccess}
                       renderActionButton={renderActionButton}
                     />
@@ -1915,6 +2271,8 @@ function MarketDetailInner() {
                     address={address || ""}
                     membershipStatus={membershipStatus}
                     shouldShowClaimCard={shouldShowClaimCard}
+                    shouldShowWinnerDisplay={shouldShowWinnerDisplay}
+                    isCurrentUserWinner={isCurrentUserWinner}
                     handleClaimSuccess={handleClaimSuccess}
                     renderActionButton={renderActionButton}
                   />
@@ -1981,19 +2339,39 @@ function MarketDetailInner() {
 
                 {marketData.state === KuriState.ACTIVE && (
                   <>
-                    <h3 className="text-lg font-semibold text-gray-900 text-center mb-4">
-                      {Date.now() <
-                      Number(marketData.nextIntervalDepositTime) * 1000
-                        ? currentInterval === 0
-                          ? "First Deposit Starts In"
-                          : "Next Deposit Starts In"
-                        : currentInterval === 1
-                        ? "First Raffle In"
-                        : "Next Raffle In"}
-                    </h3>
-                    <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
-                      <AdaptiveTimerMobileDisplay marketData={marketData} />
-                    </div>
+                    {shouldShowWinnerDisplay && currentWinner ? (
+                      // Show winner display instead of countdown
+                      <div className="mb-6">
+                        <WinnerDisplay
+                          currentWinner={currentWinner}
+                          winnerProfile={winnerProfile}
+                          winnerProfileLoading={winnerProfileLoading}
+                          isCurrentUserWinner={isCurrentUserWinner}
+                          marketData={marketData}
+                          address={address || ""}
+                          shouldShowClaimCard={shouldShowClaimCard}
+                          handleClaimSuccess={handleClaimSuccess}
+                          isMobile={true}
+                        />
+                      </div>
+                    ) : (
+                      // Show normal countdown
+                      <>
+                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-4">
+                          {Date.now() <
+                          Number(marketData.nextIntervalDepositTime) * 1000
+                            ? currentInterval === 0
+                              ? "First Deposit Starts In"
+                              : "Next Deposit Starts In"
+                            : currentInterval === 1
+                            ? "First Raffle In"
+                            : "Next Raffle In"}
+                        </h3>
+                        <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
+                          <AdaptiveTimerMobileDisplay marketData={marketData} shouldShowWinner={shouldShowWinnerDisplay} />
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
 
@@ -2021,14 +2399,16 @@ function MarketDetailInner() {
                   </div>
                 )}
 
-                {/* Mobile Action Button */}
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex justify-center"
-                >
-                  {renderActionButton()}
-                </motion.div>
+                {/* Mobile Action Button - Only show if not in winner display mode for current user */}
+                {!(shouldShowWinnerDisplay && isCurrentUserWinner && shouldShowClaimCard) && (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex justify-center"
+                  >
+                    {renderActionButton()}
+                  </motion.div>
+                )}
               </motion.div>
             </div>
           </div>

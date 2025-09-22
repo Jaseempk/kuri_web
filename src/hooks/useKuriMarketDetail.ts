@@ -7,7 +7,6 @@ import {
 } from "../graphql/types";
 import { useState, useEffect, useCallback } from "react";
 import { transformV1KuriInitialised } from "../utils/v1DataTransform";
-import { resolveMultipleAddressesRobust } from "../utils/addressResolution";
 
 export interface MarketDetail {
   creator: string;
@@ -37,6 +36,30 @@ export interface MarketDetail {
 }
 
 export const useKuriMarketDetail = (marketAddress: string) => {
+  console.log("🔍 GRAPHQL QUERY INITIALIZATION:", {
+    marketAddress,
+    queryName: "KURI_MARKET_DETAIL_QUERY",
+    variables: { marketAddress },
+    timestamp: new Date().toISOString(),
+  });
+
+  // Log the actual GraphQL query being executed
+  console.log("📋 EXECUTING GRAPHQL QUERY:", {
+    query: `
+    query KuriMarketDetail($marketAddress: String!) {
+      kuriInitialised: KuriCore_KuriInitialised_by_pk(id: $marketAddress) { ... }
+      userDepositeds: KuriCore_UserDeposited(where: { contractAddress: { _eq: $marketAddress } }) { ... }
+      raffleWinnerSelecteds: KuriCore_RaffleWinnerSelected(where: { contractAddress: { _ilike: $marketAddress } }) {
+        id, intervalIndex, winnerIndex, winnerAddress, winnerTimestamp, requestId, contractAddress
+      }
+      membershipRequesteds: KuriCore_MembershipRequested(where: { contractAddress: { _eq: $marketAddress } }) { ... }
+      userAccepteds: KuriCore_UserAccepted(where: { contractAddress: { _ilike: $marketAddress } }) { ... }
+    }`,
+    variables: { marketAddress },
+    targetEntity: "KuriCore_RaffleWinnerSelected",
+    whereClause: `contractAddress: { _ilike: "${marketAddress}" }`,
+  });
+
   const { data, loading, error, refetch } = useQuery<
     KuriMarketDetailQueryResult,
     KuriMarketDetailQueryVariables
@@ -45,47 +68,132 @@ export const useKuriMarketDetail = (marketAddress: string) => {
     notifyOnNetworkStatusChange: true,
   });
 
+  // Handle query completion with useEffect instead of deprecated onCompleted
+  useEffect(() => {
+    if (data) {
+      console.log("✅ GRAPHQL QUERY COMPLETED:", {
+        marketAddress,
+        timestamp: new Date().toISOString(),
+        hasData: !!data,
+        dataKeys: data ? Object.keys(data) : [],
+        kuriInitialised: !!data?.kuriInitialised,
+        raffleWinnerSelecteds: {
+          count: data?.raffleWinnerSelecteds?.length || 0,
+          data: data?.raffleWinnerSelecteds || [],
+        },
+        userDepositeds: {
+          count: data?.userDepositeds?.length || 0,
+        },
+        membershipRequesteds: {
+          count: data?.membershipRequesteds?.length || 0,
+        },
+        userAccepteds: {
+          count: data?.userAccepteds?.length || 0,
+        },
+        rawData: data,
+      });
+    }
+  }, [data, marketAddress]);
+
+  // Handle query errors with useEffect instead of deprecated onError
+  useEffect(() => {
+    if (error) {
+      console.error("❌ GRAPHQL QUERY ERROR:", {
+        marketAddress,
+        timestamp: new Date().toISOString(),
+        error: error.message,
+        networkError: error.networkError,
+        graphQLErrors: error.graphQLErrors,
+        fullError: error,
+      });
+    }
+  }, [error, marketAddress]);
+
   const [marketDetail, setMarketDetail] = useState<MarketDetail | null>(null);
 
+  // Log loading state changes
+  console.log("🔄 GRAPHQL QUERY STATE:", {
+    marketAddress,
+    loading,
+    hasError: !!error,
+    errorMessage: error?.message,
+    hasData: !!data,
+    timestamp: new Date().toISOString(),
+  });
+
   const resolveMarketDetail = useCallback(async () => {
-      if (!data?.kuriInitialised) {
+      console.log("🔄 MARKET DETAIL RESOLUTION DEBUG:", {
+        marketAddress,
+        hasData: !!data,
+        kuriInitialised: !!data?.kuriInitialised,
+        loadingState: loading,
+        errorState: error?.message,
+        rawGraphQLData: data,
+      });
+
+      if (!data?.kuriInitialised || data.kuriInitialised.length === 0) {
+        console.log("❌ No kuriInitialised data found");
         setMarketDetail(null);
         return;
       }
 
+      console.log("📊 Raw GraphQL Winners Data:", {
+        raffleWinnerSelecteds: data.raffleWinnerSelecteds,
+        winnersCount: data.raffleWinnerSelecteds?.length || 0,
+        userDepositeds: data.userDepositeds?.length || 0,
+        membershipRequesteds: data.membershipRequesteds?.length || 0,
+        userAccepteds: data.userAccepteds?.length || 0,
+      });
+
+      // Detailed winner data inspection
+      if (data.raffleWinnerSelecteds && data.raffleWinnerSelecteds.length > 0) {
+        console.log("🏆 DETAILED WINNER DATA FROM SUBGRAPH:", {
+          totalWinners: data.raffleWinnerSelecteds.length,
+          winners: data.raffleWinnerSelecteds.map((winner, index) => ({
+            index,
+            id: winner.id,
+            intervalIndex: winner.intervalIndex,
+            winnerIndex: winner.winnerIndex,
+            winnerAddress: winner.winnerAddress,
+            winnerTimestamp: winner.winnerTimestamp,
+            winnerTimestampFormatted: new Date(Number(winner.winnerTimestamp) * 1000).toISOString(),
+            requestId: winner.requestId,
+            contractAddress: winner.contractAddress,
+            blockNumber: winner.blockNumber,
+            blockTimestamp: winner.blockTimestamp,
+            transactionHash: winner.transactionHash,
+          })),
+        });
+      } else {
+        console.log("❌ NO WINNER DATA FOUND IN SUBGRAPH:", {
+          raffleWinnerSelecteds: data.raffleWinnerSelecteds,
+          isArray: Array.isArray(data.raffleWinnerSelecteds),
+          length: data.raffleWinnerSelecteds?.length,
+          marketAddress,
+          allDataKeys: Object.keys(data),
+        });
+      }
 
       // Transform the indexed fields to named fields
-      const transformedData = transformV1KuriInitialised(data.kuriInitialised);
+      const transformedData = transformV1KuriInitialised(data.kuriInitialised[0]);
+      
+      console.log("🔄 Transformed market data:", {
+        creator: transformedData._kuriData_creator,
+        state: transformedData._kuriData_state,
+        nexRaffleTime: transformedData._kuriData_nexRaffleTime,
+        nextIntervalDepositTime: transformedData._kuriData_nextIntervalDepositTime,
+      });
 
-      // Extract all user addresses that need resolution
-      const depositUsers = data.userDepositeds.map((d) => d.user);
-      const membershipUsers = data.membershipRequesteds.map((r) => r.user);
-      const acceptedUsers = data.userAccepteds.map((a) => a.user);
-      const winnerAddresses = data.raffleWinnerSelecteds.map(
-        (w) => w.winnerAddress
-      );
+      console.log("🏆 Raw winners before processing:", data.raffleWinnerSelecteds.map(w => ({
+        intervalIndex: w.intervalIndex,
+        winnerAddress: w.winnerAddress,
+        winnerTimestamp: w.winnerTimestamp,
+        requestId: w.requestId,
+      })));
 
-      const allUsers = [
-        ...new Set([
-          ...depositUsers,
-          ...membershipUsers,
-          ...acceptedUsers,
-          ...winnerAddresses,
-        ]),
-      ];
-
-      // Batch resolve addresses to EOAs
-      const resolvedAddresses = await resolveMultipleAddressesRobust(allUsers);
-      const addressMap = new Map(
-        allUsers.map((addr, i) => [addr, resolvedAddresses[i]])
-      );
-
-      // Create a map of accepted members for quick lookup (using resolved addresses)
+      // Create a map of accepted members for quick lookup (using smart wallet addresses)
       const acceptedMembersMap = new Map(
-        data.userAccepteds.map((accepted) => {
-          const resolvedUser = addressMap.get(accepted.user) || accepted.user;
-          return [resolvedUser, accepted];
-        })
+        data.userAccepteds.map((accepted) => [accepted.user, accepted])
       );
 
       const resolvedDetail: MarketDetail = {
@@ -99,21 +207,28 @@ export const useKuriMarketDetail = (marketAddress: string) => {
         nextDepositTime: transformedData._kuriData_nextIntervalDepositTime,
         state: transformedData._kuriData_state as KuriState,
         deposits: data.userDepositeds.map((deposit) => ({
-          user: addressMap.get(deposit.user) || deposit.user, // Resolved EOA
+          user: deposit.user, // Smart wallet address
           intervalIndex: deposit.intervalIndex,
           amount: deposit.amountDeposited,
           timestamp: deposit.depositTimestamp,
         })),
-        winners: data.raffleWinnerSelecteds.map((winner) => ({
-          intervalIndex: winner.intervalIndex,
-          winner: addressMap.get(winner.winnerAddress) || winner.winnerAddress, // Resolved EOA
-          timestamp: winner.winnerTimestamp,
-        })),
-        members: data.membershipRequesteds.map((request) => {
-          const resolvedUser = addressMap.get(request.user) || request.user;
+        winners: data.raffleWinnerSelecteds.map((winner) => {
+          console.log("🏆 Processing winner:", {
+            winnerAddress: winner.winnerAddress,
+            intervalIndex: winner.intervalIndex,
+            timestamp: winner.winnerTimestamp,
+            winnerTimestampFormatted: new Date(Number(winner.winnerTimestamp) * 1000).toISOString(),
+          });
           return {
-            address: resolvedUser, // Resolved EOA
-            status: acceptedMembersMap.has(resolvedUser)
+            intervalIndex: winner.intervalIndex,
+            winner: winner.winnerAddress, // Smart wallet address
+            timestamp: winner.winnerTimestamp,
+          };
+        }),
+        members: data.membershipRequesteds.map((request) => {
+          return {
+            address: request.user, // Smart wallet address
+            status: acceptedMembersMap.has(request.user)
               ? "accepted"
               : "requested",
             timestamp: request.timestamp,
@@ -121,6 +236,11 @@ export const useKuriMarketDetail = (marketAddress: string) => {
         }),
       };
 
+      console.log("✅ FINAL RESOLVED MARKET DETAIL:", {
+        ...resolvedDetail,
+        winnersCount: resolvedDetail.winners.length,
+        winners: resolvedDetail.winners,
+      });
 
       setMarketDetail(resolvedDetail);
   }, [data, marketAddress]);
@@ -129,10 +249,23 @@ export const useKuriMarketDetail = (marketAddress: string) => {
     resolveMarketDetail();
   }, [resolveMarketDetail]);
 
-  return {
+  const hookResult = {
     marketDetail,
     loading,
     error,
     refetch,
   };
+
+  console.log("🎯 HOOK RETURN VALUE:", {
+    marketAddress,
+    hasMarketDetail: !!marketDetail,
+    marketDetailWinnersCount: marketDetail?.winners?.length || 0,
+    marketDetailWinners: marketDetail?.winners || [],
+    loading,
+    hasError: !!error,
+    errorMessage: error?.message,
+    timestamp: new Date().toISOString(),
+  });
+
+  return hookResult;
 };
