@@ -168,7 +168,6 @@ const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   );
 };
 
-
 // Extracted Tab Content Component
 interface TabContentProps {
   activeTab: string;
@@ -203,14 +202,21 @@ interface TabContentProps {
 
 // Component that provides timer values for parsing (like "2d 5h 30m 15s")
 // ✨ FIXED: Added shouldShowWinner param to prevent timer interference
-const useTimerValue = (marketData: any, type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft', shouldShowWinner: boolean = false) => {
+const useTimerValue = (
+  marketData: any,
+  type: "timeLeft" | "raffleTimeLeft" | "depositTimeLeft",
+  shouldShowWinner: boolean = false
+) => {
   const [timerValue, setTimerValue] = useState<string>("");
 
   useEffect(() => {
     if (!marketData) return;
 
     // 🚀 FIX: Don't run timers when winner is being displayed to prevent flickering
-    if (shouldShowWinner && (type === 'raffleTimeLeft' || type === 'depositTimeLeft')) {
+    if (
+      shouldShowWinner &&
+      (type === "raffleTimeLeft" || type === "depositTimeLeft")
+    ) {
       console.log(`⏸️ Timer paused for ${type} - winner being displayed`);
       setTimerValue("Winner display active");
       return;
@@ -219,7 +225,7 @@ const useTimerValue = (marketData: any, type: 'timeLeft' | 'raffleTimeLeft' | 'd
     const updateTimer = () => {
       const now = Date.now();
 
-      if (type === 'timeLeft' && marketData.state === 0) {
+      if (type === "timeLeft" && marketData.state === 0) {
         // INLAUNCH countdown
         const end = Number((marketData as any).endTime) * 1000;
         const diff = end - now;
@@ -230,91 +236,143 @@ const useTimerValue = (marketData: any, type: 'timeLeft' | 'raffleTimeLeft' | 'd
         }
 
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const hours = Math.floor(
+          (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
         const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
         setTimerValue(newValue);
-      } 
-      else if (type === 'raffleTimeLeft' && marketData.state === 2) {
+      } else if (type === "raffleTimeLeft" && marketData.state === 2) {
         // ACTIVE raffle countdown
         const raffleEnd = Number(marketData.nexRaffleTime) * 1000;
         const raffleDiff = raffleEnd - now;
-        
+
         if (raffleDiff <= 0) {
           setTimerValue("Raffle due now");
         } else {
           const days = Math.floor(raffleDiff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((raffleDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((raffleDiff % (1000 * 60 * 60)) / (1000 * 60));
+          const hours = Math.floor(
+            (raffleDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (raffleDiff % (1000 * 60 * 60)) / (1000 * 60)
+          );
           const seconds = Math.floor((raffleDiff % (1000 * 60)) / 1000);
           const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-            setTimerValue(newValue);
+          setTimerValue(newValue);
         }
-      }
-      else if (type === 'depositTimeLeft' && marketData.state === 2) {
+      } else if (type === "depositTimeLeft" && marketData.state === 2) {
         // ACTIVE deposit countdown
         const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
-        const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000);
+        const depositEnd = depositStart + 3 * 24 * 60 * 60 * 1000;
         const depositDiff = depositEnd - now;
-        
+
         if (depositDiff <= 0) {
           setTimerValue("Payment due now");
         } else {
           const days = Math.floor(depositDiff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((depositDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((depositDiff % (1000 * 60 * 60)) / (1000 * 60));
+          const hours = Math.floor(
+            (depositDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (depositDiff % (1000 * 60 * 60)) / (1000 * 60)
+          );
           const seconds = Math.floor((depositDiff % (1000 * 60)) / 1000);
           const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-            setTimerValue(newValue);
+          setTimerValue(newValue);
         }
       }
     };
 
     const timer = setInterval(updateTimer, 1000);
     updateTimer(); // Initial update
-    
+
     return () => {
       clearInterval(timer);
     };
-  }, [marketData?.state, (marketData as any)?.endTime, marketData?.nexRaffleTime, marketData?.nextIntervalDepositTime, type, shouldShowWinner]);
+  }, [
+    marketData?.state,
+    (marketData as any)?.endTime,
+    marketData?.nexRaffleTime,
+    marketData?.nextIntervalDepositTime,
+    type,
+    shouldShowWinner,
+  ]);
 
   return timerValue;
 };
 
 // Isolated components for timer display sections
-const TimerSection = memo<{ marketData: any; section: 'days' | 'hours' | 'minutes' | 'seconds'; type: 'timeLeft' | 'raffleTimeLeft' | 'depositTimeLeft'; shouldShowWinner?: boolean }>(({ marketData, section, type, shouldShowWinner = false }) => {
+const TimerSection = memo<{
+  marketData: any;
+  section: "days" | "hours" | "minutes" | "seconds";
+  type: "timeLeft" | "raffleTimeLeft" | "depositTimeLeft";
+  shouldShowWinner?: boolean;
+}>(({ marketData, section, type, shouldShowWinner = false }) => {
   const timerValue = useTimerValue(marketData, type, shouldShowWinner);
-  
-  
-  if (section === 'days') {
-    return <>{timerValue.includes("d") ? timerValue.split("d")[0].padStart(2, "0") : "00"}</>;
-  } else if (section === 'hours') {
-    return <>{timerValue.includes("h") ? timerValue.split("h")[0].split(" ").pop()?.padStart(2, "0") || "00" : "00"}</>;
-  } else if (section === 'minutes') {
-    return <>{timerValue.includes("m") ? timerValue.split("m")[0].split(" ").pop()?.padStart(2, "0") || "00" : "00"}</>;
-  } else if (section === 'seconds') {
-    return <>{timerValue.includes("s") ? timerValue.split("s")[0].split(" ").pop()?.padStart(2, "0") || "00" : "00"}</>;
+
+  if (section === "days") {
+    return (
+      <>
+        {timerValue.includes("d")
+          ? timerValue.split("d")[0].padStart(2, "0")
+          : "00"}
+      </>
+    );
+  } else if (section === "hours") {
+    return (
+      <>
+        {timerValue.includes("h")
+          ? timerValue.split("h")[0].split(" ").pop()?.padStart(2, "0") || "00"
+          : "00"}
+      </>
+    );
+  } else if (section === "minutes") {
+    return (
+      <>
+        {timerValue.includes("m")
+          ? timerValue.split("m")[0].split(" ").pop()?.padStart(2, "0") || "00"
+          : "00"}
+      </>
+    );
+  } else if (section === "seconds") {
+    return (
+      <>
+        {timerValue.includes("s")
+          ? timerValue.split("s")[0].split(" ").pop()?.padStart(2, "0") || "00"
+          : "00"}
+      </>
+    );
   }
   return <></>;
 });
 
-
 // Component for displaying adaptive timer in desktop format
-const AdaptiveTimerDisplay = memo<{ marketData: any; shouldShowWinner?: boolean }>(({ marketData, shouldShowWinner = false }) => {
-  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft', shouldShowWinner);
-  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft', shouldShowWinner);
-  
-  
+const AdaptiveTimerDisplay = memo<{
+  marketData: any;
+  shouldShowWinner?: boolean;
+}>(({ marketData, shouldShowWinner = false }) => {
+  const raffleTimeLeft = useTimerValue(
+    marketData,
+    "raffleTimeLeft",
+    shouldShowWinner
+  );
+  const depositTimeLeft = useTimerValue(
+    marketData,
+    "depositTimeLeft",
+    shouldShowWinner
+  );
+
   const activeTimer = (() => {
     const now = Date.now();
     const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
-    const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
-    
+    const depositEnd = depositStart + 3 * 24 * 60 * 60 * 1000; // +3 days
+
     // Show deposit timer if we're in the 3-day deposit period
-    return (now >= depositStart && now <= depositEnd) 
-      ? depositTimeLeft 
+    return now >= depositStart && now <= depositEnd
+      ? depositTimeLeft
       : raffleTimeLeft;
   })();
 
@@ -326,79 +384,63 @@ const AdaptiveTimerDisplay = memo<{ marketData: any; shouldShowWinner?: boolean 
             ? activeTimer.split("d")[0].padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Days
-        </span>
+        <span className="block text-xs text-gray-900">Days</span>
       </div>
-      <span className="text-4xl font-bold text-orange-500">
-        :
-      </span>
+      <span className="text-4xl font-bold text-orange-500">:</span>
       <div className="text-center">
         <span className="text-4xl font-bold text-orange-500">
           {activeTimer.includes("h")
-            ? activeTimer
-                .split("h")[0]
-                .split(" ")
-                .pop()
-                ?.padStart(2, "0")
+            ? activeTimer.split("h")[0].split(" ").pop()?.padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Hours
-        </span>
+        <span className="block text-xs text-gray-900">Hours</span>
       </div>
-      <span className="text-4xl font-bold text-orange-500">
-        :
-      </span>
+      <span className="text-4xl font-bold text-orange-500">:</span>
       <div className="text-center">
         <span className="text-4xl font-bold text-orange-500">
           {activeTimer.includes("m")
-            ? activeTimer
-                .split("m")[0]
-                .split(" ")
-                .pop()
-                ?.padStart(2, "0")
+            ? activeTimer.split("m")[0].split(" ").pop()?.padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Minutes
-        </span>
+        <span className="block text-xs text-gray-900">Minutes</span>
       </div>
-      <span className="text-4xl font-bold text-orange-500">
-        :
-      </span>
+      <span className="text-4xl font-bold text-orange-500">:</span>
       <div className="text-center">
         <span className="text-4xl font-bold text-orange-500">
           {activeTimer.includes("s")
-            ? activeTimer
-                .split("s")[0]
-                .split(" ")
-                .pop()
-                ?.padStart(2, "0")
+            ? activeTimer.split("s")[0].split(" ").pop()?.padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Seconds
-        </span>
+        <span className="block text-xs text-gray-900">Seconds</span>
       </div>
     </>
   );
 });
 
 // Component for displaying adaptive timer in mobile format
-const AdaptiveTimerMobileDisplay = memo<{ marketData: any; shouldShowWinner?: boolean }>(({ marketData, shouldShowWinner = false }) => {
-  const raffleTimeLeft = useTimerValue(marketData, 'raffleTimeLeft', shouldShowWinner);
-  const depositTimeLeft = useTimerValue(marketData, 'depositTimeLeft', shouldShowWinner);
-  
-  
+const AdaptiveTimerMobileDisplay = memo<{
+  marketData: any;
+  shouldShowWinner?: boolean;
+}>(({ marketData, shouldShowWinner = false }) => {
+  const raffleTimeLeft = useTimerValue(
+    marketData,
+    "raffleTimeLeft",
+    shouldShowWinner
+  );
+  const depositTimeLeft = useTimerValue(
+    marketData,
+    "depositTimeLeft",
+    shouldShowWinner
+  );
+
   const activeTimer = (() => {
     const now = Date.now();
     const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
-    const depositEnd = depositStart + (3 * 24 * 60 * 60 * 1000); // +3 days
-    
+    const depositEnd = depositStart + 3 * 24 * 60 * 60 * 1000; // +3 days
+
     // Show deposit timer if we're in the 3-day deposit period
-    return (now >= depositStart && now <= depositEnd) 
-      ? depositTimeLeft 
+    return now >= depositStart && now <= depositEnd
+      ? depositTimeLeft
       : raffleTimeLeft;
   })();
 
@@ -410,60 +452,34 @@ const AdaptiveTimerMobileDisplay = memo<{ marketData: any; shouldShowWinner?: bo
             ? activeTimer.split("d")[0].padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Days
-        </span>
+        <span className="block text-xs text-gray-900">Days</span>
       </div>
-      <span className="text-3xl font-bold text-orange-500">
-        :
-      </span>
+      <span className="text-3xl font-bold text-orange-500">:</span>
       <div>
         <span className="text-4xl font-bold text-orange-500">
           {activeTimer.includes("h")
-            ? activeTimer
-                .split("h")[0]
-                .split(" ")
-                .pop()
-                ?.padStart(2, "0")
+            ? activeTimer.split("h")[0].split(" ").pop()?.padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Hours
-        </span>
+        <span className="block text-xs text-gray-900">Hours</span>
       </div>
-      <span className="text-3xl font-bold text-orange-500">
-        :
-      </span>
+      <span className="text-3xl font-bold text-orange-500">:</span>
       <div>
         <span className="text-4xl font-bold text-orange-500">
           {activeTimer.includes("m")
-            ? activeTimer
-                .split("m")[0]
-                .split(" ")
-                .pop()
-                ?.padStart(2, "0")
+            ? activeTimer.split("m")[0].split(" ").pop()?.padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Minutes
-        </span>
+        <span className="block text-xs text-gray-900">Minutes</span>
       </div>
-      <span className="text-3xl font-bold text-orange-500">
-        :
-      </span>
+      <span className="text-3xl font-bold text-orange-500">:</span>
       <div>
         <span className="text-4xl font-bold text-orange-500">
           {activeTimer.includes("s")
-            ? activeTimer
-                .split("s")[0]
-                .split(" ")
-                .pop()
-                ?.padStart(2, "0")
+            ? activeTimer.split("s")[0].split(" ").pop()?.padStart(2, "0")
             : "00"}
         </span>
-        <span className="block text-xs text-gray-900">
-          Seconds
-        </span>
+        <span className="block text-xs text-gray-900">Seconds</span>
       </div>
     </>
   );
@@ -486,570 +502,586 @@ interface WinnerDisplayProps {
   isMobile?: boolean;
 }
 
-const WinnerDisplay = memo<WinnerDisplayProps>(({
-  currentWinner,
-  winnerProfile,
-  winnerProfileLoading,
-  isCurrentUserWinner,
-  marketData,
-  address,
-  shouldShowClaimCard,
-  handleClaimSuccess,
-  isMobile = false,
-}) => {
-  console.log("🎊 WINNER DISPLAY RENDER:", {
+const WinnerDisplay = memo<WinnerDisplayProps>(
+  ({
     currentWinner,
+    winnerProfile,
+    winnerProfileLoading,
     isCurrentUserWinner,
+    marketData,
+    address,
     shouldShowClaimCard,
-    isMobile,
-  });
+    handleClaimSuccess,
+    isMobile = false,
+  }) => {
+    console.log("🎊 WINNER DISPLAY RENDER:", {
+      currentWinner,
+      isCurrentUserWinner,
+      shouldShowClaimCard,
+      isMobile,
+    });
 
-  if (isCurrentUserWinner && shouldShowClaimCard) {
-    // Winner sees claim interface
+    if (isCurrentUserWinner && shouldShowClaimCard) {
+      // Winner sees new dashboard-style banner
+      const potentialWinnings = Number(marketData.kuriAmount) / 1_000_000;
+
+      return (
+        <div
+          className={`w-full ${isMobile ? "max-w-full" : "max-w-md"} mx-auto`}
+        >
+          <div className="bg-white rounded-2xl border border-[hsl(var(--forest))]/20 overflow-hidden">
+            {/* Progress indicator */}
+            <div className="h-1 bg-[#E67A50]/10">
+              <div className="h-full w-full bg-[#E67A50]"></div>
+            </div>
+
+            <div className={`${isMobile ? "p-4 space-y-4" : "p-6 space-y-6"}`}>
+              {/* Congratulations section */}
+              <div className="text-center py-2">
+                <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-1">
+                  Congratulations!
+                </h3>
+                <p className="text-[hsl(var(--muted-foreground))] text-sm">
+                  You won the Kuri raffle for Round{" "}
+                  {currentWinner.intervalIndex}
+                </p>
+              </div>
+
+              {/* Status row */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-[hsl(var(--forest))] rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
+                    Round {currentWinner.intervalIndex} Complete
+                  </span>
+                </div>
+                <div className="text-xs font-mono text-[hsl(var(--muted-foreground))] bg-[hsl(var(--forest))]/5 px-2 py-1 rounded">
+                  STATUS: WINNER
+                </div>
+              </div>
+
+              {/* Amount display */}
+              <div className="space-y-1">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm text-[hsl(var(--muted-foreground))]">
+                    Claimable
+                  </span>
+                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                    Available now
+                  </span>
+                </div>
+                <div
+                  className={`${
+                    isMobile ? "text-3xl" : "text-4xl"
+                  } font-bold text-[hsl(var(--foreground))] tabular-nums`}
+                >
+                  ${potentialWinnings.toFixed(2)}
+                </div>
+              </div>
+
+              {/* Action area */}
+              <div className="pt-2">
+                <button
+                  onClick={handleClaimSuccess}
+                  className="w-full bg-[#E67A50] hover:bg-[#E67A50]/80 text-white font-medium py-3 rounded-lg transition-colors"
+                >
+                  Claim Your Kuri
+                </button>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] text-center mt-2">
+                  Funds processed Instantly
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Non-winners see winner announcement
     return (
-      <div className="space-y-6">
-        {/* Congratulations Header */}
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", duration: 0.8 }}
-            className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4"
-          >
-            <Trophy className="w-8 h-8 text-white" />
-          </motion.div>
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-2xl font-bold text-yellow-700 mb-2"
-          >
-            🎉 Congratulations! 🎉
-          </motion.h3>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-gray-600"
-          >
-            You won Round #{currentWinner.intervalIndex}!
-          </motion.p>
-        </div>
+      <div className="text-center space-y-4">
+        {/* Winner Announcement Header */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.8 }}
+          className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto"
+        >
+          <Trophy className="w-8 h-8 text-white" />
+        </motion.div>
 
-        {/* Claim Interface */}
-        <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-4 border-2 border-yellow-200">
-          <ClaimInterface
-            marketData={marketData}
-            kuriAddress={address as `0x${string}`}
-            onClaimSuccess={handleClaimSuccess}
-          />
-        </div>
+        <motion.h3
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-xl font-bold text-yellow-700"
+        >
+          Round {currentWinner.intervalIndex} Winner
+        </motion.h3>
+
+        {/* Winner Profile */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-6 border border-yellow-200"
+        >
+          {winnerProfileLoading ? (
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse" />
+              <div className="text-center">
+                <div className="h-4 bg-gray-300 rounded animate-pulse mb-2 w-24" />
+                <div className="h-3 bg-gray-300 rounded animate-pulse w-16" />
+              </div>
+            </div>
+          ) : winnerProfile ? (
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                {winnerProfile.profile_image_url ? (
+                  <img
+                    src={winnerProfile.profile_image_url}
+                    alt={
+                      winnerProfile.display_name ||
+                      winnerProfile.username ||
+                      "Winner"
+                    }
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Trophy className="w-6 h-6 text-white" />
+                )}
+              </div>
+              <div className="text-center">
+                <p className="font-bold text-gray-800 text-lg">
+                  {winnerProfile.display_name ||
+                    winnerProfile.username ||
+                    "Anonymous Winner"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {currentWinner.winner.slice(0, 6)}...
+                  {currentWinner.winner.slice(-4)}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center mx-auto mb-2">
+                <Trophy className="w-6 h-6 text-white" />
+              </div>
+              <p className="font-bold text-gray-800 text-lg">
+                Anonymous Winner
+              </p>
+              <p className="text-sm text-gray-500">
+                {currentWinner.winner.slice(0, 6)}...
+                {currentWinner.winner.slice(-4)}
+              </p>
+            </div>
+          )}
+        </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="text-sm text-gray-600"
+        >
+          🎊 The winner has 3 days to claim their prize
+        </motion.p>
       </div>
     );
   }
+);
 
-  // Non-winners see winner announcement
-  return (
-    <div className="text-center space-y-4">
-      {/* Winner Announcement Header */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", duration: 0.8 }}
-        className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto"
-      >
-        <Trophy className="w-8 h-8 text-white" />
-      </motion.div>
-      
-      <motion.h3
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="text-xl font-bold text-yellow-700"
-      >
-        Round #{currentWinner.intervalIndex} Winner
-      </motion.h3>
+const TabContent = memo<TabContentProps>(
+  ({
+    activeTab,
+    metadata,
+    marketData,
+    creatorProfile,
+    creatorProfileLoading,
+    currentWinner,
+    winnerProfile,
+    winnerProfileLoading,
+    address,
+    membershipStatus,
+    shouldShowClaimCard,
+    shouldShowWinnerDisplay,
+    isCurrentUserWinner,
+    handleClaimSuccess,
+    renderActionButton,
+  }) => {
+    const { currentInterval } = useMarketContext();
 
-      {/* Winner Profile */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-6 border border-yellow-200"
-      >
-        {winnerProfileLoading ? (
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse" />
-            <div className="text-center">
-              <div className="h-4 bg-gray-300 rounded animate-pulse mb-2 w-24" />
-              <div className="h-3 bg-gray-300 rounded animate-pulse w-16" />
-            </div>
-          </div>
-        ) : winnerProfile ? (
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
-              {winnerProfile.profile_image_url ? (
-                <img
-                  src={winnerProfile.profile_image_url}
-                  alt={winnerProfile.display_name || winnerProfile.username || "Winner"}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Trophy className="w-6 h-6 text-white" />
-              )}
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-gray-800 text-lg">
-                {winnerProfile.display_name || winnerProfile.username || "Anonymous Winner"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {currentWinner.winner.slice(0, 6)}...{currentWinner.winner.slice(-4)}
+    if (!marketData) return null;
+
+    return (
+      <AnimatePresence mode="wait">
+        {activeTab === "overview" && (
+          <motion.div
+            key="overview"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6 lg:space-y-8"
+          >
+            {/* About Section */}
+            <div>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900 lg:text-gray-800 mb-2 lg:mb-4">
+                About This Circle
+              </h2>
+              <p className="text-gray-600 mb-6 lg:mb-8">
+                {metadata?.long_description ||
+                  metadata?.short_description ||
+                  "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
               </p>
             </div>
-          </div>
-        ) : (
-          <div className="text-center">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center mx-auto mb-2">
-              <Trophy className="w-6 h-6 text-white" />
-            </div>
-            <p className="font-bold text-gray-800 text-lg">Anonymous Winner</p>
-            <p className="text-sm text-gray-500">
-              {currentWinner.winner.slice(0, 6)}...{currentWinner.winner.slice(-4)}
-            </p>
-          </div>
-        )}
-      </motion.div>
 
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="text-sm text-gray-600"
-      >
-        🎊 The winner has 3 days to claim their prize
-      </motion.p>
-    </div>
-  );
-});
-
-const TabContent = memo<TabContentProps>(({
-  activeTab,
-  metadata,
-  marketData,
-  creatorProfile,
-  creatorProfileLoading,
-  currentWinner,
-  winnerProfile,
-  winnerProfileLoading,
-  address,
-  membershipStatus,
-  shouldShowClaimCard,
-  shouldShowWinnerDisplay,
-  isCurrentUserWinner,
-  handleClaimSuccess,
-  renderActionButton,
-}) => {
-  const { currentInterval } = useMarketContext();
-
-
-  if (!marketData) return null;
-
-  return (
-    <AnimatePresence mode="wait">
-      {activeTab === "overview" && (
-        <motion.div
-          key="overview"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-6 lg:space-y-8"
-        >
-          {/* About Section */}
-          <div>
-            <h2 className="text-xl lg:text-2xl font-bold text-gray-900 lg:text-gray-800 mb-2 lg:mb-4">
-              About This Circle
-            </h2>
-            <p className="text-gray-600 mb-6 lg:mb-8">
-              {metadata?.long_description ||
-                metadata?.short_description ||
-                "This is a community savings circle powered by the Kuri protocol. Members contribute regularly and take turns receiving the full pot, creating a supportive financial ecosystem without interest or fees."}
-            </p>
-          </div>
-
-          {/* Circle Stats + Creator Grid */}
-          <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 mb-6 lg:mb-8">
-            {/* Circle Stats */}
-            <div className="bg-gray-50 lg:bg-orange-50 rounded-xl lg:rounded-2xl p-4 lg:p-6">
-              <h3 className="text-lg font-semibold lg:font-bold text-gray-900 lg:text-gray-800 mb-4 lg:mb-3">
-                Circle Stats
-              </h3>
-              <div className="space-y-3 lg:space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
-                    Created On
-                  </span>
-                  <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
-                    {metadata?.created_at
-                      ? new Date(metadata.created_at).toLocaleDateString(
-                          "en-US",
-                          {
+            {/* Circle Stats + Creator Grid */}
+            <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 mb-6 lg:mb-8">
+              {/* Circle Stats */}
+              <div className="bg-gray-50 lg:bg-orange-50 rounded-xl lg:rounded-2xl p-4 lg:p-6">
+                <h3 className="text-lg font-semibold lg:font-bold text-gray-900 lg:text-gray-800 mb-4 lg:mb-3">
+                  Circle Stats
+                </h3>
+                <div className="space-y-3 lg:space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                      Created On
+                    </span>
+                    <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
+                      {metadata?.created_at
+                        ? new Date(metadata.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )
+                        : new Date(
+                            Number(marketData.startTime) * 1000
+                          ).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
-                          }
-                        )
-                      : new Date(
-                          Number(marketData.startTime) * 1000
-                        ).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
-                    Payout Frequency
-                  </span>
-                  <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800 capitalize">
-                    {getIntervalTypeText(marketData.intervalType)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
-                    Next Raffle
-                  </span>
-                  <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
-                    {marketData.state === KuriState.ACTIVE
-                      ? new Date(
-                          Number(marketData.nexRaffleTime) * 1000
-                        ).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "TBD"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
-                    Circle Status
-                  </span>
-                  {(() => {
-                    const badge = getStatusBadge(marketData.state);
-                    return (
-                      <span
-                        className={`text-xs lg:text-sm font-medium px-2 py-1 rounded-full ${badge.className}`}
-                      >
-                        {badge.text}
-                      </span>
-                    );
-                  })()}
+                          })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                      Payout Frequency
+                    </span>
+                    <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800 capitalize">
+                      {getIntervalTypeText(marketData.intervalType)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                      Next Raffle
+                    </span>
+                    <span className="text-sm lg:text-base font-medium lg:font-semibold text-gray-900 lg:text-gray-800">
+                      {marketData.state === KuriState.ACTIVE
+                        ? new Date(
+                            Number(marketData.nexRaffleTime) * 1000
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : "TBD"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm lg:text-base text-gray-500 lg:text-gray-600">
+                      Circle Status
+                    </span>
+                    {(() => {
+                      const badge = getStatusBadge(marketData.state);
+                      return (
+                        <span
+                          className={`text-xs lg:text-sm font-medium px-2 py-1 rounded-full ${badge.className}`}
+                        >
+                          {badge.text}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Creator Section */}
-            <div className="bg-gray-100 p-6 rounded-2xl">
-              <h3 className="font-bold text-lg text-gray-800 mb-3">Creator</h3>
-              {creatorProfileLoading ? (
-                <div className="flex items-center">
-                  <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse mr-4" />
-                  <div className="flex-1">
-                    <div className="h-5 bg-gray-300 rounded animate-pulse mb-2" />
-                    <div className="h-4 bg-gray-300 rounded animate-pulse w-2/3" />
-                  </div>
-                </div>
-              ) : creatorProfile ? (
-                <div className="flex items-center">
-                  <img
-                    src={
-                      creatorProfile.profile_image_url ||
-                      "/images/default-avatar.png"
-                    }
-                    alt={
-                      creatorProfile.display_name ||
-                      creatorProfile.username ||
-                      "Creator"
-                    }
-                    className="w-16 h-16 rounded-full mr-4 object-cover"
-                  />
-                  <div>
-                    <p className="font-bold text-gray-900 text-lg">
-                      {creatorProfile.display_name ||
-                        creatorProfile.username ||
-                        "Anonymous Creator"}
-                    </p>
-                    <p className="text-gray-500 text-sm truncate">
-                      {marketData.creator.slice(0, 6)}...
-                      {marketData.creator.slice(-4)}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <img
-                    src="/images/default-avatar.png"
-                    alt="Creator"
-                    className="w-16 h-16 rounded-full mr-4 object-cover"
-                  />
-                  <div>
-                    <p className="font-bold text-gray-900 text-lg">
-                      Anonymous Creator
-                    </p>
-                    <p className="text-gray-500 text-sm truncate">
-                      {marketData.creator.slice(0, 6)}...
-                      {marketData.creator.slice(-4)}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Desktop Action Section - Only show on desktop */}
-          <div className="hidden lg:block bg-orange-50 p-6 rounded-2xl">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              {/* Countdown Section */}
-              <div className="flex-grow">
-                {marketData.state === KuriState.INLAUNCH && (
-                  <>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      Launch Period Ends In
-                    </h3>
-                    <div className="flex items-end gap-x-3">
-                      <div className="text-center">
-                        <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="days" type="timeLeft" />
-                        </span>
-                        <span className="block text-xs text-gray-900">
-                          Days
-                        </span>
-                      </div>
-                      <span className="text-4xl font-bold text-orange-500">
-                        :
-                      </span>
-                      <div className="text-center">
-                        <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="hours" type="timeLeft" />
-                        </span>
-                        <span className="block text-xs text-gray-900">
-                          Hours
-                        </span>
-                      </div>
-                      <span className="text-4xl font-bold text-orange-500">
-                        :
-                      </span>
-                      <div className="text-center">
-                        <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="minutes" type="timeLeft" />
-                        </span>
-                        <span className="block text-xs text-gray-900">
-                          Minutes
-                        </span>
-                      </div>
-                      <span className="text-4xl font-bold text-orange-500">
-                        :
-                      </span>
-                      <div className="text-center">
-                        <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="seconds" type="timeLeft" />
-                        </span>
-                        <span className="block text-xs text-gray-900">
-                          Seconds
-                        </span>
-                      </div>
+              {/* Creator Section */}
+              <div className="bg-gray-100 p-6 rounded-2xl">
+                <h3 className="font-bold text-lg text-gray-800 mb-3">
+                  Creator
+                </h3>
+                {creatorProfileLoading ? (
+                  <div className="flex items-center">
+                    <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse mr-4" />
+                    <div className="flex-1">
+                      <div className="h-5 bg-gray-300 rounded animate-pulse mb-2" />
+                      <div className="h-4 bg-gray-300 rounded animate-pulse w-2/3" />
                     </div>
-                  </>
-                )}
-
-                {marketData.state === KuriState.ACTIVE && (
-                  <>
-                    {shouldShowWinnerDisplay && currentWinner ? (
-                      // Show winner display instead of countdown
-                      <WinnerDisplay
-                        currentWinner={currentWinner}
-                        winnerProfile={winnerProfile}
-                        winnerProfileLoading={winnerProfileLoading}
-                        isCurrentUserWinner={isCurrentUserWinner}
-                        marketData={marketData}
-                        address={address || ""}
-                        shouldShowClaimCard={shouldShowClaimCard}
-                        handleClaimSuccess={handleClaimSuccess}
-                        isMobile={false}
-                      />
-                    ) : (
-                      // Show normal countdown
-                      <>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">
-                          {Date.now() <
-                          Number(marketData.nextIntervalDepositTime) * 1000
-                            ? currentInterval === 0
-                              ? "First Deposit Starts In"
-                              : "Next Deposit Starts In"
-                            : currentInterval === 1
-                            ? "First Raffle In"
-                            : "Next Raffle In"}
-                        </h3>
-                        <div className="flex items-end gap-x-3">
-                          <AdaptiveTimerDisplay marketData={marketData} shouldShowWinner={shouldShowWinnerDisplay} />
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-
-                {/* Current Winner Display for Active Markets */}
-                {(() => {
-                  console.log("🎯 WINNER DISPLAY RENDER CHECK:", {
-                    hasCurrentWinner: !!currentWinner,
-                    currentWinner,
-                    marketState: marketData?.state,
-                    isActive: marketData?.state === KuriState.ACTIVE,
-                    shouldShowWinnerDisplay: !!(currentWinner && marketData?.state === KuriState.ACTIVE),
-                  });
-                  return null;
-                })()}
-                {currentWinner && marketData.state === KuriState.ACTIVE && (
-                  <div className="mt-4 p-4 bg-gradient-to-br from-[hsl(var(--gold))]/20 to-amber-50 rounded-xl border border-[hsl(var(--gold))]/30">
-                    <h4 className="font-bold text-[#E67A50] mb-2 flex items-center gap-2">
-                      <Trophy className="w-4 h-4 text-[hsl(var(--gold))]" />
-                      Round #{currentWinner.intervalIndex} Winner
-                    </h4>
-                    {winnerProfileLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse" />
-                        <div className="h-4 bg-gray-300 rounded animate-pulse flex-1" />
-                      </div>
-                    ) : winnerProfile ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[hsl(var(--gold))] to-yellow-400 flex items-center justify-center">
-                          {winnerProfile.profile_image_url ? (
-                            <img
-                              src={winnerProfile.profile_image_url}
-                              alt={
-                                winnerProfile.display_name ||
-                                winnerProfile.username ||
-                                "Winner"
-                              }
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Trophy className="w-4 h-4 text-white" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-800 text-sm">
-                            {winnerProfile.display_name ||
-                              winnerProfile.username ||
-                              "Anonymous Winner"}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-800">Anonymous Winner</p>
-                    )}
                   </div>
-                )}
-
-                {marketData.state === KuriState.COMPLETED && (
-                  <div className="text-center">
-                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
-                    <h3 className="text-xl font-bold text-green-900 mb-1">
-                      Circle Completed
-                    </h3>
-                    <p className="text-green-700">
-                      All members have received their payouts
-                    </p>
+                ) : creatorProfile ? (
+                  <div className="flex items-center">
+                    <img
+                      src={
+                        creatorProfile.profile_image_url ||
+                        "/images/default-avatar.png"
+                      }
+                      alt={
+                        creatorProfile.display_name ||
+                        creatorProfile.username ||
+                        "Creator"
+                      }
+                      className="w-16 h-16 rounded-full mr-4 object-cover"
+                    />
+                    <div>
+                      <p className="font-bold text-gray-900 text-lg">
+                        {creatorProfile.display_name ||
+                          creatorProfile.username ||
+                          "Anonymous Creator"}
+                      </p>
+                      <p className="text-gray-500 text-sm truncate">
+                        {marketData.creator.slice(0, 6)}...
+                        {marketData.creator.slice(-4)}
+                      </p>
+                    </div>
                   </div>
-                )}
-
-                {marketData.state === KuriState.LAUNCHFAILED && (
-                  <div className="text-center">
-                    <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
-                    <h3 className="text-xl font-bold text-red-900 mb-1">
-                      Launch Failed
-                    </h3>
-                    <p className="text-red-700">
-                      This circle did not reach the minimum requirements
-                    </p>
+                ) : (
+                  <div className="flex items-center">
+                    <img
+                      src="/images/default-avatar.png"
+                      alt="Creator"
+                      className="w-16 h-16 rounded-full mr-4 object-cover"
+                    />
+                    <div>
+                      <p className="font-bold text-gray-900 text-lg">
+                        Anonymous Creator
+                      </p>
+                      <p className="text-gray-500 text-sm truncate">
+                        {marketData.creator.slice(0, 6)}...
+                        {marketData.creator.slice(-4)}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Action Button - Desktop Only */}
-              {/* Only show if not in winner display mode for current user */}
-              {!(shouldShowWinnerDisplay && isCurrentUserWinner && shouldShowClaimCard) && (
-                <div className="hidden lg:block flex-shrink-0">
-                  {membershipStatus === 1 &&
-                  marketData.state === KuriState.ACTIVE ? (
-                    <div className="w-full">{renderActionButton()}</div>
-                  ) : (
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {renderActionButton()}
-                    </motion.div>
+            {/* Desktop Action Section - Only show on desktop */}
+            <div className="hidden lg:block bg-orange-50 p-6 rounded-2xl">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                {/* Countdown Section */}
+                <div className="flex-grow">
+                  {marketData.state === KuriState.INLAUNCH && (
+                    <>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">
+                        Launch Period Ends In
+                      </h3>
+                      <div className="flex items-end gap-x-3">
+                        <div className="text-center">
+                          <span className="text-4xl font-bold text-orange-500">
+                            <TimerSection
+                              marketData={marketData}
+                              section="days"
+                              type="timeLeft"
+                            />
+                          </span>
+                          <span className="block text-xs text-gray-900">
+                            Days
+                          </span>
+                        </div>
+                        <span className="text-4xl font-bold text-orange-500">
+                          :
+                        </span>
+                        <div className="text-center">
+                          <span className="text-4xl font-bold text-orange-500">
+                            <TimerSection
+                              marketData={marketData}
+                              section="hours"
+                              type="timeLeft"
+                            />
+                          </span>
+                          <span className="block text-xs text-gray-900">
+                            Hours
+                          </span>
+                        </div>
+                        <span className="text-4xl font-bold text-orange-500">
+                          :
+                        </span>
+                        <div className="text-center">
+                          <span className="text-4xl font-bold text-orange-500">
+                            <TimerSection
+                              marketData={marketData}
+                              section="minutes"
+                              type="timeLeft"
+                            />
+                          </span>
+                          <span className="block text-xs text-gray-900">
+                            Minutes
+                          </span>
+                        </div>
+                        <span className="text-4xl font-bold text-orange-500">
+                          :
+                        </span>
+                        <div className="text-center">
+                          <span className="text-4xl font-bold text-orange-500">
+                            <TimerSection
+                              marketData={marketData}
+                              section="seconds"
+                              type="timeLeft"
+                            />
+                          </span>
+                          <span className="block text-xs text-gray-900">
+                            Seconds
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {marketData.state === KuriState.ACTIVE && (
+                    <>
+                      {shouldShowWinnerDisplay && currentWinner ? (
+                        // Show winner display instead of countdown
+                        <WinnerDisplay
+                          currentWinner={currentWinner}
+                          winnerProfile={winnerProfile}
+                          winnerProfileLoading={winnerProfileLoading}
+                          isCurrentUserWinner={isCurrentUserWinner}
+                          marketData={marketData}
+                          address={address || ""}
+                          shouldShowClaimCard={shouldShowClaimCard}
+                          handleClaimSuccess={handleClaimSuccess}
+                          isMobile={false}
+                        />
+                      ) : (
+                        // Show normal countdown
+                        <>
+                          <h3 className="text-xl font-bold text-gray-800 mb-2">
+                            {Date.now() <
+                            Number(marketData.nextIntervalDepositTime) * 1000
+                              ? currentInterval === 0
+                                ? "First Deposit Starts In"
+                                : "Next Deposit Starts In"
+                              : currentInterval === 1
+                              ? "First Raffle In"
+                              : "Next Raffle In"}
+                          </h3>
+                          <div className="flex items-end gap-x-3">
+                            <AdaptiveTimerDisplay
+                              marketData={marketData}
+                              shouldShowWinner={shouldShowWinnerDisplay}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {marketData.state === KuriState.COMPLETED && (
+                    <div className="text-center">
+                      <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                      <h3 className="text-xl font-bold text-green-900 mb-1">
+                        Circle Completed
+                      </h3>
+                      <p className="text-green-700">
+                        All members have received their payouts
+                      </p>
+                    </div>
+                  )}
+
+                  {marketData.state === KuriState.LAUNCHFAILED && (
+                    <div className="text-center">
+                      <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
+                      <h3 className="text-xl font-bold text-red-900 mb-1">
+                        Launch Failed
+                      </h3>
+                      <p className="text-red-700">
+                        This circle did not reach the minimum requirements
+                      </p>
+                    </div>
                   )}
                 </div>
-              )}
+
+                {/* Action Button - Desktop Only */}
+                {/* Only show if not in winner display mode for current user */}
+                {!(
+                  shouldShowWinnerDisplay &&
+                  isCurrentUserWinner &&
+                  shouldShowClaimCard
+                ) && (
+                  <div className="hidden lg:block flex-shrink-0">
+                    {membershipStatus === 1 &&
+                    marketData.state === KuriState.ACTIVE ? (
+                      <div className="w-full">{renderActionButton()}</div>
+                    ) : (
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {renderActionButton()}
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
 
-      {activeTab === "activity" && (
-        <motion.div
-          key="activity"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-4 lg:space-y-6"
-        >
-          <div className="text-center py-8 lg:py-12">
-            <Activity className="h-12 w-12 lg:h-16 lg:w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg lg:text-xl font-semibold text-gray-500 lg:text-gray-600 mb-2">
-              Activity Coming Soon
-            </h3>
-            <p className="text-sm lg:text-base text-gray-400 lg:text-gray-500">
-              Track deposits, payouts, and member activity in this section.
-            </p>
-          </div>
-        </motion.div>
-      )}
+        {activeTab === "activity" && (
+          <motion.div
+            key="activity"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4 lg:space-y-6"
+          >
+            <div className="text-center py-8 lg:py-12">
+              <Activity className="h-12 w-12 lg:h-16 lg:w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg lg:text-xl font-semibold text-gray-500 lg:text-gray-600 mb-2">
+                Activity Coming Soon
+              </h3>
+              <p className="text-sm lg:text-base text-gray-400 lg:text-gray-500">
+                Track deposits, payouts, and member activity in this section.
+              </p>
+            </div>
+          </motion.div>
+        )}
 
-      {activeTab === "members" && (
-        <motion.div
-          key="members"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-4 lg:space-y-6"
-        >
-          <CircleMembersDisplay marketAddress={address} />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}, (prevProps, nextProps) => {
-  // Only re-render if important props change (not timer-related props)
-  const shouldSkipRender = (
-    prevProps.activeTab === nextProps.activeTab &&
-    prevProps.membershipStatus === nextProps.membershipStatus &&
-    prevProps.address === nextProps.address &&
-    prevProps.creatorProfileLoading === nextProps.creatorProfileLoading &&
-    prevProps.creatorProfile?.id === nextProps.creatorProfile?.id &&
-    prevProps.winnerProfileLoading === nextProps.winnerProfileLoading &&
-    prevProps.winnerProfile?.id === nextProps.winnerProfile?.id
-  );
-  
-  
-  return shouldSkipRender;
-});
+        {activeTab === "members" && (
+          <motion.div
+            key="members"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4 lg:space-y-6"
+          >
+            <CircleMembersDisplay marketAddress={address} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if important props change (not timer-related props)
+    const shouldSkipRender =
+      prevProps.activeTab === nextProps.activeTab &&
+      prevProps.membershipStatus === nextProps.membershipStatus &&
+      prevProps.address === nextProps.address &&
+      prevProps.creatorProfileLoading === nextProps.creatorProfileLoading &&
+      prevProps.creatorProfile?.id === nextProps.creatorProfile?.id &&
+      prevProps.winnerProfileLoading === nextProps.winnerProfileLoading &&
+      prevProps.winnerProfile?.id === nextProps.winnerProfile?.id;
+
+    return shouldSkipRender;
+  }
+);
 
 // Convert useKuriCore KuriState to GraphQL KuriState for components that expect it
 const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
@@ -1081,7 +1113,7 @@ function MarketDetailInner() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [hasUserClaimed, setHasUserClaimed] = useState<boolean | null>(null);
-  
+
   // 🚀 NEW: Persistent winner state to prevent flickering during GraphQL polling
   const [persistentWinner, setPersistentWinner] = useState<{
     intervalIndex: number;
@@ -1161,7 +1193,6 @@ function MarketDetailInner() {
           };
         }
       });
-
     }
 
     previousProps.current = currentProps;
@@ -1175,8 +1206,11 @@ function MarketDetailInner() {
   // });
 
   // Stabilize creator address to prevent unnecessary profile refetches
-  const creatorAddress = useMemo(() => marketData?.creator || null, [marketData?.creator]);
-  
+  const creatorAddress = useMemo(
+    () => marketData?.creator || null,
+    [marketData?.creator]
+  );
+
   // Fetch creator's profile
   const { profile: creatorProfile, isLoading: creatorProfileLoading } =
     useUserProfileByAddress(creatorAddress);
@@ -1213,15 +1247,17 @@ function MarketDetailInner() {
         winner: currentWinnerFromContext.winner,
         timestamp: currentWinnerFromContext.timestamp,
       };
-      
+
       // Only update if it's actually new (different interval or address)
-      if (!persistentWinner || 
-          persistentWinner.intervalIndex !== newWinner.intervalIndex ||
-          persistentWinner.winner !== newWinner.winner) {
+      if (
+        !persistentWinner ||
+        persistentWinner.intervalIndex !== newWinner.intervalIndex ||
+        persistentWinner.winner !== newWinner.winner
+      ) {
         console.log("🔄 Updating persistent winner:", newWinner);
         setPersistentWinner(newWinner);
       }
-      
+
       return newWinner;
     }
 
@@ -1255,30 +1291,46 @@ function MarketDetailInner() {
     // No winner available
     console.log("❌ No winner data available");
     return null;
-  }, [currentWinnerFromContext, persistentWinner, winners?.length, marketData?.state, address, winnersLoading, winnersError]);
+  }, [
+    currentWinnerFromContext,
+    persistentWinner,
+    winners?.length,
+    marketData?.state,
+    address,
+    winnersLoading,
+    winnersError,
+  ]);
 
   // Stabilize winner address to prevent unnecessary profile refetches
-  const winnerAddress = useMemo(() => currentWinner?.winner || null, [currentWinner?.winner]);
-  
+  const winnerAddress = useMemo(
+    () => currentWinner?.winner || null,
+    [currentWinner?.winner]
+  );
+
   // Fetch winner's profile
   const { profile: winnerProfile, isLoading: winnerProfileLoading } =
     useUserProfileByAddress(winnerAddress);
 
   // Check if current user is the winner
   const isCurrentUserWinner = useMemo(() => {
-    const result = !!(currentWinner && userAddress && 
-      currentWinner.winner.toLowerCase() === userAddress.toLowerCase());
-    
+    const result = !!(
+      currentWinner &&
+      userAddress &&
+      currentWinner.winner.toLowerCase() === userAddress.toLowerCase()
+    );
+
     console.log("🏆 IS CURRENT USER WINNER CHECK:", {
       hasCurrentWinner: !!currentWinner,
       currentWinnerAddress: currentWinner?.winner,
       hasUserAddress: !!userAddress,
       userAddress,
-      addressMatch: currentWinner && userAddress ? 
-        currentWinner.winner.toLowerCase() === userAddress.toLowerCase() : false,
+      addressMatch:
+        currentWinner && userAddress
+          ? currentWinner.winner.toLowerCase() === userAddress.toLowerCase()
+          : false,
       result,
     });
-    
+
     return result;
   }, [currentWinner, userAddress]);
 
@@ -1441,7 +1493,7 @@ function MarketDetailInner() {
       userAddressLower: userAddress.toLowerCase(),
       isWinner,
     });
-    
+
     if (!isWinner) {
       console.log("❌ User is not the winner for claim card");
       return false;
@@ -1458,15 +1510,12 @@ function MarketDetailInner() {
       hasUserClaimed,
       shouldShow,
       condition: "hasUserClaimed !== true",
-      explanation: "Shows claim card if not explicitly claimed (handles null case)",
+      explanation:
+        "Shows claim card if not explicitly claimed (handles null case)",
     });
-    
+
     return shouldShow;
-  }, [
-    currentWinner,
-    userAddress,
-    hasUserClaimed,
-  ]);
+  }, [currentWinner, userAddress, hasUserClaimed]);
 
   // Check if market is full
   const isMarketFull = useMemo(() => {
@@ -1671,7 +1720,7 @@ function MarketDetailInner() {
                   onClaimSuccess={handleClaimSuccess}
                 />
               ) : (
-                <div style={{ display: 'none' }}>
+                <div style={{ display: "none" }}>
                   {/* Debug: Claim card hidden - shouldShowClaimCard: {shouldShowClaimCard.toString()} */}
                 </div>
               )}
@@ -1800,7 +1849,7 @@ function MarketDetailInner() {
                   onClaimSuccess={handleClaimSuccess}
                 />
               ) : (
-                <div style={{ display: 'none' }}>
+                <div style={{ display: "none" }}>
                   {/* Debug: Claim card hidden - shouldShowClaimCard: {shouldShowClaimCard.toString()} */}
                 </div>
               )}
@@ -2294,7 +2343,11 @@ function MarketDetailInner() {
                     <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="days" type="timeLeft" />
+                          <TimerSection
+                            marketData={marketData}
+                            section="days"
+                            type="timeLeft"
+                          />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Days
@@ -2305,7 +2358,11 @@ function MarketDetailInner() {
                       </span>
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="hours" type="timeLeft" />
+                          <TimerSection
+                            marketData={marketData}
+                            section="hours"
+                            type="timeLeft"
+                          />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Hours
@@ -2316,7 +2373,11 @@ function MarketDetailInner() {
                       </span>
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="minutes" type="timeLeft" />
+                          <TimerSection
+                            marketData={marketData}
+                            section="minutes"
+                            type="timeLeft"
+                          />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Minutes
@@ -2327,7 +2388,11 @@ function MarketDetailInner() {
                       </span>
                       <div>
                         <span className="text-4xl font-bold text-orange-500">
-                          <TimerSection marketData={marketData} section="seconds" type="timeLeft" />
+                          <TimerSection
+                            marketData={marketData}
+                            section="seconds"
+                            type="timeLeft"
+                          />
                         </span>
                         <span className="block text-xs text-gray-900">
                           Seconds
@@ -2368,7 +2433,10 @@ function MarketDetailInner() {
                             : "Next Raffle In"}
                         </h3>
                         <div className="flex justify-center items-baseline space-x-2 text-gray-900 mb-6">
-                          <AdaptiveTimerMobileDisplay marketData={marketData} shouldShowWinner={shouldShowWinnerDisplay} />
+                          <AdaptiveTimerMobileDisplay
+                            marketData={marketData}
+                            shouldShowWinner={shouldShowWinnerDisplay}
+                          />
                         </div>
                       </>
                     )}
@@ -2400,7 +2468,11 @@ function MarketDetailInner() {
                 )}
 
                 {/* Mobile Action Button - Only show if not in winner display mode for current user */}
-                {!(shouldShowWinnerDisplay && isCurrentUserWinner && shouldShowClaimCard) && (
+                {!(
+                  shouldShowWinnerDisplay &&
+                  isCurrentUserWinner &&
+                  shouldShowClaimCard
+                ) && (
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -2448,7 +2520,7 @@ function MarketDetailWithTimer() {
 export default function MarketDetail() {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
-  
+
   // Validate address immediately - redirect if invalid
   useEffect(() => {
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
