@@ -116,17 +116,9 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     loading: winnersLoading,
     error: winnersError,
     refetch: refetchWinners,
-  } = useRaffleWinners(marketAddress);
+  } = useRaffleWinners(marketAddress, marketDetail?.nextRaffleTime);
 
-  console.log("🏛️ MARKET CONTEXT INTEGRATION:", {
-    marketAddress,
-    hasMarketDetail: !!marketDetail,
-    originalWinnersFromDetail: marketDetail?.winners?.length || 0,
-    newWinnersFromHook: winners?.length || 0,
-    currentWinnerFromHook: currentWinner?.intervalIndex,
-    winnersLoading,
-    hasWinnersError: !!winnersError,
-  });
+  // Market context integration logging reduced for performance
 
   // Single subscription to user deposits
   const {

@@ -514,13 +514,6 @@ const WinnerDisplay = memo<WinnerDisplayProps>(
     handleClaimSuccess,
     isMobile = false,
   }) => {
-    console.log("🎊 WINNER DISPLAY RENDER:", {
-      currentWinner,
-      isCurrentUserWinner,
-      shouldShowClaimCard,
-      isMobile,
-    });
-
     if (isCurrentUserWinner && shouldShowClaimCard) {
       // Winner sees new dashboard-style banner
       const potentialWinnings = Number(marketData.kuriAmount) / 1_000_000;
@@ -1153,23 +1146,6 @@ function MarketDetailInner() {
     currentInterval,
   } = useMarketContext();
 
-  console.log("🎭 MARKET DETAIL COMPONENT CONTEXT DATA:", {
-    address,
-    hasMarketData: !!marketData,
-    hasMarketDetail: !!marketDetail,
-    originalWinnersFromDetail: marketDetail?.winners?.length || 0,
-    newWinnersFromContext: winners?.length || 0,
-    currentWinnerFromContext: currentWinnerFromContext,
-    currentWinnerInterval: currentWinnerFromContext?.intervalIndex,
-    winnersLoading,
-    hasWinnersError: !!winnersError,
-    marketDataState: marketData?.state,
-    marketDataNextRaffle: marketData?.nexRaffleTime?.toString(),
-    marketDataIntervalDuration: marketData?.intervalDuration?.toString(),
-  });
-
-  // 🔥 TIMER MOVED: Timer logic moved to isolated components to prevent parent re-renders
-
   // Add render cause tracking
   const renderCount = useRef(0);
   const previousProps = useRef<any>({});
@@ -1228,18 +1204,7 @@ function MarketDetailInner() {
 
   // Use winner data with persistent state to prevent GraphQL polling flickering
   const currentWinner = useMemo(() => {
-    console.log("🏆 PERSISTENT WINNER DISPLAY LOGIC:", {
-      marketAddress: address,
-      currentWinnerFromContext: currentWinnerFromContext?.intervalIndex,
-      persistentWinner: persistentWinner?.intervalIndex,
-      winnersCount: winners?.length || 0,
-      marketState: marketData?.state,
-      hasMarketData: !!marketData,
-      winnersLoading,
-      hasWinnersError: !!winnersError,
-    });
-
-    // 🚀 PERSISTENCE LOGIC: Once we have a winner, keep showing it even during GraphQL polling
+    //  PERSISTENCE LOGIC: Once we have a winner, keep showing it even during GraphQL polling
     if (currentWinnerFromContext) {
       // Update persistent winner when we get new winner data
       const newWinner = {
@@ -1254,7 +1219,6 @@ function MarketDetailInner() {
         persistentWinner.intervalIndex !== newWinner.intervalIndex ||
         persistentWinner.winner !== newWinner.winner
       ) {
-        console.log("🔄 Updating persistent winner:", newWinner);
         setPersistentWinner(newWinner);
       }
 
@@ -1279,7 +1243,7 @@ function MarketDetailInner() {
     }
 
     if (winnersError) {
-      console.log("❌ Winners error:", winnersError.message);
+      console.log(" Winners error:", winnersError.message);
       // Keep showing persistent winner even on error
       if (persistentWinner) {
         console.log("🛡️ Showing persistent winner despite error");
@@ -1289,7 +1253,7 @@ function MarketDetailInner() {
     }
 
     // No winner available
-    console.log("❌ No winner data available");
+    console.log(" No winner data available");
     return null;
   }, [
     currentWinnerFromContext,
@@ -1319,37 +1283,29 @@ function MarketDetailInner() {
       currentWinner.winner.toLowerCase() === userAddress.toLowerCase()
     );
 
-    console.log("🏆 IS CURRENT USER WINNER CHECK:", {
-      hasCurrentWinner: !!currentWinner,
-      currentWinnerAddress: currentWinner?.winner,
-      hasUserAddress: !!userAddress,
-      userAddress,
-      addressMatch:
-        currentWinner && userAddress
-          ? currentWinner.winner.toLowerCase() === userAddress.toLowerCase()
-          : false,
-      result,
-    });
-
     return result;
   }, [currentWinner, userAddress]);
 
   // Determine if we should show winner display instead of countdown
+  // Winner display only shows for 3 days after raffle, then reverts to normal UI
   const shouldShowWinnerDisplay = useMemo(() => {
-    console.log("🔍 SIMPLIFIED WINNER DISPLAY CONDITIONS:", {
-      hasCurrentWinner: !!currentWinner,
-      hasMarketData: !!marketData,
-      marketState: marketData?.state,
-    });
-
     if (!currentWinner) {
-      console.log("❌ No current winner for display");
+      console.log("No current winner for display");
       return false;
     }
 
-    // SIMPLIFIED: If we have a winner, show the winner display
-    // The currentWinner logic already handles timing and market state checks
-    console.log("✅ Showing winner display - winner exists");
+    // Calculate 3-day window from winner timestamp
+    const winnerTimestamp = Number(currentWinner.timestamp) * 1000;
+    const threeDaysAfterWinner = winnerTimestamp + 3 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // Only show winner display within 3 days of raffle
+    const withinThreeDayWindow = now <= threeDaysAfterWinner;
+
+    if (!withinThreeDayWindow) {
+      return false;
+    }
+
     return true;
   }, [currentWinner]);
 
@@ -1465,54 +1421,23 @@ function MarketDetailInner() {
 
   // Determine if claim card should be visible
   const shouldShowClaimCard = useMemo(() => {
-    console.log("🎯 CLAIM CARD VISIBILITY CHECK:", {
-      hasCurrentWinner: !!currentWinner,
-      currentWinnerAddress: currentWinner?.winner,
-      userAddress,
-      hasUserAddress: !!userAddress,
-      marketData: !!marketData,
-      marketState: marketData?.state,
-      kuriStateActive: KuriState.ACTIVE,
-      nexRaffleTime: marketData?.nexRaffleTime,
-      hasUserClaimed,
-      hasUserClaimedType: typeof hasUserClaimed,
-    });
-
     if (!currentWinner || !userAddress) {
-      console.log("❌ No winner or user address for claim card");
+      console.log(" No winner or user address for claim card");
       return false;
     }
 
     // Check if the current user is the winner
     const isWinner =
       currentWinner.winner.toLowerCase() === userAddress.toLowerCase();
-    console.log("🔍 ADDRESS MATCHING:", {
-      winnerAddress: currentWinner.winner,
-      winnerAddressLower: currentWinner.winner.toLowerCase(),
-      userAddress: userAddress,
-      userAddressLower: userAddress.toLowerCase(),
-      isWinner,
-    });
 
     if (!isWinner) {
-      console.log("❌ User is not the winner for claim card");
+      console.log(" User is not the winner for claim card");
       return false;
     }
 
-    // SIMPLIFIED: If user is winner, show claim card regardless of complex timing
-    // The winner display logic already handles timing constraints
-    console.log("✅ User is winner - checking claim status");
-
     // Only show if user hasn't claimed yet
-    // 🚀 FIXED: Handle null case and show claim card for winners who haven't claimed
+    //  FIXED: Handle null case and show claim card for winners who haven't claimed
     const shouldShow = hasUserClaimed !== true; // Show if false OR null (not claimed)
-    console.log("🎯 CLAIM STATUS CHECK:", {
-      hasUserClaimed,
-      shouldShow,
-      condition: "hasUserClaimed !== true",
-      explanation:
-        "Shows claim card if not explicitly claimed (handles null case)",
-    });
 
     return shouldShow;
   }, [currentWinner, userAddress, hasUserClaimed]);
@@ -1545,7 +1470,7 @@ function MarketDetailInner() {
 
     setIsRequesting(true);
     try {
-      // 🚀 USE SPONSORED VERSION FOR TESTING
+      //  USE SPONSORED VERSION FOR TESTING
       await requestMembershipSponsored();
       toast.success("Membership request sent!");
 
