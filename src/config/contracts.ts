@@ -27,7 +27,7 @@ const NETWORK_CONFIG: { [key: number]: NetworkConfig } = {
   },
   [base.id]: {
     addresses: {
-      KuriFactory: "0x408A1C9f08bBA1A8FbFcEE5Bb06171D60660c78C", // V1 Factory Address (Mainnet)
+      KuriFactory: "0xC388C761dE077bC6f5c3Fee21a609669277A1401", // V1 Factory Address (Mainnet)
       USDC: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC Mainnet
     },
     chainId: base.id,

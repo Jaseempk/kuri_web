@@ -47,6 +47,11 @@ export const KuriCoreABI = [
         type: "address",
         internalType: "address",
       },
+      {
+        name: "_treasuryAddress",
+        type: "address",
+        internalType: "address",
+      },
     ],
     stateMutability: "nonpayable",
   },
@@ -1828,6 +1833,11 @@ export const KuriCoreABI = [
   {
     type: "error",
     name: "KuriCore__UserYetToMakePayments",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "KuriCore__WinnerAlreadySelected",
     inputs: [],
   },
   {
