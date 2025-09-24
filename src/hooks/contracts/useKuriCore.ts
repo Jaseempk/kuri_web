@@ -377,6 +377,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       });
 
+
       const marketTuple = data as KuriDataTuple;
       const processedData = {
         creator: marketTuple[0],

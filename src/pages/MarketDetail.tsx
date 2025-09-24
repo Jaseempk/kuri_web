@@ -208,16 +208,19 @@ const useTimerValue = (
   shouldShowWinner: boolean = false
 ) => {
   const [timerValue, setTimerValue] = useState<string>("");
+  
 
   useEffect(() => {
-    if (!marketData) return;
+    
+    if (!marketData) {
+      return;
+    }
 
     // 🚀 FIX: Don't run timers when winner is being displayed to prevent flickering
     if (
       shouldShowWinner &&
       (type === "raffleTimeLeft" || type === "depositTimeLeft")
     ) {
-      console.log(`⏸️ Timer paused for ${type} - winner being displayed`);
       setTimerValue("Winner display active");
       return;
     }
@@ -226,12 +229,14 @@ const useTimerValue = (
       const now = Date.now();
 
       if (type === "timeLeft" && marketData.state === 0) {
-        // INLAUNCH countdown
-        const end = Number((marketData as any).endTime) * 1000;
+        // INLAUNCH countdown - Use launchPeriod instead of endTime!
+        const end = Number((marketData as any).launchPeriod) * 1000;
         const diff = end - now;
+        
 
         if (diff <= 0) {
-          setTimerValue("Launch period ended");
+          const expiredValue = "Launch period ended";
+          setTimerValue(expiredValue);
           return;
         }
 
@@ -294,6 +299,7 @@ const useTimerValue = (
     };
   }, [
     marketData?.state,
+    (marketData as any)?.launchPeriod,
     (marketData as any)?.endTime,
     marketData?.nexRaffleTime,
     marketData?.nextIntervalDepositTime,
@@ -1146,6 +1152,7 @@ function MarketDetailInner() {
     currentInterval,
   } = useMarketContext();
 
+
   // Add render cause tracking
   const renderCount = useRef(0);
   const previousProps = useRef<any>({});
@@ -1227,33 +1234,27 @@ function MarketDetailInner() {
 
     // 🛡️ FALLBACK TO PERSISTENT STATE: If GraphQL polling temporarily clears data, use persistent state
     if (persistentWinner && !winnersLoading) {
-      console.log("🛡️ Using persistent winner during data refresh");
       return persistentWinner;
     }
 
     // Check for loading or error states
     if (winnersLoading) {
-      console.log("⏳ Winners still loading...");
       // Keep showing persistent winner during loading
       if (persistentWinner) {
-        console.log("🛡️ Showing persistent winner during loading");
         return persistentWinner;
       }
       return null;
     }
 
     if (winnersError) {
-      console.log(" Winners error:", winnersError.message);
       // Keep showing persistent winner even on error
       if (persistentWinner) {
-        console.log("🛡️ Showing persistent winner despite error");
         return persistentWinner;
       }
       return null;
     }
 
     // No winner available
-    console.log(" No winner data available");
     return null;
   }, [
     currentWinnerFromContext,
@@ -1290,7 +1291,6 @@ function MarketDetailInner() {
   // Winner display only shows for 3 days after raffle, then reverts to normal UI
   const shouldShowWinnerDisplay = useMemo(() => {
     if (!currentWinner) {
-      console.log("No current winner for display");
       return false;
     }
 
@@ -1422,7 +1422,6 @@ function MarketDetailInner() {
   // Determine if claim card should be visible
   const shouldShowClaimCard = useMemo(() => {
     if (!currentWinner || !userAddress) {
-      console.log(" No winner or user address for claim card");
       return false;
     }
 
@@ -1431,7 +1430,6 @@ function MarketDetailInner() {
       currentWinner.winner.toLowerCase() === userAddress.toLowerCase();
 
     if (!isWinner) {
-      console.log(" User is not the winner for claim card");
       return false;
     }
 
