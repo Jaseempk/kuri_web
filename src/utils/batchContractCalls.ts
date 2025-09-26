@@ -56,7 +56,7 @@ export const checkPaymentStatusForMember = async (
   marketState: number
 ): Promise<boolean | null> => {
   // Only check payment status for ACTIVE markets and ACCEPTED members
-  if (marketState !== 2 || membershipStatus !== 1) {
+  if (marketState !== 1 || membershipStatus !== 1) {
     return null;
   }
 
@@ -195,7 +195,7 @@ export const filterRelevantMarkets = (
   return markets.filter((market) => {
     const isCreator =
       market.creator.toLowerCase() === userAddress.toLowerCase();
-    const isActiveMarket = market.state === 2; // ACTIVE markets might have user as member
+    const isActiveMarket = market.state === 1; // ACTIVE markets might have user as member
     const isLaunchMarket = market.state === 0; // INLAUNCH markets might have user as applicant
 
     // Include if user is creator or if market is in a state where user might be involved

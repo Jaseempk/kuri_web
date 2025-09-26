@@ -116,7 +116,7 @@ export interface AnalyticsEvents {
   };
   market_detail_viewed: {
     market_address: string;
-    market_state: "inlaunch" | "active" | "completed" | "failed" | "unknown";
+    market_state: "inlaunch" | "active" | "completed" | "unknown";
   };
   profile_viewed: {
     profile_address: string;

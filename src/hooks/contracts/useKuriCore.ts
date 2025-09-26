@@ -33,7 +33,6 @@ import { encodeFunctionData } from "viem";
 
 export enum KuriState {
   INLAUNCH,
-  LAUNCHFAILED,
   ACTIVE,
   COMPLETED,
 }
@@ -259,7 +258,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     }
 
     // Only check payment status for ACTIVE markets
-    if (marketData.state !== 2) {
+    if (marketData.state !== 1) {
       // Not ACTIVE
       setUserPaymentStatus(null);
       return false;
@@ -341,7 +340,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     }
 
     // Only check for ACTIVE markets
-    if (marketData.state !== 2) {
+    if (marketData.state !== 1) {
       return false;
     }
 
@@ -440,7 +439,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   // Check payment status and balance when market becomes active or user changes
   useEffect(() => {
     // Only check balance for active markets with connected users
-    if (marketData?.state === 2 && userAddress) {
+    if (marketData?.state === 1 && userAddress) {
       checkUserBalance(); // Keep this - safe for all users
       // checkUserPaymentStatus(); ← REMOVED: Now explicit only
     }

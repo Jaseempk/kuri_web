@@ -264,7 +264,7 @@ function App() {
         // Fallback: If no active launch circles, show recently active circles
         if (activeInLaunch.length === 0) {
           const recentlyActive = markets
-            .filter((m) => m.state === 2) // ACTIVE state
+            .filter((m) => m.state === 1) // ACTIVE state
             .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
             .slice(0, 3);
 

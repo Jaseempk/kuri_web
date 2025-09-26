@@ -41,7 +41,7 @@ const myCirclesSections = [
   {
     title: "Active Circles",
     description: "Currently active circles accepting deposits", 
-    filter: (market: any) => market.state === 2, // KuriState.ACTIVE
+    filter: (market: any) => market.state === 1, // KuriState.ACTIVE
     value: "active",
   },
 ];
@@ -68,7 +68,7 @@ export default function EnhancedProfile() {
     if (!userMarkets.length) return "launching";
 
     const launchingMarkets = userMarkets.filter((m) => m.state === 0);
-    const activeMarkets = userMarkets.filter((m) => m.state === 2);
+    const activeMarkets = userMarkets.filter((m) => m.state === 1);
 
     if (launchingMarkets.length > 0) return "launching";
     if (activeMarkets.length > 0) return "active";

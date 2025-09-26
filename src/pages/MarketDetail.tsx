@@ -92,8 +92,6 @@ const getStatusBadge = (state: KuriState) => {
   switch (state) {
     case KuriState.INLAUNCH:
       return { text: "Launching", className: "bg-blue-100 text-blue-800" };
-    case KuriState.LAUNCHFAILED:
-      return { text: "Launch Failed", className: "bg-red-100 text-red-800" };
     case KuriState.ACTIVE:
       return { text: "Active", className: "bg-green-100 text-green-800" };
     case KuriState.COMPLETED:
@@ -249,7 +247,7 @@ const useTimerValue = (
 
         const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
         setTimerValue(newValue);
-      } else if (type === "raffleTimeLeft" && marketData.state === 2) {
+      } else if (type === "raffleTimeLeft" && marketData.state === 1) {
         // ACTIVE raffle countdown
         const raffleEnd = Number(marketData.nexRaffleTime) * 1000;
         const raffleDiff = raffleEnd - now;
@@ -268,7 +266,7 @@ const useTimerValue = (
           const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
           setTimerValue(newValue);
         }
-      } else if (type === "depositTimeLeft" && marketData.state === 2) {
+      } else if (type === "depositTimeLeft" && marketData.state === 1) {
         // ACTIVE deposit countdown
         const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
         const depositEnd = depositStart + 3 * 24 * 60 * 60 * 1000;
@@ -992,17 +990,6 @@ const TabContent = memo<TabContentProps>(
                     </div>
                   )}
 
-                  {marketData.state === KuriState.LAUNCHFAILED && (
-                    <div className="text-center">
-                      <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
-                      <h3 className="text-xl font-bold text-red-900 mb-1">
-                        Launch Failed
-                      </h3>
-                      <p className="text-red-700">
-                        This circle did not reach the minimum requirements
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Action Button - Desktop Only */}
@@ -1087,8 +1074,6 @@ const convertToGraphQLKuriState = (state: KuriState): GraphQLKuriState => {
   switch (state) {
     case KuriState.INLAUNCH:
       return GraphQLKuriState.UNINITIALIZED;
-    case KuriState.LAUNCHFAILED:
-      return GraphQLKuriState.FAILED;
     case KuriState.ACTIVE:
       return GraphQLKuriState.ACTIVE;
     case KuriState.COMPLETED:
@@ -1109,7 +1094,6 @@ function MarketDetailInner() {
   const [membershipStatus, setMembershipStatus] = useState<number>(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [isRequesting, setIsRequesting] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [hasUserClaimed, setHasUserClaimed] = useState<boolean | null>(null);
 
@@ -1148,6 +1132,7 @@ function MarketDetailInner() {
     initializeKuriSponsored,
     fetchMarketData,
     checkPaymentStatusIfMember,
+    isRequesting,
     checkHasClaimed,
     currentInterval,
   } = useMarketContext();
@@ -1331,7 +1316,7 @@ function MarketDetailInner() {
       if (!userAddress || !marketData) return;
 
       // Only check for ACTIVE markets
-      if (marketData.state === 2) {
+      if (marketData.state === 1) {
         try {
           await checkPaymentStatusIfMember();
         } catch (err) {
@@ -1466,7 +1451,6 @@ function MarketDetailInner() {
       return;
     }
 
-    setIsRequesting(true);
     try {
       //  USE SPONSORED VERSION FOR TESTING
       await requestMembershipSponsored();
@@ -1497,8 +1481,6 @@ function MarketDetailInner() {
           err instanceof Error ? err.message : "Failed to request membership";
         toast.error(errorMsg);
       }
-    } finally {
-      setIsRequesting(false);
     }
   };
 
@@ -1664,7 +1646,7 @@ function MarketDetailInner() {
         }
       }
 
-      // For other states (COMPLETED, LAUNCHFAILED), show manage members
+      // For other states (COMPLETED), show manage members
       return (
         <ManageMembersDialog
           market={{
@@ -2378,17 +2360,6 @@ function MarketDetailInner() {
                   </div>
                 )}
 
-                {marketData.state === KuriState.LAUNCHFAILED && (
-                  <div className="text-center">
-                    <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
-                    <h3 className="text-xl font-bold text-red-900 mb-1">
-                      Launch Failed
-                    </h3>
-                    <p className="text-red-700">
-                      This circle did not reach the minimum requirements
-                    </p>
-                  </div>
-                )}
 
                 {/* Mobile Action Button - Only show if not in winner display mode for current user */}
                 {!(

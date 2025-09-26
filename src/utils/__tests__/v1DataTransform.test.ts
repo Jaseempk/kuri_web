@@ -59,7 +59,7 @@ describe('V1 Data Transformation', () => {
         _kuriData_startTime: '1703880000',
         _kuriData_endTime: '1704484800',
         _kuriData_intervalType: 1,
-        _kuriData_state: 2,
+        _kuriData_state: 1,
         blockNumber: '12345',
         blockTimestamp: '1703880000',
         transactionHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',

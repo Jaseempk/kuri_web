@@ -48,7 +48,7 @@ const marketSections = [
   {
     title: "Active Circles",
     description: "Currently active circles accepting deposits",
-    filter: (market: OptimizedKuriMarket) => market.state === 2, // KuriState.ACTIVE
+    filter: (market: OptimizedKuriMarket) => market.state === 1, // KuriState.ACTIVE
     value: "active",
   },
 ];
@@ -190,7 +190,7 @@ export default function MarketList() {
     if (!markets.length) return "created";
 
     const createdMarkets = markets.filter((m) => m.state === 0);
-    const activeMarkets = markets.filter((m) => m.state === 2);
+    const activeMarkets = markets.filter((m) => m.state === 1);
 
     if (createdMarkets.length > 0) return "created";
     if (activeMarkets.length > 0) return "active";
@@ -254,7 +254,7 @@ export default function MarketList() {
         // Store current stats for comparison (including USDC balances if available)
         const currentStats = {
           tvl: totalTVL > 0 ? totalTVL : BigInt(0),
-          activeCircles: markets.filter((m) => m.state === 2).length,
+          activeCircles: markets.filter((m) => m.state === 1).length,
           totalParticipants: markets.reduce(
             (acc, market) => acc + market.activeParticipants,
             0
@@ -340,7 +340,7 @@ export default function MarketList() {
   // Use actual USDC balances for TVL - this represents real locked value
   const totalValueLocked = totalTVL;
 
-  const activeCircles = marketsForStats.filter((m) => m.state === 2).length;
+  const activeCircles = marketsForStats.filter((m) => m.state === 1).length;
 
   const totalParticipants = marketsForStats.reduce(
     (acc, market) => acc + market.activeParticipants,

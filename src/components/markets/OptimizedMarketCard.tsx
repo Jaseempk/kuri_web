@@ -264,11 +264,9 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
     switch (state) {
       case 0: // INLAUNCH
         return "bg-[hsl(var(--gold))]";
-      case 2: // ACTIVE
+      case 1: // ACTIVE
         return "bg-[hsl(var(--forest))]";
-      case 1: // LAUNCHFAILED
-        return "bg-[hsl(var(--ochre))]";
-      case 3: // COMPLETED
+      case 2: // COMPLETED
         return "bg-[hsl(var(--sand))]";
       default:
         return "bg-[hsl(var(--sand))]";
@@ -280,10 +278,8 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
       case 0:
         return "IN LAUNCH";
       case 1:
-        return "LAUNCH FAILED";
-      case 2:
         return "ACTIVE";
-      case 3:
+      case 2:
         return "COMPLETED";
       default:
         return "UNKNOWN";

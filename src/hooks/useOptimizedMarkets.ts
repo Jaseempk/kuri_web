@@ -127,7 +127,7 @@ export const useUserRelatedMarkets = (
       } else if (userData?.membershipStatus === 4) {
         // APPLIED member
         appliedMarkets.push(market);
-      } else if (market.state === 0 || market.state === 2) {
+      } else if (market.state === 0 || market.state === 1) {
         // INLAUNCH or ACTIVE markets available for joining
         availableMarkets.push(market);
       }
@@ -168,7 +168,7 @@ export const useMarketStatistics = (
     markets.forEach((market) => {
       totalMarkets++;
 
-      if (market.state === 2) {
+      if (market.state === 1) {
         activeMarkets++;
         // Add to TVL for active markets
         totalValueLocked +=

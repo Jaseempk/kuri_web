@@ -27,7 +27,7 @@ export const mockMarket: KuriMarket = {
   activeParticipants: 5,
   kuriAmount: "1000000000", // 1000 USDC
   intervalType: 1, // Monthly
-  state: 2, // Active
+  state: 1, // Active
   createdAt: "1234567890",
   nextDepositTime: "1234567890",
   nextRaffleTime: "1234567890",

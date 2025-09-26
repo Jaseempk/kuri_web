@@ -43,6 +43,7 @@ interface MarketContextType {
   rejectMember: ReturnType<typeof useKuriCore>['rejectMemberSponsored'];
   isAccepting: boolean;
   isRejecting: boolean;
+  isRequesting: boolean;
   
   // Additional MarketDetail actions
   requestMembershipSponsored: ReturnType<typeof useKuriCore>['requestMembershipSponsored'];
@@ -86,6 +87,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     rejectMemberSponsored,
     isAccepting,
     isRejecting,
+    isRequesting,
     requestMembershipSponsored,
     initializeKuriSponsored,
     fetchMarketData,
@@ -165,6 +167,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     rejectMember: rejectMemberSponsored,
     isAccepting,
     isRejecting,
+    isRequesting,
     
     // Additional MarketDetail actions
     requestMembershipSponsored,
@@ -219,6 +222,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     rejectMemberSponsored,
     isAccepting,
     isRejecting,
+    isRequesting,
     requestMembershipSponsored,
     initializeKuriSponsored,
     fetchMarketData,

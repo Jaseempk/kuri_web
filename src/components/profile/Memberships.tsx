@@ -28,8 +28,8 @@ export function Memberships() {
       setMemberMarkets([]);
       setLoadingStatus(true);
 
-      // Filter for only ACTIVE markets (state === 2) before checking membership
-      const activeMarkets = markets.filter((market) => market.state === 2);
+      // Filter for only ACTIVE markets (state === 1) before checking membership
+      const activeMarkets = markets.filter((market) => market.state === 1);
 
       const membershipPromises = activeMarkets.map(async (market) => {
         try {

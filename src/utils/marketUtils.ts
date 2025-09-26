@@ -6,7 +6,7 @@ export const shouldCheckPaymentStatus = (
   userAddress?: string
 ): boolean => {
   // Only for ACTIVE markets
-  if (marketState !== 2) return false;
+  if (marketState !== 1) return false;
 
   // Only if user is connected
   if (!userAddress) return false;
@@ -22,7 +22,7 @@ export const shouldUseKuriCore = (
   market: KuriMarket,
   userAddress?: string
 ): boolean => {
-  const isActive = market.state === 2;
+  const isActive = market.state === 1;
   const isInLaunch = market.state === 0;
   const isCreator = userAddress?.toLowerCase() === market.creator.toLowerCase();
 

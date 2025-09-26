@@ -19,7 +19,6 @@ export const KuriFactoryABI = [
   { inputs: [], name: "KCF__InvalidAdminAddy", type: "error" },
   { inputs: [], name: "KCF__InvalidCurrencyIndex", type: "error" },
   { inputs: [], name: "KCF__InvalidInputs", type: "error" },
-  { inputs: [], name: "KCF__InvalidKeyHash", type: "error" },
   { inputs: [], name: "KCF__InvalidVRFCoordinatorAddress", type: "error" },
   { inputs: [], name: "KCF__SubscriptionIdDontExist", type: "error" },
   {
@@ -39,25 +38,6 @@ export const KuriFactoryABI = [
       },
     ],
     name: "CurrencyRemoved",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "bytes32",
-        name: "newKeyHash",
-        type: "bytes32",
-      },
-      {
-        indexed: false,
-        internalType: "bytes32",
-        name: "oldKeyHash",
-        type: "bytes32",
-      },
-    ],
-    name: "KeyHashUpdated",
     type: "event",
   },
   {
@@ -329,13 +309,6 @@ export const KuriFactoryABI = [
   },
   {
     inputs: [],
-    name: "s_keyHash",
-    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "s_kuriAdmin",
     outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "view",
@@ -346,13 +319,6 @@ export const KuriFactoryABI = [
     name: "s_subscriptionId",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "bytes32", name: "_newKeyHash", type: "bytes32" }],
-    name: "setKeyHash",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
