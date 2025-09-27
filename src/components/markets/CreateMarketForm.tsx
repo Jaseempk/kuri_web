@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
@@ -49,6 +49,7 @@ export const CreateMarketForm = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasInvalidImage, setHasInvalidImage] = useState(false);
   const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
+  const [isProcessingComplete, setIsProcessingComplete] = useState(false);
 
   // const navigate = useNavigate();
   const { smartAddress: address } = useAuthContext();
@@ -212,12 +213,23 @@ export const CreateMarketForm = ({
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
+  // Combined loading state that covers the entire process
+  const isFullyLoading = isCreating || !isProcessingComplete;
+
+  // Reset processing state when component unmounts (form closes)
+  useEffect(() => {
+    return () => {
+      setIsProcessingComplete(true);
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     try {
       setError("");
+      setIsProcessingComplete(false); // Start extended loading state
       const result = await initialiseKuriMarketSponsored(
         parseUnits(formData.totalAmount, 6), // USDC has 6 decimal places - pass total kuri amount
         Number(formData.participantCount),
@@ -270,7 +282,11 @@ export const CreateMarketForm = ({
       // NOTE: Removed onClose() call to fix circular dependency
       // Let parent component (MarketList) handle modal lifecycle
       // Modal will close naturally through user interaction
+      
+      // DON'T set isProcessingComplete to true here!
+      // Keep button in loading state until parent closes this form
     } catch (err) {
+      setIsProcessingComplete(true); // Reset on error
       // Track market creation failure
       trackError(
         "market_creation_failed",
@@ -709,10 +725,10 @@ export const CreateMarketForm = ({
             ) : (
               <Button
                 type="submit"
-                disabled={isCreating}
+                disabled={isFullyLoading}
                 className="flex-1 bg-[#8B6F47] text-white hover:bg-transparent hover:text-[#8B6F47] hover:border-[#8B6F47] border border-transparent transition-all duration-200 rounded-full py-2 font-semibold text-sm sm:text-base md:text-lg shadow-md"
               >
-                {isCreating ? (
+                {isFullyLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white/20 border-t-white" />
                     <span className="text-xs sm:text-sm">Creating...</span>
