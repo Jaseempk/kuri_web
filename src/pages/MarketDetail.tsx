@@ -113,13 +113,6 @@ interface StatsContainerProps {
 const StatsContainer: React.FC<StatsContainerProps> = ({ marketData }) => {
   if (!marketData) return null;
 
-  // console.log("maarketData:", marketData);
-  // console.log("🔄 StatsContainer render - data changed:", {
-  //   activeParticipants: marketData.totalActiveParticipantsCount,
-  //   totalParticipants: marketData.totalParticipantsCount,
-  //   kuriAmount: marketData.kuriAmount.toString(),
-  // });
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -206,10 +199,8 @@ const useTimerValue = (
   shouldShowWinner: boolean = false
 ) => {
   const [timerValue, setTimerValue] = useState<string>("");
-  
 
   useEffect(() => {
-    
     if (!marketData) {
       return;
     }
@@ -230,7 +221,6 @@ const useTimerValue = (
         // INLAUNCH countdown - Use launchPeriod instead of endTime!
         const end = Number((marketData as any).launchPeriod) * 1000;
         const diff = end - now;
-        
 
         if (diff <= 0) {
           const expiredValue = "Launch period ended";
@@ -989,7 +979,6 @@ const TabContent = memo<TabContentProps>(
                       </p>
                     </div>
                   )}
-
                 </div>
 
                 {/* Action Button - Desktop Only */}
@@ -1137,7 +1126,6 @@ function MarketDetailInner() {
     currentInterval,
   } = useMarketContext();
 
-
   // Add render cause tracking
   const renderCount = useRef(0);
   const previousProps = useRef<any>({});
@@ -1165,13 +1153,6 @@ function MarketDetailInner() {
 
     previousProps.current = currentProps;
   });
-
-  // console.log("🔍 RENDER CAUSE:", {
-  //   userAddress,
-  //   marketDataExists: !!marketData,
-  //   timeLeft,
-  //   isLoadingCore,
-  // });
 
   // Stabilize creator address to prevent unnecessary profile refetches
   const creatorAddress = useMemo(
@@ -1454,6 +1435,7 @@ function MarketDetailInner() {
     try {
       //  USE SPONSORED VERSION FOR TESTING
       await requestMembershipSponsored();
+
       toast.success("Membership request sent!");
 
       // Track successful market join
@@ -1469,6 +1451,7 @@ function MarketDetailInner() {
       const status = await getMemberStatus(userAddress as `0x${string}`);
       setMembershipStatus(status ?? 0);
     } catch (err) {
+      console.log("❌ Request failed:", err);
       // Track join failure
       trackError(
         "market_join_failed",
@@ -1572,7 +1555,11 @@ function MarketDetailInner() {
           <button
             onClick={handleInitialize}
             disabled={isInitializing || !canInitialize}
-            className="w-full bg-[#E67A50] text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-70"
+            className={`w-full font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
+              isInitializing
+                ? "bg-orange-500 text-white cursor-not-allowed opacity-75"
+                : "bg-[#E67A50] text-white hover:bg-orange-600 disabled:opacity-70"
+            }`}
           >
             {isInitializing ? (
               <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
@@ -1700,6 +1687,8 @@ function MarketDetailInner() {
             className={`w-full font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
               isMarketFull
                 ? "bg-gray-400 text-white cursor-not-allowed opacity-70"
+                : isRequesting
+                ? "bg-orange-500 text-white cursor-not-allowed opacity-75"
                 : "bg-[#E67A50] text-white hover:bg-orange-600"
             }`}
             title={isMarketFull ? "This circle is already full" : undefined}
@@ -2359,7 +2348,6 @@ function MarketDetailInner() {
                     </p>
                   </div>
                 )}
-
 
                 {/* Mobile Action Button - Only show if not in winner display mode for current user */}
                 {!(
