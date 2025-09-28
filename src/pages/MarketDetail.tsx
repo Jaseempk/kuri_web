@@ -195,7 +195,7 @@ interface TabContentProps {
 // ✨ FIXED: Added shouldShowWinner param to prevent timer interference
 const useTimerValue = (
   marketData: any,
-  type: "timeLeft" | "raffleTimeLeft" | "depositTimeLeft",
+  type: "timeLeft" | "raffleTimeLeft" | "depositTimeLeft" | "depositStartsIn",
   shouldShowWinner: boolean = false
 ) => {
   const [timerValue, setTimerValue] = useState<string>("");
@@ -208,7 +208,7 @@ const useTimerValue = (
     // 🚀 FIX: Don't run timers when winner is being displayed to prevent flickering
     if (
       shouldShowWinner &&
-      (type === "raffleTimeLeft" || type === "depositTimeLeft")
+      (type === "raffleTimeLeft" || type === "depositTimeLeft" || type === "depositStartsIn")
     ) {
       setTimerValue("Winner display active");
       return;
@@ -276,6 +276,25 @@ const useTimerValue = (
           const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
           setTimerValue(newValue);
         }
+      } else if (type === "depositStartsIn" && marketData.state === 1) {
+        // ACTIVE countdown to when deposit window opens
+        const depositStart = Number(marketData.nextIntervalDepositTime) * 1000;
+        const depositStartDiff = depositStart - now;
+
+        if (depositStartDiff <= 0) {
+          setTimerValue("Deposit window open");
+        } else {
+          const days = Math.floor(depositStartDiff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor(
+            (depositStartDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (depositStartDiff % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const seconds = Math.floor((depositStartDiff % (1000 * 60)) / 1000);
+          const newValue = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+          setTimerValue(newValue);
+        }
       }
     };
 
@@ -302,7 +321,7 @@ const useTimerValue = (
 const TimerSection = memo<{
   marketData: any;
   section: "days" | "hours" | "minutes" | "seconds";
-  type: "timeLeft" | "raffleTimeLeft" | "depositTimeLeft";
+  type: "timeLeft" | "raffleTimeLeft" | "depositTimeLeft" | "depositStartsIn";
   shouldShowWinner?: boolean;
 }>(({ marketData, section, type, shouldShowWinner = false }) => {
   const timerValue = useTimerValue(marketData, type, shouldShowWinner);
@@ -358,6 +377,11 @@ const AdaptiveTimerDisplay = memo<{
     "depositTimeLeft",
     shouldShowWinner
   );
+  const depositStartsIn = useTimerValue(
+    marketData,
+    "depositStartsIn",
+    shouldShowWinner
+  );
 
   const activeTimer = (() => {
     const now = Date.now();
@@ -365,9 +389,17 @@ const AdaptiveTimerDisplay = memo<{
     const depositEnd = depositStart + 3 * 24 * 60 * 60 * 1000; // +3 days
 
     // Show deposit timer if we're in the 3-day deposit period
-    return now >= depositStart && now <= depositEnd
-      ? depositTimeLeft
-      : raffleTimeLeft;
+    if (now >= depositStart && now <= depositEnd) {
+      return depositTimeLeft;
+    }
+    // Show deposit starts timer if we're before deposit window
+    else if (now < depositStart) {
+      return depositStartsIn;
+    }
+    // Show raffle timer otherwise (after deposit window, before next cycle)
+    else {
+      return raffleTimeLeft;
+    }
   })();
 
   return (
@@ -426,6 +458,11 @@ const AdaptiveTimerMobileDisplay = memo<{
     "depositTimeLeft",
     shouldShowWinner
   );
+  const depositStartsIn = useTimerValue(
+    marketData,
+    "depositStartsIn",
+    shouldShowWinner
+  );
 
   const activeTimer = (() => {
     const now = Date.now();
@@ -433,9 +470,17 @@ const AdaptiveTimerMobileDisplay = memo<{
     const depositEnd = depositStart + 3 * 24 * 60 * 60 * 1000; // +3 days
 
     // Show deposit timer if we're in the 3-day deposit period
-    return now >= depositStart && now <= depositEnd
-      ? depositTimeLeft
-      : raffleTimeLeft;
+    if (now >= depositStart && now <= depositEnd) {
+      return depositTimeLeft;
+    }
+    // Show deposit starts timer if we're before deposit window
+    else if (now < depositStart) {
+      return depositStartsIn;
+    }
+    // Show raffle timer otherwise (after deposit window, before next cycle)
+    else {
+      return raffleTimeLeft;
+    }
   })();
 
   return (
