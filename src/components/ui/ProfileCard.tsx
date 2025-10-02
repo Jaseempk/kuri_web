@@ -20,7 +20,7 @@ export function ProfileCard({
   onClose,
 }: ProfileCardProps) {
   const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    return `${address.slice(0, 10)}...${address.slice(-8)}`;
   };
 
   const copyAddress = async () => {
@@ -42,14 +42,14 @@ export function ProfileCard({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[90vw] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
+          <DialogTitle className="flex items-center gap-2 sm:gap-3">
             <UserAvatar profile={profile} address={address} size="lg" />
-            <div className="flex flex-col items-start">
-              <span className="text-lg font-semibold">{displayName}</span>
+            <div className="flex flex-col items-start min-w-0 flex-1">
+              <span className="text-base sm:text-lg font-semibold truncate max-w-full">{displayName}</span>
               {profile?.username && profile?.display_name && (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-full">
                   @{profile.username}
                 </span>
               )}
@@ -57,19 +57,22 @@ export function ProfileCard({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 pt-4">
+        <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
           {/* Address Section */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">
               Wallet Address
             </label>
             <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-              <code className="text-sm font-mono flex-1">{address}</code>
+              <code className="text-xs sm:text-sm font-mono flex-1 min-w-0 block">
+                <span className="hidden sm:inline">{address}</span>
+                <span className="sm:hidden">{formatAddress(address)}</span>
+              </code>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={copyAddress}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 flex-shrink-0"
               >
                 <Copy className="h-3 w-3" />
               </Button>
@@ -95,10 +98,10 @@ export function ProfileCard({
             <Button
               variant="outline"
               size="sm"
-              className="w-full"
+              className="w-full text-xs sm:text-sm !whitespace-normal min-h-[36px]"
               onClick={handleViewInsights}
             >
-              <TrendingUp className="h-4 w-4 mr-2" />
+              <TrendingUp className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
               View Circle Insights
             </Button>
           </div>
