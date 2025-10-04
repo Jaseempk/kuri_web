@@ -243,6 +243,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
     // Show deposit button if user hasn't paid
     return (
       <button
+        type="button"
         onClick={handleDeposit}
         disabled={isLoading || isApproving}
         className="bg-[hsl(var(--terracotta))]/80 backdrop-blur-sm text-white border border-[hsl(var(--terracotta))]/30 hover:bg-[hsl(var(--terracotta))] transition-all duration-300 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
@@ -312,7 +313,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
               {renderActionButton()}
             </div>
           ) : (
-            <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm cursor-not-allowed">
+            <button type="button" className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm cursor-not-allowed">
               <span className="hidden sm:inline">
                 Next deposit window opens in{" "}
                 {daysUntilDeposit > 0 ? `${daysUntilDeposit} days` : "soon"}

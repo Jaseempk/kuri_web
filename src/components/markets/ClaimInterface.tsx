@@ -136,6 +136,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
         <div className="mt-auto">
           {canClaim && isCurrentUserWinner ? (
             <button
+              type="button"
               onClick={handleClaim}
               disabled={isLoading}
               className="bg-[hsl(var(--forest))]/80 backdrop-blur-sm text-white border border-[hsl(var(--forest))]/30 hover:bg-[hsl(var(--forest))] transition-all duration-300 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm shadow-lg hover:shadow-xl"
@@ -153,7 +154,7 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
               )}
             </button>
           ) : (
-            <button className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm cursor-not-allowed">
+            <button type="button" className="bg-white/20 backdrop-blur-sm text-[hsl(var(--muted-foreground))] border border-white/30 rounded-full px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm cursor-not-allowed">
               {!canClaim ? (
                 <>
                   <span className="hidden sm:inline">Circle not active</span>

@@ -1571,6 +1571,7 @@ function MarketDetailInner() {
     if (!userAddress) {
       return (
         <button
+          type="button"
           disabled
           className="w-full bg-gray-400 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-70 flex items-center justify-center"
         >
@@ -1598,6 +1599,7 @@ function MarketDetailInner() {
       if (canInitialize) {
         return (
           <button
+            type="button"
             onClick={handleInitialize}
             disabled={isInitializing || !canInitialize}
             className={`w-full font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
@@ -1667,6 +1669,7 @@ function MarketDetailInner() {
           // Creator is not a member - show non-clickable status
           return (
             <button
+              type="button"
               disabled
               className="w-full bg-blue-600 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
             >
@@ -1727,6 +1730,7 @@ function MarketDetailInner() {
       case 0: // NONE
         return (
           <button
+            type="button"
             onClick={handleJoinRequest}
             disabled={isRequesting || isMarketFull}
             className={`w-full font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md transition-colors duration-300 flex items-center justify-center ${
@@ -1797,6 +1801,7 @@ function MarketDetailInner() {
         }
         return (
           <button
+            type="button"
             disabled
             className="w-full bg-green-600 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
@@ -1809,6 +1814,7 @@ function MarketDetailInner() {
       case 2: // REJECTED
         return (
           <button
+            type="button"
             disabled
             className="w-full bg-red-500 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
@@ -1821,6 +1827,7 @@ function MarketDetailInner() {
       case 3: // FLAGGED
         return (
           <button
+            type="button"
             disabled
             className="w-full bg-red-500 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
@@ -1833,6 +1840,7 @@ function MarketDetailInner() {
       case 4: // APPLIED
         return (
           <button
+            type="button"
             disabled
             className="w-full bg-yellow-500 text-white font-semibold sm:font-bold py-2 sm:py-3 px-4 sm:px-8 rounded-lg sm:rounded-xl lg:rounded-full text-sm sm:text-base lg:text-lg shadow-md cursor-not-allowed opacity-90 flex items-center justify-center"
           >
