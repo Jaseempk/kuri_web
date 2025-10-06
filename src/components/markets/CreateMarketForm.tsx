@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useKuriFactory } from "../../hooks/contracts/useKuriFactory";
 import { Button } from "../ui/button";
 import { isUserRejection } from "../../utils/errors";
@@ -49,7 +49,7 @@ export const CreateMarketForm = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasInvalidImage, setHasInvalidImage] = useState(false);
   const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
-  const [isProcessingComplete, setIsProcessingComplete] = useState(false);
+  const [isProcessingComplete, setIsProcessingComplete] = useState(true); // Start as true (not processing)
 
   // const navigate = useNavigate();
   const { smartAddress: address } = useAuthContext();
@@ -215,13 +215,6 @@ export const CreateMarketForm = ({
 
   // Combined loading state that covers the entire process
   const isFullyLoading = isCreating || !isProcessingComplete;
-
-  // Reset processing state when component unmounts (form closes)
-  useEffect(() => {
-    return () => {
-      setIsProcessingComplete(true);
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
