@@ -82,17 +82,16 @@ export const useApiAuth = () => {
 
           // Check if smart wallet is deployed, deploy if needed
           const isDeployed = await sponsoredClient.account.isAccountDeployed();
+
           if (!isDeployed) {
             console.log("Smart wallet not deployed, deploying...");
-            // Deploy the smart wallet by sending a minimal transaction to self
             await sponsoredClient.sendUserOperation({
               uo: {
                 target: targetAddress as `0x${string}`,
-                data: "0x", // empty data
-                value: 0n, // no value
+                data: "0x",
+                value: 0n,
               },
             });
-            console.log("Smart wallet deployed successfully");
           }
 
           // Try signing with smart wallet
@@ -101,6 +100,10 @@ export const useApiAuth = () => {
             message,
           });
         } catch (smartWalletError) {
+          console.log(
+            "Smart wallet signing failed, falling back to embedded wallet:",
+            smartWalletError
+          );
           // Fallback: Sign with embedded wallet for smart wallet
           signature = await viemClient.signMessage({
             message: message,

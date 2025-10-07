@@ -13,13 +13,15 @@ export interface GasSponsorshipParams {
 }
 
 export interface SponsoredClient {
-  account: { 
+  account: {
     address: `0x${string}`;
     isAccountDeployed: () => Promise<boolean>;
   };
   sendUserOperation: (params: any) => Promise<any>;
   waitForUserOperationTransaction: (opResult: any) => Promise<any>;
   signMessage: (params: { message: string }) => Promise<string>;
+  buildUserOperation: (params: any) => Promise<any>;
+  estimateUserOperationGas: (userOp: any, entryPoint?: any, stateOverride?: any) => Promise<any>;
 }
 
 /**

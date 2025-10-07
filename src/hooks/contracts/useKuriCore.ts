@@ -1,17 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { readContract, writeContract, simulateContract } from "@wagmi/core";
 
-// Debounce utility for frequent blockchain calls
-const debounce = <T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): T => {
-  let timeout: NodeJS.Timeout;
-  return ((...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), wait);
-  }) as T;
-};
 import { KuriCoreABI } from "../../contracts/abis/KuriCoreV1";
 import { ERC20ABI } from "../../contracts/abis/ERC20";
 import { handleContractError } from "../../utils/errors";
@@ -74,6 +63,17 @@ interface KuriData {
   state: KuriState;
 }
 
+// Debounce utility for frequent blockchain calls
+const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): T => {
+  let timeout: NodeJS.Timeout;
+  return ((...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  }) as T;
+};
 export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   const [isRequesting, setIsRequesting] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -376,7 +376,6 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
         chainId: chainId as 84532 | 8453, // Ensure we read from the correct network
       });
 
-
       const marketTuple = data as KuriDataTuple;
       const processedData = {
         creator: marketTuple[0],
@@ -402,7 +401,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     }
   }, [kuriAddress, chainId]);
 
-  // 🔒 MEMOIZE marketData to prevent object recreation causing infinite re-renders
+  //  MEMOIZE marketData to prevent object recreation causing infinite re-renders
   const memoizedMarketData = useMemo(() => {
     if (!marketData) return null;
 
@@ -449,7 +448,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
   useEffect(() => {
     fetchMarketData();
     fetchTokenAddress();
-  }, [kuriAddress, chainId]); // 🔥 FIX: Use direct dependencies instead of callback references
+  }, [kuriAddress, chainId]);
 
   // Initialize market
   const initializeKuri = useCallback(async () => {
@@ -570,7 +569,7 @@ export const useKuriCore = (kuriAddress?: `0x${string}`) => {
     refreshUserData,
   ]);
 
-  // 🚀 NEW: Gas-sponsored deposit using Alchemy Account Kit (MOST COMPLEX)
+  //  NEW: Gas-sponsored deposit using Alchemy Account Kit (MOST COMPLEX)
   const depositSponsored = useCallback(async () => {
     if (!kuriAddress || !userAddress || !marketData || !tokenAddress)
       throw new Error("Invalid parameters");
