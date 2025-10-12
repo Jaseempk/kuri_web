@@ -81,48 +81,56 @@ const testimonials = [
 ];
 
 // Features data for Why It's Special section
-const FEATURES_DATA = [
-  {
-    id: 1,
-    image: "/images/zeroInterest.jpg",
-    alt: "Zero interest",
-    title: "Zero-interest,\nZero-shame",
-    description:
-      "No predatory fees or interest rates. Just people helping people achieve financial goals together.",
-    bgColor: "bg-[hsl(var(--sand))]",
-    borderColor: "border-[hsl(var(--gold))]",
-  },
-  {
-    id: 2,
-    image: "/images/trustvibe.jpg",
-    alt: "Trust based",
-    title: "Trust-based\nwith optional privacy",
-    description:
-      "Built on community trust with flexible privacy options to suit your comfort level.",
-    bgColor: "bg-[hsl(var(--sand))]",
-    borderColor: "border-[hsl(var(--gold))]",
-  },
-  {
-    id: 3,
-    image: "/images/communityvibe.jpg",
-    alt: "Community owned",
-    title: "Community-\nowned vibe",
-    description:
-      "Created by and for communities, with decisions made collectively by members.",
-    bgColor: "bg-[hsl(var(--sand))]",
-    borderColor: "border-[hsl(var(--gold))]",
-  },
-  {
-    id: 4,
-    image: "/images/fairplay.jpg",
-    alt: "Fair raffles",
-    title: "Fair, verifiable\nraffles",
-    description:
-      "Transparent selection process ensures everyone gets their turn, verified on blockchains trustless.",
-    bgColor: "bg-[hsl(var(--terracotta))]",
-    borderColor: "border-[hsl(var(--terracotta))]",
-  },
-];
+const getFeaturesData = (countryCode?: string) => {
+  const isAfricanCountry =
+    countryCode &&
+    ["NG", "KE", "EG", "ZA", "GH", "ET", "SN", "MY"].includes(countryCode);
+
+  return [
+    {
+      id: 1,
+      image: "/images/zeroInterest.jpg",
+      alt: "Zero interest",
+      title: "Zero-interest,\nZero-shame",
+      description:
+        "No predatory fees or interest rates. Just people helping people achieve financial goals together.",
+      bgColor: "bg-[hsl(var(--sand))]",
+      borderColor: "border-[hsl(var(--gold))]",
+    },
+    {
+      id: 2,
+      image: isAfricanCountry ? "/images/ntrust.jpg" : "/images/trustvibe.jpg",
+      alt: "Trust based",
+      title: "Trust-based\nwith optional privacy",
+      description:
+        "Built on community trust with flexible privacy options to suit your comfort level.",
+      bgColor: "bg-[hsl(var(--sand))]",
+      borderColor: "border-[hsl(var(--gold))]",
+    },
+    {
+      id: 3,
+      image: isAfricanCountry
+        ? "/images/ncommunity.jpg"
+        : "/images/communityvibe.jpg",
+      alt: "Community owned",
+      title: "Community-\nowned vibe",
+      description:
+        "Created by and for communities, with decisions made collectively by members.",
+      bgColor: "bg-[hsl(var(--sand))]",
+      borderColor: "border-[hsl(var(--gold))]",
+    },
+    {
+      id: 4,
+      image: "/images/fairplay.jpg",
+      alt: "Fair raffles",
+      title: "Fair, verifiable\nraffles",
+      description:
+        "Transparent selection process ensures everyone gets their turn, verified on blockchains trustless.",
+      bgColor: "bg-[hsl(var(--terracotta))]",
+      borderColor: "border-[hsl(var(--terracotta))]",
+    },
+  ];
+};
 
 function App() {
   const navigate = useNavigate();
@@ -713,11 +721,11 @@ function App() {
               {/* Desktop Grid Layout (md and up) */}
               <div className="hidden md:grid md:grid-cols-3 gap-8">
                 {inLaunchMarkets.map((market, index) => (
-                  <MarketProvider key={market.address} marketAddress={market.address}>
-                    <MarketCard
-                      market={market}
-                      index={index}
-                    />
+                  <MarketProvider
+                    key={market.address}
+                    marketAddress={market.address}
+                  >
+                    <MarketCard market={market} index={index} />
                   </MarketProvider>
                 ))}
               </div>
@@ -838,7 +846,7 @@ function App() {
 
           {/* Desktop Grid Layout (md and up) */}
           <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-10 max-w-6xl mx-auto">
-            {FEATURES_DATA.map((feature, index) => (
+            {getFeaturesData(location?.country).map((feature, index) => (
               <motion.div
                 key={feature.id}
                 className="flex flex-col items-center text-center"
@@ -895,11 +903,14 @@ function App() {
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {/* Create circular carousel with duplicates: [last, ...features, first] */}
-              {[
-                FEATURES_DATA[3], // Duplicate of last slide at beginning
-                ...FEATURES_DATA, // All original slides
-                FEATURES_DATA[0], // Duplicate of first slide at end
-              ].map((feature, slideIndex) => {
+              {(() => {
+                const featuresData = getFeaturesData(location?.country);
+                return [
+                  featuresData[3], // Duplicate of last slide at beginning
+                  ...featuresData, // All original slides
+                  featuresData[0], // Duplicate of first slide at end
+                ];
+              })().map((feature, slideIndex) => {
                 // Determine if this is a duplicate slide for animation purposes
                 const isDuplicate = slideIndex === 0 || slideIndex === 5;
 
@@ -944,7 +955,7 @@ function App() {
 
             {/* Carousel Indicators */}
             <div className="flex justify-center mt-6 space-x-2">
-              {FEATURES_DATA.map((_, index) => (
+              {getFeaturesData(location?.country).map((_, index) => (
                 <button
                   key={index}
                   onClick={() => scrollToFeature(index)}
@@ -1014,7 +1025,14 @@ function App() {
                 </div>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?auto=format&fit=crop&w=800&q=80"
+                src={
+                  location &&
+                  ["NG", "KE", "EG", "ZA", "GH", "ET", "SN", "MY"].includes(
+                    location.country
+                  )
+                    ? "/images/Nhandshake.jpg"
+                    : "https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?auto=format&fit=crop&w=800&q=80"
+                }
                 alt="Traditional savings group"
                 className="absolute inset-0 w-3/4 h-3/4 object-cover rounded-full m-auto shadow-xl"
                 loading="lazy"
