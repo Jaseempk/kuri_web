@@ -493,7 +493,7 @@ export default function MarketList() {
 
             {/* Right Column - Market Statistics Sidebar (Desktop Only) */}
             <div className="hidden lg:block lg:col-span-1">
-              <div className="bg-white/40 backdrop-blur-[10px] p-6 rounded-3xl shadow-lg border border-white/20 sticky top-28">
+              <div className="bg-[#fdfaf7] p-6 rounded-3xl shadow-lg border border-white/20 sticky top-28">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6">
                   Market Statistics
                 </h3>
