@@ -502,9 +502,7 @@ export default function MarketList() {
                   {/* Individual stat cards with glassmorphic design */}
                   <div className="flex justify-between items-center p-4 bg-white/50 rounded-xl">
                     <div>
-                      <p className="text-sm text-gray-500">
-                        Total Value Locked
-                      </p>
+                      <p className="text-sm text-gray-500">Total Value Saved</p>
                       <p className="text-2xl font-bold text-gray-800">
                         $
                         {Number(
