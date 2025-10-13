@@ -67,6 +67,9 @@ declare module "@getpara/react-sdk" {
     PROD = "prod"
   }
 
+  // OAuth method types
+  export type TOAuthMethod = 'GOOGLE' | 'APPLE' | 'FACEBOOK' | 'DISCORD' | 'TWITTER' | 'TELEGRAM' | 'FARCASTER';
+
   // Provider props
   export interface ParaProviderProps {
     children: ReactNode;
@@ -74,9 +77,21 @@ declare module "@getpara/react-sdk" {
       apiKey: string;
       env?: Environment;
     };
-    config?: {
-      appName?: string;
-      requireEmailVerification?: boolean;
+    config: {
+      appName: string;
+      disableAutoSessionKeepAlive?: boolean;
+      disableEmbeddedModal?: boolean;
+      rpcUrl?: string;
+    };
+    paraModalConfig?: {
+      twoFactorAuthEnabled?: boolean;
+      recoverySecretStepEnabled?: boolean;
+      oAuthMethods?: TOAuthMethod[];
+      disableEmailLogin?: boolean;
+      disablePhoneLogin?: boolean;
+      logo?: string;
+      hideWallets?: boolean;
+      isGuestModeEnabled?: boolean;
     };
   }
 

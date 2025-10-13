@@ -85,7 +85,11 @@ export const ParaWeb3Provider = ({
         }}
         config={{
           appName: "Kuri Finance",
-          requireEmailVerification: true, // Always require email verification for Kuri
+        }}
+        paraModalConfig={{
+          oAuthMethods: [], // Disable all OAuth methods (Google, Apple, Facebook, etc.)
+          disableEmailLogin: false, // Keep email enabled
+          disablePhoneLogin: false, // Keep phone enabled
         }}
       >
         <WagmiProvider config={config}>{children}</WagmiProvider>
