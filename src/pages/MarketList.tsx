@@ -401,7 +401,7 @@ export default function MarketList() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#fdfaf7]">
+      <div className="min-h-screen bg-[#F9F6F1]">
         {/* Main Grid Container */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -557,7 +557,7 @@ export default function MarketList() {
         </main>
 
         {/* Search/Filter Bar - Sticky Full Width */}
-        <div className="sticky top-0 z-20 bg-[#fdfaf7]/95 backdrop-blur-sm border-b border-[#E8DED1]/50 py-6">
+        <div className="sticky top-0 z-20 bg-[#F9F6F1]/95 backdrop-blur-sm border-b border-[#E8DED1]/50 py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <div className="relative flex-1 lg:flex-none lg:w-1/2">
