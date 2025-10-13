@@ -439,7 +439,7 @@ export default function MarketList() {
                               e.preventDefault();
                             }
                           }}
-                          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                          className="inline-flex items-center justify-center px-5 py-3.5 border border-transparent text-base font-semibold rounded-full text-white bg-[hsl(var(--terracotta))] hover:bg-white hover:text-[hsl(var(--terracotta))] hover:border-[hsl(var(--terracotta))] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
                         >
                           <Plus className="mr-2 h-5 w-5" />
                           Start a New Circle
