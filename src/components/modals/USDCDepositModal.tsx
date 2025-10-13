@@ -1,4 +1,4 @@
-import { Copy, Check, ExternalLink, Info } from "lucide-react";
+import { Copy, Check, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useClipboard } from "../../hooks/useClipboard";
@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import {
@@ -32,9 +31,7 @@ interface USDCDepositModalProps {
 }
 
 const networkConfig = getCurrentNetworkConfig();
-const USDC_CONTRACT_ADDRESS = getContractAddress(getDefaultChainId(), "USDC");
 const NETWORK_NAME = networkConfig.name;
-const BLOCK_EXPLORER_URL = `${networkConfig.blockExplorer}/address/${USDC_CONTRACT_ADDRESS}`;
 
 // UPI Configuration from environment
 const UPI_ID = import.meta.env.VITE_UPI_ID || "kuriapp@okaxis";
@@ -48,21 +45,22 @@ export const USDCDepositModal = ({
   smartWalletAddress,
 }: USDCDepositModalProps) => {
   const { copyToClipboard, isCopied } = useClipboard();
-  const { location, isLoading: isLoadingLocation } = useGeolocation();
+  const { location } = useGeolocation();
   const { profile } = useAuthContext();
 
   // State for tabs and UPI
-  const [activeTab, setActiveTab] = useState<DepositTab>("crypto");
+  const [activeTab, setActiveTab] = useState<DepositTab>("upi");
   const [upiAmount, setUpiAmount] = useState<string>("");
   const [isProcessingUPI, setIsProcessingUPI] = useState(false);
 
-  // Check if user is in India
+  // Check if user is in India or Malaysia
   const isIndianUser = location?.country === "IN" || location?.country === "MY";
 
-  // Reset to crypto tab when modal opens if not in India
+  // Set default tab based on user location
   useEffect(() => {
-    if (isOpen && !isIndianUser) {
-      setActiveTab("crypto");
+    if (isOpen) {
+      // Default to UPI for IN/MY users, crypto for others
+      setActiveTab(isIndianUser ? "upi" : "crypto");
     }
   }, [isOpen, isIndianUser]);
 
@@ -72,15 +70,6 @@ export const USDCDepositModal = ({
       toast.success("Wallet address copied to clipboard!");
     } catch (error) {
       toast.error("Failed to copy address");
-    }
-  };
-
-  const handleCopyUSDCAddress = async () => {
-    try {
-      await copyToClipboard(USDC_CONTRACT_ADDRESS);
-      toast.success("USDC contract address copied!");
-    } catch (error) {
-      toast.error("Failed to copy USDC address");
     }
   };
 
@@ -158,19 +147,6 @@ export const USDCDepositModal = ({
         {isIndianUser && (
           <div className="flex border-b border-[#E8DED1] px-4">
             <button
-              onClick={() => setActiveTab("crypto")}
-              className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-                activeTab === "crypto"
-                  ? "text-[#8D6E63]"
-                  : "text-[#4E342E]/50 hover:text-[#4E342E]/75"
-              }`}
-            >
-              Crypto Deposit
-              {activeTab === "crypto" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#8D6E63]" />
-              )}
-            </button>
-            <button
               onClick={() => setActiveTab("upi")}
               className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
                 activeTab === "upi"
@@ -180,6 +156,19 @@ export const USDCDepositModal = ({
             >
               UPI Payment
               {activeTab === "upi" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#8D6E63]" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("crypto")}
+              className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
+                activeTab === "crypto"
+                  ? "text-[#8D6E63]"
+                  : "text-[#4E342E]/50 hover:text-[#4E342E]/75"
+              }`}
+            >
+              USD Deposit
+              {activeTab === "crypto" && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#8D6E63]" />
               )}
             </button>
@@ -293,7 +282,7 @@ export const USDCDepositModal = ({
                     <ul className="text-xs text-amber-700 list-disc list-inside space-y-0.5">
                       <li>Click "Pay with UPI" to open your UPI app</li>
                       <li>Complete payment in your UPI app</li>
-                      <li>USDC will be credited within 24 hours</li>
+                      <li>Wallet Balance will be updated within 24 hours</li>
                     </ul>
                   </div>
                 </div>
