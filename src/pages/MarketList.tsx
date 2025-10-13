@@ -560,7 +560,7 @@ export default function MarketList() {
         <div className="sticky top-0 z-20 bg-[#fdfaf7]/95 backdrop-blur-sm border-b border-[#E8DED1]/50 py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
-              <div className="relative flex-1">
+              <div className="relative flex-1 lg:flex-none lg:w-1/2">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <MarketSearch
                   value={searchQuery}
