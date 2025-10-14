@@ -9,6 +9,7 @@ import { hasSufficientBalance, calculateRequiredDepositAmount, calculatePerInter
 import { InsufficientBalanceModal } from "../modals/InsufficientBalanceModal";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { trackDeposit, trackError } from "../../utils/analytics";
+import { CurrencyDisplay } from "../ui/CurrencyDisplay";
 
 interface KuriData {
   creator: `0x${string}`;
@@ -277,20 +278,20 @@ export const DepositForm: React.FC<DepositFormProps> = ({
               <div className="flex justify-between">
                 <span>Per-Interval Amount:</span>
                 <span>
-                  ${(Number(perIntervalAmount) / 1_000_000).toFixed(2)}
+                  <CurrencyDisplay amount={perIntervalAmount} decimals={2} />
                 </span>
               </div>
               <div className="flex justify-between text-orange-600">
                 <span>Platform Fee (1%):</span>
                 <span>
-                  ${(Number(perIntervalAmount) / 100_000_000).toFixed(2)}
+                  <CurrencyDisplay amount={perIntervalAmount / BigInt(100)} decimals={2} />
                 </span>
               </div>
               <hr className="border-gray-300" />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
                 <span>
-                  ${(Number(requiredAmount) / 1_000_000).toFixed(2)}
+                  <CurrencyDisplay amount={requiredAmount} decimals={2} />
                 </span>
               </div>
             </div>
@@ -301,7 +302,7 @@ export const DepositForm: React.FC<DepositFormProps> = ({
               Required Amount
             </h3>
             <p className="text-2xl sm:text-3xl font-bold text-[hsl(var(--foreground))]">
-              ${(Number(perIntervalAmount) / 1_000_000).toFixed(2)}
+              <CurrencyDisplay amount={perIntervalAmount} decimals={2} />
             </p>
           </div>
         )}

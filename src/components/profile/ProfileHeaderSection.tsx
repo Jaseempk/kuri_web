@@ -6,6 +6,8 @@ import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
 import { USDCWithdrawModal } from "../modals/USDCWithdrawModal";
+import { CurrencyDisplay } from "../ui/CurrencyDisplay";
+import { CurrencyToggle, CurrencyRateDisplay } from "../ui/CurrencyToggle";
 
 interface ProfileHeaderSectionProps {
   profile: KuriUserProfile;
@@ -40,17 +42,7 @@ export function ProfileHeaderSection({
     return `${month.toLowerCase()} ${year.slice(-2)}`;
   };
 
-  const formatUSDCDisplay = (amount: bigint): string => {
-    const formatted = formatUnits(amount, 6);
-    const num = parseFloat(formatted);
-
-    if (num % 1 === 0) {
-      return num.toFixed(2);
-    }
-
-    const decimalPlaces = formatted.split(".")[1]?.length || 0;
-    return num.toFixed(Math.max(2, Math.min(decimalPlaces, 6)));
-  };
+  // We'll use CurrencyDisplay component instead of custom formatting
 
   const handleDeposit = () => {
     setShowDepositModal(true);
@@ -135,9 +127,10 @@ export function ProfileHeaderSection({
                 </span>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  USDC Balance
-                </p>
+                <div className="flex items-center gap-3 mb-1">
+                  <p className="text-sm text-muted-foreground">USDC Balance</p>
+                  <CurrencyToggle compact showRefresh />
+                </div>
                 {isLoadingBalance ? (
                   <div className="animate-pulse">
                     <div className="h-6 bg-gray-200 rounded w-24"></div>
@@ -147,11 +140,9 @@ export function ProfileHeaderSection({
                 ) : (
                   <div>
                     <p className="text-2xl font-bold text-foreground">
-                      {formatUSDCDisplay(balance)}{" "}
-                      <span className="text-base font-medium text-muted-foreground">
-                        USDC
-                      </span>
+                      <CurrencyDisplay amount={balance} decimals={2} />
                     </p>
+                    <CurrencyRateDisplay className="text-sm text-muted-foreground mt-1" />
                   </div>
                 )}
               </div>

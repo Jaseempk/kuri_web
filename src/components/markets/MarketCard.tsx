@@ -19,6 +19,8 @@ import { useProfileRequired } from "../../hooks/useProfileRequired";
 import { ShareButton } from "../ui/ShareButton";
 import { shouldUseKuriCore } from "../../utils/marketUtils";
 import { apiClient } from "../../lib/apiClient";
+import { useCurrency } from "../../contexts/CurrencyContext";
+import { CurrencyDisplay } from "../ui/CurrencyDisplay";
 
 interface MarketCardProps {
   market: KuriMarket;
@@ -413,20 +415,31 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   Contribution
                 </p>
                 <p className="text-sm xs:text-base font-medium">
-                  $
-                  {(
-                    Number(market.kuriAmount) /
-                    1_000_000 /
-                    (marketData?.totalParticipantsCount ??
-                      market.totalParticipants)
-                  ).toFixed(2)}{" "}
-                  {getIntervalTypeText(market.intervalType)}
+                  {(() => {
+                    const participantCount = marketData?.totalParticipantsCount ?? market.totalParticipants;
+                    // Prevent division by zero for new markets
+                    if (participantCount === 0) {
+                      return <span>--</span>;
+                    }
+                    return (
+                      <>
+                        <CurrencyDisplay
+                          amount={BigInt(market.kuriAmount) / BigInt(participantCount)}
+                          decimals={2}
+                        />{" "}
+                        {getIntervalTypeText(market.intervalType)}
+                      </>
+                    );
+                  })()}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Win Amount</p>
                 <p className="text-sm xs:text-base font-medium text-[hsl(var(--forest))]">
-                  ${Math.floor(Number(market.kuriAmount) / 1_000_000)}
+                  <CurrencyDisplay
+                    amount={BigInt(market.kuriAmount)}
+                    decimals={0}
+                  />
                 </p>
               </div>
               <div>

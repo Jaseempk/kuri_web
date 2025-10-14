@@ -10,6 +10,7 @@ import { ParaErrorBoundary } from "./components/providers/ParaErrorBoundary";
 import { ToastProvider } from "./components/providers/ToastProvider";
 import { AuthProvider } from "./contexts/AuthContext";
 import { FarcasterProvider } from "./contexts/FarcasterContext";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { FarcasterAwareLayout } from "./components/layouts/FarcasterAwareLayout";
 import { PostCreationModalProvider } from "./components/modals/PostCreationModalProvider";
 import { ApolloProvider } from "./providers/ApolloProvider";
@@ -68,19 +69,21 @@ function App() {
       <ParaWeb3Provider>
       <ApolloProvider>
         <AuthProvider>
-          <FarcasterProvider>
-            <ToastProvider />
-            <Analytics debug={false} />
-            <NetworkStatus />
-            <Router future={{ v7_relativeSplatPath: true }}>
-              <PostCreationModalProvider>
-                <NotificationHandler />
-                <RoutesWithAnalytics />
-                <InstallPrompt />
-                <FloatingNotificationPrompt />
-              </PostCreationModalProvider>
-            </Router>
-          </FarcasterProvider>
+          <CurrencyProvider>
+            <FarcasterProvider>
+              <ToastProvider />
+              <Analytics debug={false} />
+              <NetworkStatus />
+              <Router future={{ v7_relativeSplatPath: true }}>
+                <PostCreationModalProvider>
+                  <NotificationHandler />
+                  <RoutesWithAnalytics />
+                  <InstallPrompt />
+                  <FloatingNotificationPrompt />
+                </PostCreationModalProvider>
+              </Router>
+            </FarcasterProvider>
+          </CurrencyProvider>
         </AuthProvider>
       </ApolloProvider>
     </ParaWeb3Provider>

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { formatUnits } from "viem";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
 import { USDCWithdrawModal } from "../modals/USDCWithdrawModal";
+import { CurrencyDisplay } from "../ui/CurrencyDisplay";
+import { CurrencyToggle, CurrencyRateDisplay } from "../ui/CurrencyToggle";
 
 export function USDCBalanceSection() {
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -13,20 +14,7 @@ export function USDCBalanceSection() {
     address && address.startsWith("0x") ? (address as `0x${string}`) : undefined
   );
 
-  // Format USDC balance with at least 2 decimal places
-  const formatUSDCDisplay = (amount: bigint): string => {
-    const formatted = formatUnits(amount, 6);
-    const num = parseFloat(formatted);
-
-    // If it's a whole number, show .00
-    if (num % 1 === 0) {
-      return num.toFixed(2);
-    }
-
-    // If it has decimals, show at least 2 decimal places
-    const decimalPlaces = formatted.split(".")[1]?.length || 0;
-    return num.toFixed(Math.max(2, Math.min(decimalPlaces, 6)));
-  };
+  // We'll use CurrencyDisplay component instead of custom formatting
 
   const handleDeposit = () => {
     setShowDepositModal(true);
@@ -46,7 +34,10 @@ export function USDCBalanceSection() {
 
   return (
     <div className="mt-6 bg-white rounded-2xl shadow-lg p-6 mx-4 md:hidden">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">USDC Balance</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-gray-800">USDC Balance</h2>
+        <CurrencyToggle compact showRefresh />
+      </div>
 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
@@ -69,14 +60,9 @@ export function USDCBalanceSection() {
             ) : (
               <div>
                 <p className="text-2xl font-bold text-gray-800">
-                  {formatUSDCDisplay(balance)}{" "}
-                  <span className="text-base font-medium text-gray-500">
-                    USDC
-                  </span>
+                  <CurrencyDisplay amount={balance} decimals={2} />
                 </p>
-                <p className="text-sm text-gray-500">
-                  ≈ ${formatUSDCDisplay(balance)}
-                </p>
+                <CurrencyRateDisplay className="text-sm text-gray-500 mt-1" />
               </div>
             )}
           </div>

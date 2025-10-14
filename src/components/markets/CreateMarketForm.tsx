@@ -13,6 +13,8 @@ import { apiClient } from "../../lib/apiClient";
 import { formatErrorForUser } from "../../utils/apiErrors";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { ChevronDown, Check } from "lucide-react";
+import { useCurrency } from "../../contexts/CurrencyContext";
+import { formatNumberAsInr } from "../../utils/currencyUtils";
 
 interface FormData {
   totalAmount: string;
@@ -54,8 +56,9 @@ export const CreateMarketForm = ({
   // const navigate = useNavigate();
   const { smartAddress: address } = useAuthContext();
   const { initialiseKuriMarketSponsored, isCreating } = useKuriFactory();
+  const { isIndianUser, exchangeRate, convertUsdToInr } = useCurrency();
 
-  // Calculate monthly contribution per participant
+  // Calculate monthly contribution per participant (ALWAYS in USD)
   const monthlyContribution = useMemo(() => {
     if (!formData.totalAmount || !formData.participantCount) return "0";
     const total = parseFloat(formData.totalAmount);
@@ -63,6 +66,21 @@ export const CreateMarketForm = ({
     if (isNaN(total) || isNaN(participants) || participants === 0) return "0";
     return (total / participants).toFixed(2);
   }, [formData.totalAmount, formData.participantCount]);
+
+  // Calculate INR equivalents for Indian users (DISPLAY ONLY)
+  const totalAmountInr = useMemo(() => {
+    if (!isIndianUser || !formData.totalAmount) return null;
+    const usdAmount = parseFloat(formData.totalAmount);
+    if (isNaN(usdAmount)) return null;
+    return convertUsdToInr(usdAmount);
+  }, [formData.totalAmount, isIndianUser, convertUsdToInr]);
+
+  const monthlyContributionInr = useMemo(() => {
+    if (!isIndianUser || !monthlyContribution) return null;
+    const usdAmount = parseFloat(monthlyContribution);
+    if (isNaN(usdAmount)) return null;
+    return convertUsdToInr(usdAmount);
+  }, [monthlyContribution, isIndianUser, convertUsdToInr]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -354,6 +372,11 @@ export const CreateMarketForm = ({
               />
               <p className="text-xs text-gray-500 mt-1">
                 This is the total amount anyone can win on each cycle.
+                {totalAmountInr && (
+                  <span className="block mt-1 text-blue-600 font-medium">
+                    ≈ {formatNumberAsInr(totalAmountInr, 2)}
+                  </span>
+                )}
               </p>
             </div>
 
@@ -386,6 +409,11 @@ export const CreateMarketForm = ({
                 readOnly
                 className="w-full px-3 py-2 sm:px-4 rounded-lg border border-[#E8DED1] bg-gray-100 focus:outline-none cursor-not-allowed text-gray-700 text-sm sm:text-base"
               />
+              {monthlyContributionInr && (
+                <p className="text-xs text-blue-600 font-medium mt-1">
+                  ≈ {formatNumberAsInr(monthlyContributionInr, 2)} per person
+                </p>
+              )}
             </div>
 
             <div>
@@ -498,7 +526,9 @@ export const CreateMarketForm = ({
               <ul className="text-xs sm:text-sm text-orange-700 space-y-1">
                 <li>
                   • <strong>Join as member:</strong> You contribute{" "}
-                  {monthlyContribution} USDC monthly and can win the pot
+                  {monthlyContribution} USDC
+                  {monthlyContributionInr && ` (≈${formatNumberAsInr(monthlyContributionInr, 2)})`}
+                  {" "}{formData.intervalType === "0" ? "weekly" : "monthly"} and can win the pot
                 </li>
                 <li>
                   • <strong>Admin only:</strong> You manage the circle but don't
@@ -611,17 +641,29 @@ export const CreateMarketForm = ({
                     {formData.participantCount || "0"} people
                   </span>{" "}
                   will join this circle, and the winner of each round takes home{" "}
-                  <span className="font-medium text-[#8B6F47]">
-                    {formData.totalAmount || "0"} USDC
-                  </span>
+                  {isIndianUser && totalAmountInr ? (
+                    <span className="font-medium text-[#8B6F47]">
+                      {formatNumberAsInr(totalAmountInr, 2)} ({formData.totalAmount || "0"} USDC)
+                    </span>
+                  ) : (
+                    <span className="font-medium text-[#8B6F47]">
+                      {formData.totalAmount || "0"} USDC
+                    </span>
+                  )}
                   .
                 </p>
                 <p className="text-gray-700">
                   Each person contributes{" "}
-                  <span className="font-medium text-[#8B6F47]">
-                    {monthlyContribution} USDC
-                  </span>{" "}
-                  {formData.intervalType === "0" ? "every week" : "every month"}{" "}
+                  {isIndianUser && monthlyContributionInr ? (
+                    <span className="font-medium text-[#8B6F47]">
+                      {formatNumberAsInr(monthlyContributionInr, 2)} ({monthlyContribution} USDC)
+                    </span>
+                  ) : (
+                    <span className="font-medium text-[#8B6F47]">
+                      {monthlyContribution} USDC
+                    </span>
+                  )}
+                  {" "}{formData.intervalType === "0" ? "every week" : "every month"}{" "}
                   until everyone has won once.
                 </p>
                 <p className="text-gray-700">

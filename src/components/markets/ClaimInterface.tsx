@@ -4,6 +4,7 @@ import { useMarketContext } from "../../contexts/MarketContext";
 import { useAuthContext } from "../../contexts/AuthContext";
 
 import { AlertTriangle } from "lucide-react";
+import { CurrencyDisplay } from "../ui/CurrencyDisplay";
 
 interface KuriData {
   creator: `0x${string}`;
@@ -104,11 +105,6 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
     canClaimFinal: canClaim && isCurrentUserWinner,
   });
 
-  // Calculate potential winnings (full pool amount)
-  const potentialWinnings =
-    (Number(marketData.kuriAmount) / 1_000_000) *
-    marketData.totalParticipantsCount;
-
   return (
     <div className="relative rounded-2xl p-4 sm:p-6 md:p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden min-h-[160px] sm:min-h-[200px]">
       {/* Gradient overlay for subtle color hint */}
@@ -129,7 +125,10 @@ export const ClaimInterface: React.FC<ClaimInterfaceProps> = ({
             Claimable Amount
           </h3>
           <p className="text-3xl sm:text-4xl font-bold text-[hsl(var(--foreground))]">
-            ${potentialWinnings.toFixed(2)}
+            <CurrencyDisplay
+              amount={marketData.kuriAmount * BigInt(marketData.totalParticipantsCount)}
+              decimals={2}
+            />
           </p>
         </div>
 

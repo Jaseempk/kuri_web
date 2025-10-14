@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { formatUnits } from "viem";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { Plus, RefreshCw } from "lucide-react";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
+import { CurrencyDisplay } from "./CurrencyDisplay";
+import { CurrencyToggle, CurrencyRateDisplay } from "./CurrencyToggle";
 
 export const UserBalanceCard = () => {
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -44,13 +45,6 @@ export const UserBalanceCard = () => {
     return () => clearInterval(interval);
   }, [isLoadingBalance]);
 
-  const formatBalance = (balance: bigint) => {
-    return Number(formatUnits(balance, 6)).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   // Loading animation component
   const LoadingDots = () => (
     <div className="flex items-center gap-1">
@@ -74,9 +68,12 @@ export const UserBalanceCard = () => {
     <div className="bg-[#f9f4ef] rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       {/* Mobile Layout */}
       <div className="sm:hidden">
-        {/* Top row: Title and Button */}
-        <div className="flex justify-between items-center mb-1">
-          <p className="text-sm text-gray-500">Your USDC Balance</p>
+        {/* Top row: Title, Toggle, and Button */}
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-gray-500">Your USDC Balance</p>
+            <CurrencyToggle compact showRefresh={false} />
+          </div>
           <button
             onClick={handleDeposit}
             className="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-300 flex items-center text-sm"
@@ -94,7 +91,7 @@ export const UserBalanceCard = () => {
             ) : balanceError ? (
               <span className="text-red-600 text-xl">Error</span>
             ) : (
-              `$${formatBalance(balance)}`
+              <CurrencyDisplay amount={balance} decimals={2} />
             )}
           </div>
         </div>
@@ -122,15 +119,18 @@ export const UserBalanceCard = () => {
 
       {/* Desktop Layout - Keep existing */}
       <div className="hidden sm:flex sm:flex-row justify-between items-center">
-        <div>
-          <p className="text-sm text-gray-500">Your USDC Balance</p>
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-1">
+            <p className="text-sm text-gray-500">Your USDC Balance</p>
+            <CurrencyToggle compact showRefresh />
+          </div>
           <div className="text-4xl font-bold text-gray-800 mt-1">
             {isLoadingBalance ? (
               <LoadingDots />
             ) : balanceError ? (
               <span className="text-red-600 text-xl">Error</span>
             ) : (
-              `$${formatBalance(balance)}`
+              <CurrencyDisplay amount={balance} decimals={2} />
             )}
           </div>
           <div className="flex items-center mt-2 space-x-2">
@@ -147,6 +147,7 @@ export const UserBalanceCard = () => {
               </button>
             )}
           </div>
+          <CurrencyRateDisplay className="mt-1" />
         </div>
         <button
           onClick={handleDeposit}

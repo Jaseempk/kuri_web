@@ -38,6 +38,8 @@ import { ShareButton } from "../ui/ShareButton";
 import { useShare } from "../../hooks/useShare";
 import { apiClient } from "../../lib/apiClient";
 import { shouldUseKuriCore } from "../../utils/marketUtils";
+import { CurrencyDisplay } from "../ui/CurrencyDisplay";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 interface OptimizedMarketCardProps {
   market: OptimizedKuriMarket;
@@ -396,19 +398,30 @@ export const OptimizedMarketCard: React.FC<OptimizedMarketCardProps> = ({
                   Contribution
                 </p>
                 <p className="text-sm xs:text-base font-medium">
-                  $
-                  {(
-                    Number(market.kuriAmount) /
-                    1_000_000 /
-                    market.totalParticipants
-                  ).toFixed(2)}{" "}
-                  {getIntervalTypeText(market.intervalType)}
+                  {(() => {
+                    // Prevent division by zero for new markets
+                    if (market.totalParticipants === 0) {
+                      return <span>--</span>;
+                    }
+                    return (
+                      <>
+                        <CurrencyDisplay
+                          amount={BigInt(market.kuriAmount) / BigInt(market.totalParticipants)}
+                          decimals={2}
+                        />{" "}
+                        {getIntervalTypeText(market.intervalType)}
+                      </>
+                    );
+                  })()}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Win Amount</p>
                 <p className="text-sm xs:text-base font-medium text-[hsl(var(--forest))]">
-                  ${Math.floor(Number(market.kuriAmount) / 1_000_000)}
+                  <CurrencyDisplay
+                    amount={BigInt(market.kuriAmount)}
+                    decimals={0}
+                  />
                 </p>
               </div>
               <div>

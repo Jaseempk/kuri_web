@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { formatUSDCBalance, calculateDeficit } from "../../utils/tokenUtils";
+import { calculateDeficit } from "../../utils/tokenUtils";
+import { CurrencyDisplay } from "../ui/CurrencyDisplay";
 
 interface InsufficientBalanceModalProps {
   isOpen: boolean;
@@ -30,9 +31,6 @@ export const InsufficientBalanceModal: React.FC<
   isRefreshing = false,
 }) => {
   const deficit = calculateDeficit(requiredAmount, userBalance);
-  const formattedUserBalance = formatUSDCBalance(userBalance);
-  const formattedRequiredAmount = formatUSDCBalance(requiredAmount);
-  const formattedDeficit = formatUSDCBalance(deficit);
 
   const handleBuyUSDC = () => {
     // Open external link to buy USDC (you can customize this URL)
@@ -74,14 +72,14 @@ export const InsufficientBalanceModal: React.FC<
                 <div className="flex justify-between">
                   <span className="text-gray-600">Your Current Balance:</span>
                   <span className="font-mono font-medium">
-                    {formattedUserBalance} USDC
+                    <CurrencyDisplay amount={userBalance} decimals={2} showBoth />
                   </span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Required Amount:</span>
                   <span className="font-mono font-medium">
-                    {formattedRequiredAmount} USDC
+                    <CurrencyDisplay amount={requiredAmount} decimals={2} showBoth />
                   </span>
                 </div>
 
@@ -90,7 +88,7 @@ export const InsufficientBalanceModal: React.FC<
                 <div className="flex justify-between">
                   <span className="text-red-700 font-medium">You Need:</span>
                   <span className="font-mono font-bold text-red-700">
-                    {formattedDeficit} USDC more
+                    <CurrencyDisplay amount={deficit} decimals={2} showBoth />
                   </span>
                 </div>
               </div>

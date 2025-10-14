@@ -1,22 +1,18 @@
-import { Link, useLocation } from "react-router-dom";
-import { useAuthContext } from "../../contexts/AuthContext";
-import { User, Plus } from "lucide-react";
-import { Button } from "./button";
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "./button";
+import { Plus, User } from "lucide-react";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { useUserUSDCBalance } from "../../hooks/useUSDCBalances";
 import { formatUnits } from "viem";
 import { USDCDepositModal } from "../modals/USDCDepositModal";
+import { CurrencyDisplay } from "./CurrencyDisplay";
 
 const formatAddress = (address: string) => {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 };
 
-const formatBalance = (balance: bigint) => {
-  return Number(formatUnits(balance, 6)).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
+// We'll use CurrencyDisplay component instead of custom formatting
 
 export function ProfileButton() {
   const location = useLocation();
@@ -115,7 +111,7 @@ export function ProfileButton() {
             ) : balanceError ? (
               "Error"
             ) : (
-              `$${formatBalance(balance)}`
+              <CurrencyDisplay amount={balance} decimals={2} compact />
             )}
           </div>
           
