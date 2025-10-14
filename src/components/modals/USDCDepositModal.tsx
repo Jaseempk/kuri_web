@@ -270,7 +270,6 @@ export const USDCDepositModal = ({
                   Min: ₹10 | Max: ₹1,00,000
                 </p>
               </div>
-
               {/* UPI Info Notice */}
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <div className="flex items-start gap-2">
@@ -287,8 +286,7 @@ export const USDCDepositModal = ({
                   </div>
                 </div>
               </div>
-
-              {/* UPI ID Display (Fallback) */}
+              {/* UPI ID Display (Fallback)
               <div>
                 <label className="block text-sm font-medium text-[#4E342E] mb-2">
                   Or Pay Manually to UPI ID
@@ -306,8 +304,7 @@ export const USDCDepositModal = ({
                     </Button>
                   </div>
                 </div>
-              </div>
-
+              </div> */}
               {/* Action Button */}
               <div className="pt-2">
                 <Button
