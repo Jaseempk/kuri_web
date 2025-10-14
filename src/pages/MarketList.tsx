@@ -30,6 +30,7 @@ import { MarketMetadata } from "../components/markets/MarketCard";
 import { useProfileRequired } from "../hooks/useProfileRequired";
 import { usePostCreationShareReplacement } from "../components/modals/PostCreationModalProvider";
 import { useUSDCBalances } from "../hooks/useUSDCBalances";
+import { CurrencyDisplay } from "../components/ui/CurrencyDisplay";
 // import { UserBalanceCard } from "../components/ui/UserBalanceCard"; // Commented out for potential reuse
 
 const INTERVAL_TYPE = {
@@ -504,10 +505,10 @@ export default function MarketList() {
                     <div>
                       <p className="text-sm text-gray-500">Total Value Saved</p>
                       <p className="text-2xl font-bold text-gray-800">
-                        $
-                        {Number(
-                          formatUnits(totalValueLocked, 6)
-                        ).toLocaleString()}
+                        <CurrencyDisplay
+                          amount={totalValueLocked}
+                          decimals={0}
+                        />
                       </p>
                     </div>
                     <div className="text-right">
