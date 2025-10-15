@@ -133,7 +133,29 @@ export const useOptimizedAuth = () => {
     enabled: !!(embeddedWalletId && accountIsConnected),
     staleTime: 10 * 60 * 1000, // 10 minutes for wallet resolution
     refetchOnWindowFocus: false,
-    retry: 2,
+    retry: (failureCount, error) => {
+      // Retry network/infrastructure errors, not validation errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Don't retry validation errors
+      if (
+        errorMessage.includes('Missing required parameters') ||
+        errorMessage.includes('Invalid signMessageAsync') ||
+        errorMessage.includes('not implemented')
+      ) {
+        console.error('Smart wallet validation error (not retrying):', error);
+        return false;
+      }
+
+      // Retry infrastructure errors (GetCounterFactualAddressError, network issues)
+      if (failureCount < 3) {
+        console.warn(`Smart wallet resolution failed (attempt ${failureCount + 1}/3), retrying...`);
+        return true;
+      }
+
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000), // Exponential backoff up to 8s
   });
 
   // Level 2: Profile (depends on Smart Wallet address)

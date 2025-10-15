@@ -6,12 +6,60 @@ import { generateSalt } from "./generateSalt";
 import { customSignMessage } from "./customSignMessage";
 import { getDefaultChain } from "../config/contracts";
 
+// Helper function to retry with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | unknown;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      // Don't retry on validation errors (invalid params)
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (
+        errorMessage.includes('Invalid') ||
+        errorMessage.includes('not implemented') ||
+        errorMessage.includes('Missing')
+      ) {
+        throw error;
+      }
+
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.warn(
+          `Smart wallet resolution attempt ${attempt + 1} failed, retrying in ${delay}ms...`,
+          error
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 export async function getSmartWalletAddressForEOA(
   paraWalletId: string,
   eoaAddress: `0x${string}`,
   signMessageAsync: any
 ): Promise<`0x${string}`> {
-  try {
+  // Validation before attempting
+  if (!paraWalletId || !eoaAddress) {
+    throw new Error('Missing required parameters: paraWalletId or eoaAddress');
+  }
+
+  if (!signMessageAsync || typeof signMessageAsync !== 'function') {
+    throw new Error('Invalid signMessageAsync function provided');
+  }
+
+  // Wrap the entire operation in retry logic
+  return retryWithBackoff(async () => {
     const defaultChain = getDefaultChain();
 
     // Get the appropriate Alchemy chain object based on the current network
@@ -54,10 +102,7 @@ export async function getSmartWalletAddressForEOA(
     });
 
     return sponsoredClient.account.address;
-  } catch (error) {
-    console.error("Failed to generate smart wallet address:", error);
-    throw error;
-  }
+  }, 3, 1000); // 3 retries with 1s base delay
 }
 
 // Cache to avoid regenerating addresses

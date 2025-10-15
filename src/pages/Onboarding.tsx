@@ -55,7 +55,12 @@ export default function Onboarding() {
       case AuthFlowState.PROFILE_LOADING:
         break;
       case AuthFlowState.ERROR:
-        // Handle errors
+        // Show user-friendly error for infrastructure issues
+        const errorMsg = "We're experiencing connection issues. Please try again.";
+        if (!error) setError(errorMsg);
+        toast.error(errorMsg, {
+          description: "This is usually temporary. Check your internet connection and try again.",
+        });
         break;
     }
   }, [authState, returnUrl, coordinatedNavigate, loading]);
