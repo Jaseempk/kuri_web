@@ -409,7 +409,7 @@ export const CreateMarketForm = ({
                 readOnly
                 className="w-full px-3 py-2 sm:px-4 rounded-lg border border-[#E8DED1] bg-gray-100 focus:outline-none cursor-not-allowed text-gray-700 text-sm sm:text-base"
               />
-              {monthlyContributionInr && (
+              {monthlyContributionInr && parseFloat(monthlyContribution) > 0 && (
                 <p className="text-xs text-blue-600 font-medium mt-1">
                   ≈ {formatNumberAsInr(monthlyContributionInr, 2)} per person
                 </p>
