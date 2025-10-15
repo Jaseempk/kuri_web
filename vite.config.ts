@@ -15,7 +15,8 @@ export default defineConfig({
       include: ["buffer", "crypto", "stream", "util"],
     }),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "autoUpdate", // Auto-update in background
+      injectRegister: "auto", // Automatically inject SW registration
       includeAssets: [
         "favicon.ico",
         "icons/*.png",
@@ -55,6 +56,9 @@ export default defineConfig({
           "**/images/*.jpg", // Don't precache large images
           "**/node_modules/**/*",
         ],
+        skipWaiting: true, // Activate new SW immediately
+        clientsClaim: true, // Take control of all clients immediately
+        cleanupOutdatedCaches: true, // Remove old caches
         runtimeCaching: [
           {
             urlPattern:

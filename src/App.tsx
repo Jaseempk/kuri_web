@@ -20,6 +20,7 @@ import { NetworkStatus } from "./components/NetworkStatus";
 import { FloatingNotificationPrompt } from "./components/notifications/FloatingNotificationPrompt";
 import { NotificationHandler } from "./components/notifications/NotificationHandler";
 import { AuthGuard } from "./components/guards/AuthGuard";
+import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import Landing from "./pages/Landing";
 import MarketList from "./pages/MarketList";
 import MarketDetail from "./pages/MarketDetail";
@@ -80,6 +81,7 @@ function App() {
                   <RoutesWithAnalytics />
                   <InstallPrompt />
                   <FloatingNotificationPrompt />
+                  <PWAUpdatePrompt />
                 </PostCreationModalProvider>
               </Router>
             </FarcasterProvider>
